@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<!-- 和暦⇔西暦変換表 (롱테일 선점 기사 + 내장 변환 도구) -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070b18" media="(prefers-color-scheme: dark)">
+  <title>和暦⇔西暦変換表｜令和・平成・昭和の年号早見表【計算ツール付き】 | 履歴スタジオ</title>
+  <meta name="description" content="和暦（令和・平成・昭和・大正）と西暦の変換表・早見表。履歴書の年号統一に便利な双方向の変換ツール付き。元年の例外一覧と書き方の注意点も解説します。">
+  <link rel="canonical" href="https://www.rireki-studio.com/guide/wareki.html">
+  <meta property="og:title" content="和暦⇔西暦変換表【計算ツール付き】">
+  <meta property="og:description" content="令和・平成・昭和の早見表。履歴書の年号統一に。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.rireki-studio.com/guide/wareki.html">
+  <meta property="og:image" content="https://www.rireki-studio.com/assets/ogp.png">
+  <link rel="icon" href="../assets/favicon.svg?v=1.0" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="../style.css?v=1.0">
+  <link rel="stylesheet" href="guide.css?v=1.0">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article",
+   "headline":"和暦⇔西暦変換表｜令和・平成・昭和の年号早見表【計算ツール付き】",
+   "description":"和暦と西暦の双方向変換ツールと早見表。",
+   "datePublished":"2026-08-08","dateModified":"2026-08-08",
+   "author":{"@type":"Organization","name":"履歴スタジオ"},
+   "publisher":{"@type":"Organization","name":"履歴スタジオ","url":"https://www.rireki-studio.com/"},
+   "mainEntityOfPage":"https://www.rireki-studio.com/guide/wareki.html"}
+  </script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://www.rireki-studio.com/"}, {"@type": "ListItem", "position": 2, "name": "ガイド", "item": "https://www.rireki-studio.com/guide/"}, {"@type": "ListItem", "position": 3, "name": "和暦⇔西暦変換表｜令和・平成・昭和の年号早見表【計算ツール付き】", "item": "https://www.rireki-studio.com/guide/wareki.html"}]}</script>
+</head>
+<body>
+<!-- SVG 아이콘 스프라이트 (이모지 폰트 비의존) -->
+<svg class="svg-sprite" aria-hidden="true" focusable="false"
+     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-cam" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  </defs>
+</svg>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html">
+        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="currentColor" opacity=".15"/><rect x="18" y="12" width="28" height="40" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><rect x="23" y="18" width="11" height="8" fill="currentColor" opacity=".6"/><line x1="23" y1="32" x2="41" y2="32" stroke="currentColor" stroke-width="3"/><line x1="23" y1="39" x2="41" y2="39" stroke="currentColor" stroke-width="3"/></svg>
+        <span class="brand-text">履歴スタジオ<small>Rireki Studio</small></span>
+      </a>
+      <nav class="header-actions">
+        <a class="btn primary" href="../index.html">無料で履歴書を作る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="article-wrap">
+    <nav class="breadcrumb" aria-label="パンくず">
+      <a href="../index.html">ホーム</a> &gt; <a href="index.html">ガイド</a> &gt; 和暦⇔西暦変換
+    </nav>
+
+    <article class="article">
+      <span class="a-cat">和暦・西暦</span>
+      <h1>和暦⇔西暦変換表<br>令和・平成・昭和の年号早見表【計算ツール付き】</h1>
+      <p class="a-date">公開日：2026年8月8日</p>
+
+      <p>履歴書の記入で悩みがちなのが年号の変換です。「令和5年は西暦何年？」「平成生まれは何年？」という疑問は、この下の<strong>変換ツール</strong>で即座に解決します。</p>
+
+      <!-- ===== 内蔵 변환 도구 ===== -->
+      <section class="wareki-tool" aria-label="和暦西暦変換ツール">
+        <h2><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg>和暦⇔西暦 変換ツール</h2>
+        <div class="wk-row">
+          <div class="field">
+            <label for="wkYear">西暦（年）</label>
+            <input type="number" id="wkYear" min="1868" max="2100" placeholder="例: 2000">
+          </div>
+          <div class="field">
+            <label for="wkMonth">月（任意）</label>
+            <input type="number" id="wkMonth" min="1" max="12" placeholder="1〜12">
+          </div>
+        </div>
+        <button class="btn primary" id="wkBtn" type="button">変換する</button>
+        <p class="wk-result" id="wkOut">—</p>
+        <p class="hint">※1989年1月・2019年4月など、元号の改まる年は月の入力で精度が上がります。</p>
+      </section>
+
+      <h2 id="sec1">元号の一覧と開始日</h2>
+      <table class="a-table">
+        <tr><th>元号</th><th>開始日（西暦）</th><th>期間</th></tr>
+        <tr><td class="y">令和</td><td>2019年5月1日〜</td><td class="y">現在</td></tr>
+        <tr><td class="y">平成</td><td>1989年1月8日〜2019年4月30日</td><td class="y">31年間</td></tr>
+        <tr><td class="y">昭和</td><td>1926年12月25日〜1989年1月7日</td><td class="y">64年間</td></tr>
+        <tr><td class="y">大正</td><td>1912年7月30日〜1926年12月24日</td><td class="y">15年間</td></tr>
+        <tr><td class="y">明治</td><td>1868年9月8日〜1912年7月29日</td><td class="y">45年間</td></tr>
+      </table>
+
+      <h2 id="sec2">西暦から和暦への換算式</h2>
+      <p>覚えておくと便利な換算式です（その元号の1年目=元年）。</p>
+      <ul>
+        <li><strong>令和</strong>：西暦 − 2018（例：2026 − 2018 = 令和8年）</li>
+        <li><strong>平成</strong>：西暦 − 1988（例：2000 − 1988 = 平成12年）</li>
+        <li><strong>昭和</strong>：西暦 − 1925（例：1980 − 1925 = 昭和55年）</li>
+      </ul>
+      <div class="caution-box">1989年1月1〜7日は「昭和64年」、2019年1〜4月は「平成31年」です。紙に書く際は月の確認を忘れずに。</div>
+
+      <h2 id="sec3">早見表（1989〜2036年）</h2>
+      <p id="wkTableNote">※この表はページ読み込み時に自動生成されます。</p>
+      <div id="wkTable"></div>
+
+      <h2 id="sec4">履歴書での年号の使い方</h2>
+      <ul>
+        <li><strong>和暦と西暦は混在させない</strong>のが大原則。生年月日・学歴・職歴・資格・日付のすべてで統一します</li>
+        <li>企業から指定がある場合はそちらに従いましょう（指定がなければ和暦が一般的）</li>
+        <li>「平成元年」「令和元年」は1年目の書き方。2年目以降は「平成2年」「令和2年」と数字で書きます</li>
+      </ul>
+      <p>当サイトの履歴書作成ツールでは、西暦で入力するだけで和暦と西暦を切り替えて印刷できます（設定→年号表示）。</p>
+
+      <div class="cta-box">
+        <p>年号変換は全部自動 — 和暦/西暦ワンタップ切替</p>
+        <a class="btn primary big" href="../index.html#tab=rireki"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>自動変換つきで履歴書を作る</a>
+        <span class="cta-sub">生年月日は西暦で入力、表示は和暦に自動変換</span>
+      </div>
+
+      <h3>関連ガイド</h3>
+      <div class="rel-grid">
+        <a class="rel-card" href="nenrei.html"><span class="rc-cat">年齢・年度</span><div class="rc-title">年齢早見表【2026年版】</div><div class="rc-desc">満年齢計算ツールと生まれ年別の早見表</div></a>
+        <a class="rel-card" href="kakikata.html"><span class="rc-cat">基本</span><div class="rc-title">履歴書の書き方【完全ガイド】</div><div class="rc-desc">年号統一のルールと基本マナー</div></a>
+        <a class="rel-card" href="blank-gap.html"><span class="rc-cat">ブランク</span><div class="rc-title">空白期間はどう書く？</div><div class="rc-desc">期間計算と伝え方のコツ</div></a>
+      </div>
+
+      
+      <div class="share-row" aria-label="共有">
+        <span class="share-lbl">この記事を共有:</span>
+        <a class="share-btn" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fwww.rireki-studio.com%2Fguide%2Fwareki.html&text=%E5%92%8C%E6%9A%A6%E2%87%94%E8%A5%BF%E6%9A%A6%E5%A4%89%E6%8F%9B%E8%A1%A8%EF%BD%9C%E4%BB%A4%E5%92%8C%E3%83%BB%E5%B9%B3%E6%88%90%E3%83%BB%E6%98%AD%E5%92%8C%E3%81%AE%E5%B9%B4%E5%8F%B7%E6%97%A9%E8%A6%8B%E8%A1%A8%E3%80%90%E8%A8%88%E7%AE%97%E3%83%84%E3%83%BC%E3%83%AB%E4%BB%98%E3%81%8D%E3%80%91" target="_blank" rel="noopener">𝕏 でポスト</a>
+        <a class="share-btn" href="https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Fwww.rireki-studio.com%2Fguide%2Fwareki.html" target="_blank" rel="noopener">LINEで送る</a>
+      </div>
+
+      <!-- AdSense 인아티클 슬롯 (승인 후 활성화) -->
+      <div class="ad-slot" data-ad-on="0" aria-hidden="true"></div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <nav class="foot-links">
+      <a href="../terms.html">利用規約</a>
+      <a href="../privacy.html">プライバシーポリシー</a>
+      <a href="../contact.html">お問い合わせ</a>
+      <a href="../about.html">運営者情報</a>
+      <a href="../offline/rireki-studio-offline.zip">オフライン版</a>
+    </nav>
+    <p class="foot-note">履歴スタジオ — データはブラウザ内にのみ保存されます</p>
+  </footer>
+
+  <script>
+  /* ===== 和暦⇔西暦 変換ツール (이 페이지 전용 자체 완결 스크립트 / innerHTML 미사용) ===== */
+  (function(){
+    'use strict';
+    var ERAS = [
+      { name:'令和', y:2019, m:5, d:1 },
+      { name:'平成', y:1989, m:1, d:8 },
+      { name:'昭和', y:1926, m:12, d:25 },
+      { name:'大正', y:1912, m:7, d:30 },
+      { name:'明治', y:1868, m:9, d:8 }
+    ];
+    function toWareki(y, m, d){
+      m = m || 1; d = d || 1;
+      for (var i=0;i<ERAS.length;i++){
+        var e = ERAS[i];
+        if (y > e.y || (y === e.y && (m > e.m || (m === e.m && d >= e.d)))){
+          var n = y - e.y + 1;
+          return e.name + (n === 1 ? '元' : n) + '年';
+        }
+      }
+      return '明治以前';
+    }
+    var out = document.getElementById('wkOut');
+    function convert(){
+      var y = parseInt(document.getElementById('wkYear').value, 10);
+      var m = parseInt(document.getElementById('wkMonth').value, 10) || 1;
+      if (!y || y < 1868 || y > 2100){ out.textContent = '1868〜2100年の範囲で入力してください'; return; }
+      out.textContent = y + '年' + (document.getElementById('wkMonth').value ? m + '月' : '') + ' → ' + toWareki(y, m, 1);
+    }
+    document.getElementById('wkBtn').addEventListener('click', convert);
+    ['wkYear','wkMonth'].forEach(function(id){
+      document.getElementById(id).addEventListener('keydown', function(e){ if (e.key === 'Enter') convert(); });
+    });
+    /* 早見表 생성 (1989〜2036) — DOM은 createElement/textContent만 사용 */
+    var wrap = document.getElementById('wkTable');
+    var note = document.getElementById('wkTableNote');
+    var table = document.createElement('table'); table.className = 'a-table';
+    var head = document.createElement('tr');
+    ['西暦','元号','西暦','元号'].forEach(function(txt){
+      var th = document.createElement('th'); th.textContent = txt; head.appendChild(th);
+    });
+    table.appendChild(head);
+    var years = [];
+    for (var yy = 1989; yy <= 2036; yy++) years.push(yy);
+    var half = Math.ceil(years.length / 2);
+    for (var row = 0; row < half; row++){
+      var tr = document.createElement('tr');
+      [years[row], years[row+half]].forEach(function(v){
+        if (v == null){ var td1=document.createElement('td'), td2=document.createElement('td'); tr.appendChild(td1); tr.appendChild(td2); return; }
+        var tdA = document.createElement('td'); tdA.className='y'; tdA.textContent = v + '年';
+        var tdB = document.createElement('td'); tdB.textContent = toWareki(v, 6, 1);
+        tr.appendChild(tdA); tr.appendChild(tdB);
+      });
+      table.appendChild(tr);
+    }
+    wrap.appendChild(table);
+    note.textContent = '※1989年・2019年は年の途中で元号が変わります（境界は上の表参照）。';
+  })();
+  </script>
+</body>
+</html>

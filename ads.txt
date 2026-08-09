@@ -1,0 +1,4 @@
+# 履歴スタジオ ads.txt
+# ※ Google AdSense 승인 후 아래 두 줄을 활성화하고, pub-0000000000000000 을 본인 게시자 ID로 교체하세요.
+#   (AdSense → 계정 → 계정 정보에서 확인, 형식: pub-로 시작하는 16자리 숫자)
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

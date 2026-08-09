@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- 404 Not Found (호스팅 기본 에러 페이지 — Netlify/Cloudflare가 자동 사용) -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070b18" media="(prefers-color-scheme: dark)">
+  <title>ページが見つかりません | 履歴スタジオ</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css?v=1.0">
+  <style>
+    /* 404 전용 최소 스타일 */
+    .nf-wrap{ min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:2rem 1rem; gap:.6rem; }
+    .nf-code{ font-size:4rem; font-weight:800; color:var(--accent); line-height:1; }
+    .nf-msg{ color:var(--muted); max-width:480px; }
+    .nf-links{ display:flex; gap:.6rem; flex-wrap:wrap; justify-content:center; margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="currentColor" opacity=".15"/><rect x="18" y="12" width="28" height="40" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><rect x="23" y="18" width="11" height="8" fill="currentColor" opacity=".6"/><line x1="23" y1="32" x2="41" y2="32" stroke="currentColor" stroke-width="3"/><line x1="23" y1="39" x2="41" y2="39" stroke="currentColor" stroke-width="3"/></svg>
+        <span class="brand-text">履歴スタジオ<small>Rireki Studio</small></span>
+      </a>
+    </div>
+  </header>
+  <main class="nf-wrap">
+    <div class="nf-code">404</div>
+    <h1 style="font-size:1.2rem;margin:0">ページが見つかりません</h1>
+    <p class="nf-msg">お探しのページは移動または削除された可能性があります。下のリンクからお進みください。</p>
+    <div class="nf-links">
+      <a class="btn primary" href="index.html">📝 履歴書作成ツール</a>
+      <a class="btn" href="guide/index.html">📚 書き方ガイド</a>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <p class="foot-note">履歴スタジオ — データはブラウザ内にのみ保存されます</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<!-- 敬語 변환기 (v2.11 SEO 자산: 面接/メール/接客 대형 상시 키워드 — rule 기반 즉시 검출, 침입 없는 로컬 처리) -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070b18" media="(prefers-color-scheme: dark)">
+  <title>敬語変換ツール【カジュアルの言葉→尊敬語・謙譲語・丁寧語】 | 履歴スタジオ</title>
+  <meta name="description" content="文章を貼るだけで、敬語に直せる言葉を検出。「食べる→召し上がる／いただく」など相手の動作か自分の動作かで使い分けられる敬語変換ツール。面接・ビジネスメール・アルバイトの接客用語に。">
+  <link rel="canonical" href="https://www.rireki-studio.com/guide/keigo.html">
+  <meta property="og:title" content="敬語変換ツール【カジュアル→尊敬語・謙譲語・丁寧語】">
+  <meta property="og:description" content="貼るだけで敬語に直せる言葉を検出。尊敬語・謙譲語・丁寧語の使い分け一覧つき。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.rireki-studio.com/guide/keigo.html">
+  <meta property="og:image" content="https://www.rireki-studio.com/assets/ogp.png">
+  <link rel="icon" href="../assets/favicon.svg?v=1.0" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="../style.css?v=1.0">
+  <link rel="stylesheet" href="guide.css?v=1.0">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article",
+   "headline":"敬語変換ツール【カジュアルの言葉→尊敬語・謙譲語・丁寧語】",
+   "description":"文章を貼るだけで敬語に直せる言葉を検出するツールと、敬語3種類の使い分け解説。",
+   "datePublished":"2026-08-08","dateModified":"2026-08-08",
+   "author":{"@type":"Organization","name":"履歴スタジオ"},
+   "publisher":{"@type":"Organization","name":"履歴スタジオ","url":"https://www.rireki-studio.com/"},
+   "mainEntityOfPage":"https://www.rireki-studio.com/guide/keigo.html"}
+  </script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://www.rireki-studio.com/"}, {"@type": "ListItem", "position": 2, "name": "ガイド", "item": "https://www.rireki-studio.com/guide/"}, {"@type": "ListItem", "position": 3, "name": "敬語変換", "item": "https://www.rireki-studio.com/guide/keigo.html"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "尊敬語と謙譲語はどう使い分けますか？", "acceptedAnswer": {"@type": "Answer", "text": "相手（目上の人）の動作には尊敬語、自分の動作には謙譲語を使います。「部長が召し上がる」「私がいただく」。自分の動作に尊敬語を使うのは典型的なミスです。「誰の動作か」をまず考えるのがコツです。"}}, {"@type": "Question", "name": "機械的に敬語変換して大丈夫ですか？", "acceptedAnswer": {"@type": "Answer", "text": "敬語は文脈（誰の動作か・どの程度の関係性か）で正解が変わるため、機械置換はあくまで目安です。本ツールは「直せる言葉の候補」を示すので、最終判断は前後の文脈で確認してください。"}}, {"@type": "Question", "name": "面接で一番使う敬語は何ですか？", "acceptedAnswer": {"@type": "Answer", "text": "頻出は「伺う（行くの謙譲語）」「いただく（もらう）」「存じております（知っています）」「御社（あなたの会社）」の4つ。たどたどしくても丁寧語（です・ます）が崩れなければ、大きく印象は損なわれません。"}}]}</script>
+</head>
+<body>
+<!-- SVG 아이콘 스프라이트 (이모지 폰트 비의존) -->
+<svg class="svg-sprite" aria-hidden="true" focusable="false"
+     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  </defs>
+</svg>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html">
+        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="currentColor" opacity=".15"/><rect x="18" y="12" width="28" height="40" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><rect x="23" y="18" width="11" height="8" fill="currentColor" opacity=".6"/><line x1="23" y1="32" x2="41" y2="32" stroke="currentColor" stroke-width="3"/><line x1="23" y1="39" x2="41" y2="39" stroke="currentColor" stroke-width="3"/></svg>
+        <span class="brand-text">履歴スタジオ<small>Rireki Studio</small></span>
+      </a>
+      <nav class="header-actions">
+        <a class="btn primary" href="../index.html"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>無料で書類を作る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="article-wrap">
+    <nav class="breadcrumb" aria-label="パンくず">
+      <a href="../index.html">ホーム</a> &gt; <a href="index.html">ガイド</a> &gt; 敬語変換
+    </nav>
+
+    <article class="article">
+      <header class="article-head">
+        <h1>敬語変換ツール<br>【カジュアルの言葉→尊敬語・謙譲語・丁寧語】</h1>
+        <p class="article-date">公開日：2026年8月8日</p>
+        <p class="article-lead">面接の練習、取引先へのメール、アルバイトの接客——「この言葉、敬語に直せるかな？」を毎回調べるのは面倒です。文章を貼ると、直せる候補の言葉を瞬時に検出します。入力内容はサーバーに送信されず、端末の中だけで処理します。</p>
+      </header>
+
+      <h2 id="sec1">文章から敬語候補を検出【ツール】</h2>
+      <div class="wareki-tool">
+        <label for="keigoInput" style="font-weight:800;font-size:.85rem;display:block;margin-bottom:.4rem;">文章を貼り付けてください（例: 明日の面接に行きます。先日お聞きした件で連絡しました）</label>
+        <textarea id="keigoInput" rows="5" style="width:100%;"></textarea>
+        <div style="margin-top:.6rem;">
+          <button type="button" class="btn primary" id="btnKeigo"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>敬語候補を検出する</button>
+        </div>
+        <div id="keigoResult" style="margin-top:.9rem;"></div>
+      </div>
+
+      <h2 id="sec2">敬語の3種類を10秒でおさらい</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>種類</th><th>誰の動作に使う</th><th>例</th></tr></thead>
+          <tbody>
+            <tr><td class="y">尊敬語</td><td><strong>相手（目上の人）</strong>の動作を高める</td><td>召し上がる・おっしゃる・ご覧になる</td></tr>
+            <tr><td class="y">謙譲語</td><td><strong>自分</strong>の動作をへりくだる</td><td>いただく・申す・伺う</td></tr>
+            <tr><td class="y">丁寧語</td><td>聞き手への丁寧さ（誰の動作でも）</td><td>です・ます・ございます</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>迷ったときの鉄則は<strong>「これは誰の動作？」を考えること</strong>。相手の動作なら尊敬語、自分の動作なら謙譲語です。一番多いミスは自分の動作に尊敬語を使うこと（例「私が拝見になります」→正しくは「私が拝見します」）。</p>
+
+      <h2 id="sec3">そのまま使える：NG→OK 変換例6選</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>NG（カジュアル）</th><th>OK（敬語）</th><th>場面</th></tr></thead>
+          <tbody>
+            <tr><td>明日そっちに行きますね</td><td>明日そちらに伺います</td><td>面接・訪問</td></tr>
+            <tr><td>資料見ました</td><td>資料を拝見いたしました</td><td>ビジネスメール</td></tr>
+            <tr><td>社長に聞いてみます</td><td>社長に伺ってみます</td><td>社内の報告</td></tr>
+            <tr><td>これ食べますか？</td><td>こちらお召し上がりになりますか？</td><td>接客</td></tr>
+            <tr><td>知ってます</td><td>存じております／承知しております</td><td>面接の受け答え</td></tr>
+            <tr><td>今日もらった給料で…</td><td>本日いただいたお給料で…</td><td>丁寧な私的会話</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cta-box">
+        <p>書類づくりには敬語の練習帳にもなる例文を</p>
+        <a class="btn primary big" href="../index.html"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>志望動機の例文を見る（27文収録）</a>
+        <span class="cta-sub">セルフ診断つき・登録不要・外部送信ゼロ</span>
+      </div>
+
+      <div class="caution-box">
+        敬語は文脈（誰の動作か・相手との距離感）で正解が変わります。本ツールの検出は候補の提示であり、最終判断は必ず前後の文脈で確認してください。特に改まった場面（弔事・役所への届出等）は別途正式な文例集をご参照ください。
+      </div>
+
+      <h2 id="sec4">あわせて読みたい</h2>
+      <div class="rel-grid">
+        <a class="rel-card" href="toki.html"><span class="rc-cat">手紙・送付状</span><div class="rc-title">時候の挨拶【月別一覧&変換ツール】</div><div class="rc-desc">手紙の季語を月ボタンで確認・コピー</div></a>
+        <a class="rel-card" href="shiboudouki.html"><span class="rc-cat">志望動機</span><div class="rc-title">志望動機の書き方と例文</div><div class="rc-desc">採用担当に伝わる3段構成</div></a>
+        <a class="rel-card" href="arubaito.html"><span class="rc-cat">アルバイト</span><div class="rc-title">アルバイトの履歴書の書き方</div><div class="rc-desc">学生向けの書き方と面接のコツ</div></a>
+      </div>
+
+      <div class="share-row" aria-label="共有">
+        <span class="share-lbl">この記事を共有:</span>
+        <a class="share-btn" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fwww.rireki-studio.com%2Fguide%2Fkeigo.html&text=%E6%95%AC%E8%AA%9E%E5%A4%89%E6%8F%9B%E3%83%84%E3%83%BC%E3%83%AB%E3%80%90%E3%82%AB%E3%82%B8%E3%83%A5%E3%82%A2%E3%83%AB%E3%81%AE%E8%A8%80%E8%91%89%E2%86%92%E5%B0%8A%E6%95%AC%E8%AA%9E%E3%83%BB%E8%AC%99%E8%AD%B2%E8%AA%9E%E3%83%BB%E4%B8%81%E5%AF%A7%E8%AA%9E%E3%80%91%EF%BD%9C%E5%B1%A5%E6%AD%B4%E3%82%B9%E3%82%BF%E3%82%B8%E3%82%AA" target="_blank" rel="noopener">𝕏 でポスト</a>
+        <a class="share-btn" href="https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Fwww.rireki-studio.com%2Fguide%2Fkeigo.html" target="_blank" rel="noopener">LINEで送る</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <nav class="foot-links">
+      <a href="../terms.html">利用規約</a>
+      <a href="../privacy.html">プライバシーポリシー</a>
+      <a href="../contact.html">お問い合わせ</a>
+      <a href="../about.html">運営者情報</a>
+      <a href="../offline/rireki-studio-offline.zip">オフライン版</a>
+    </nav>
+    <p class="foot-note">履歴スタジオ — データはブラウザ内にのみ保存されます</p>
+  </footer>
+
+<script>
+/* 敬語 변환기 — 입력문에서 변환 후보 검출 (순수 로컬 처리 / createElement 전용) */
+(function(){
+  'use strict';
+  /* {보통어, 尊敬語(상대 동작), 謙譲語(자기 동작), 丁寧語} */
+  var KEIGO = [
+    { p:'食べる', s:'召し上がる', k:'いただく', t:'食べます' },
+    { p:'食べた', s:'召し上がる（過去なら 召し上がった／召し上がりました）', k:'いただく（過去なら いただいた／いただきました）', t:'食べます（過去：食べました）' },
+    { p:'食べて', s:'召し上がる（て形：召し上がって）', k:'いただく（て形：いただいて）', t:'食べます' },
+    { p:'飲む', s:'お飲みになる', k:'いただく', t:'飲みます' },
+    { p:'見る', s:'ご覧になる', k:'拝見する', t:'見ます' },
+    { p:'見た', s:'ご覧になる（過去：ご覧になった）', k:'拝見する（過去：拝見した）', t:'見ます（過去：見ました）' },
+    { p:'見ました', s:'ご覧になる（過去：ご覧になった／ご覧になりました）', k:'拝見する（過去：拝見した／拝見しました）', t:'見ます（過去：見ました）' },
+    { p:'見ています', s:'ご覧になっています', k:'拝見しています', t:'見ています' },
+    { p:'見て', s:'ご覧になる（て形：ご覧になって）', k:'拝見する（て形：拝見して）', t:'見ます' },
+    { p:'見ます', s:'ご覧になります', k:'拝見します', t:'見ます（そのまま丁寧）' },
+    { p:'行く', s:'いらっしゃる', k:'伺う・参る', t:'行きます' },
+    { p:'行きます', s:'いらっしゃる（丁寧：いらっしゃいます）', k:'伺う・参る（丁寧：伺います・参ります）', t:'（そのまま丁寧）' },
+    { p:'行って', s:'いらっしゃる（て形：いらっしゃって）', k:'伺う・参る（て形：伺って・参って）', t:'行きます' },
+    { p:'行った', s:'いらっしゃる（過去：いらっしゃった）', k:'伺う・参る（過去：伺った・参った）', t:'行きます（過去：行きました）' },
+    { p:'来る', s:'お越しになる・いらっしゃる', k:'参る・伺う', t:'来ます' },
+    { p:'来ます', s:'お越しになります', k:'参ります', t:'（そのまま丁寧）' },
+    { p:'言う', s:'おっしゃる', k:'申す・申し上げる', t:'言います' },
+    { p:'言いました', s:'おっしゃいました', k:'申し上げました', t:'言いました' },
+    { p:'聞く', s:'お聞きになる', k:'伺う', t:'聞きます' },
+    { p:'聞いた', s:'お聞きになった', k:'伺った', t:'聞きました' },
+    { p:'会う', s:'お会いになる', k:'お目にかかる', t:'会います' },
+    { p:'知る', s:'ご存知です', k:'存じております', t:'知っています' },
+    { p:'知ってる', s:'ご存知ですか', k:'存じております', t:'知っています' },
+    { p:'わかる', s:'おわかりになる', k:'承知する・理解する', t:'わかります' },
+    { p:'する', s:'なさる', k:'いたします', t:'します' },
+    { p:'します', s:'なさいます', k:'いたします', t:'（そのまま丁寧）' },
+    { p:'もらう', s:'お受け取りになる', k:'いただく', t:'もらいます' },
+    { p:'もらった', s:'お受け取りになった', k:'いただいた', t:'もらいました' },
+    { p:'あげる', s:'お与えになる', k:'差し上げる', t:'あげます' },
+    { p:'読む', s:'お読みになる', k:'拝読する', t:'読みます' },
+    { p:'書く', s:'お書きになる', k:'したためる', t:'書きます' },
+    { p:'書きました', s:'お書きになりました', k:'したためました', t:'書きました' },
+    { p:'休む', s:'お休みになる', k:'休ませていただく', t:'休みます' },
+    { p:'いる', s:'いらっしゃる', k:'おります', t:'います' },
+    { p:'借りる', s:'お借りになる', k:'拝借する', t:'借ります' },
+    { p:'待つ', s:'お待ちになる', k:'お待ちする', t:'待ちます' },
+    { p:'思う', s:'お思いになる', k:'存じます', t:'思います' },
+    { p:'そっち', s:'そちら（貴社・御社への敬意）', k:'そちら', t:'そちら' },
+    { p:'あなたの会社', s:'貴社・御社', k:'当社・弊社（自社の謙譲）', t:'（会社の呼び方）' },
+    { p:'うちの会社', s:'貴社・御社', k:'当社・弊社', t:'（会社の呼び方）' }
+  ];
+  function h(tag, attrs){
+    var el = document.createElement(tag); attrs = attrs || {};
+    Object.keys(attrs).forEach(function(k){
+      if (k === 'class') el.className = attrs[k];
+      else if (k === 'text') el.textContent = attrs[k];
+      else el.setAttribute(k, attrs[k]);
+    });
+    for (var i = 2; i < arguments.length; i++) if (arguments[i] != null) el.append(arguments[i]);
+    return el;
+  }
+  function run(){
+    var host = document.getElementById('keigoResult');
+    host.replaceChildren();
+    var input = String(document.getElementById('keigoInput').value || '');
+    if (!input.trim()){
+      host.append(h('p', { class:'hint', text:'まず文章を入力してください。' }));
+      return;
+    }
+    var hits = [];
+    var used = []; // [start, end) 이미 매칭된 구간 (긴 패턴 우선)
+    KEIGO.slice().sort(function(a, b){ return b.p.length - a.p.length; }).forEach(function(e){
+      var idx = input.indexOf(e.p);
+      while (idx >= 0){
+        var covered = false;
+        for (var u = 0; u < used.length; u++){
+          if (idx >= used[u][0] && idx + e.p.length <= used[u][1]) { covered = true; break; }
+        }
+        if (!covered){
+          if (hits.every(function(x){ return x.p !== e.p; })){
+            hits.push(e); used.push([idx, idx + e.p.length]);
+          }
+          break;
+        }
+        idx = input.indexOf(e.p, idx + 1);
+      }
+    });
+    if (!hits.length){
+      host.append(h('p', { class:'hint', text:'変換候補の言葉は見つかりませんでした。すでに丁寧な文か、一覧にない語彙の可能性があります。' }));
+      return;
+    }
+    var note = h('p', { class:'hint', text:'「相手の動作」なら尊敬語、「自分の動作」なら謙譲語を使い分けます。', style:'font-size:.78rem;margin:.2rem 0 .5rem' });
+    host.append(note);
+    hits.forEach(function(e){
+      var card = h('div', { class:'point-box', style:'margin:.5rem 0;padding:.7rem 1rem' });
+      card.append(h('p', { text:'検出：「' + e.p + '」', style:'font-weight:800;margin:0 0 .3rem' }));
+      card.append(h('p', { text:'■ 相手の動作なら（尊敬語）：' + e.s, style:'margin:0 0 .15rem;font-size:.85rem' }));
+      card.append(h('p', { text:'■ 自分の動作なら（謙譲語）：' + e.k, style:'margin:0 0 .15rem;font-size:.85rem' }));
+      card.append(h('p', { text:'■ 丁寧語の目安：' + e.t, style:'margin:0;font-size:.85rem;color:var(--muted)' }));
+      host.append(card);
+    });
+  }
+  document.getElementById('btnKeigo').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

@@ -751,3 +751,15 @@ dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
   #printRoot .a4{ box-shadow:none; transform:none !important; margin:0; }
   #printRoot .a4.tall{ height:auto; }
 }
+
+/* ===== 12-F. AI写真ブリッジ 배너 (photo 탭 → ai-shashin 가이드, v2.21) ===== */
+.ai-bridge{ display:flex; align-items:center; gap:.9rem; flex-wrap:wrap;
+  border:1.5px solid color-mix(in srgb, var(--ok) 42%, var(--line));
+  background:linear-gradient(135deg, color-mix(in srgb, var(--ok) 10%, var(--panel)), color-mix(in srgb, var(--accent2) 8%, var(--panel)));
+  border-radius:14px; padding:.8rem 1rem; }
+.ai-bridge-txt{ flex:1 1 230px; min-width:0; }
+.ai-bridge-txt strong{ display:flex; align-items:center; gap:.4rem; font-size:.9rem; }
+.ai-bridge-txt .ic{ width:15px; height:15px; color:var(--ok); flex:none; }
+.ai-bridge-txt span{ display:block; margin-top:.22rem; font-size:.76rem; color:var(--muted); line-height:1.65; }
+.ai-bridge-link{ flex:none; }
+@media (max-width:767px){ .ai-bridge-link{ width:100%; } }

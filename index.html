@@ -23,7 +23,7 @@
   <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=2.20">
+  <link rel="stylesheet" href="style.css?v=2.21">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication",
    "name":"履歴スタジオ","alternateName":"Rireki Studio",
@@ -93,7 +93,7 @@
         <a class="btn ghost" href="guide/" id="btnGuide" title="書き方ガイド"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg><span class="bt-lbl">ガイド</span></a>
         <button class="btn ghost" id="btnTheme" type="button" title="ダーク/ライト切替" aria-label="テーマ切替"><svg class="ic ic-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="ic ic-sun" aria-hidden="true"><use href="#i-sun"/></svg></button>
         <button class="btn ghost" id="btnSettings" type="button" title="設定・データ管理" aria-label="設定"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg><span class="bt-lbl">設定</span></button>
-        <button class="btn primary" id="btnBackup" type="button" title="JSONバックアップを保存"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg><span class="bt-lbl">バックアップ</span></button>
+      <!-- v2.22: ヘッダーの個別バックアップボタンは削除 — 同機能が設定ダイアログ内にあり重複のため -->
       </nav>
     </div>
   </header>
@@ -156,7 +156,7 @@
     </div>
     <div class="hero-stats" aria-label="サービス実績の数字">
       <div class="stein"><b>12</b><span>すべて無料のツール</span></div>
-      <div class="stein"><b>19</b><span>書き方ガイド記事</span></div>
+      <div class="stein"><b>20</b><span>書き方ガイド記事</span></div>
       <div class="stein"><b>0</b><span>外部送信 — 完全ローカル</span></div>
       <div class="stein"><b>6</b><span>対応書類</span></div>
     </div>
@@ -194,7 +194,7 @@
         <ul>
           <li>多くのサイトが便利な機能を「会員登録」や「アプリ」の背面に置いています。当サイトはその制約がありません</li>
           <li>入力データが外部サーバーに残る心配がないため、住所・電話番号・顔写真も安心して扱えます</li>
-          <li>書き方ガイド（17本）と作成ツールが相互リンクしており、迷ったらすぐ解説に戻れます</li>
+          <li>書き方ガイド（20本）と作成ツールが相互リンクしており、迷ったらすぐ解説に戻れます</li>
         </ul>
       </details>
     </section>
@@ -388,6 +388,15 @@
           <li class="step" id="st3">背景・補正</li>
           <li class="step" id="st4">保存</li>
         </ol>
+
+        <!-- AI写真ブリッジ (v2.21): AI生成した写真の仕上げ導線 — ガイド記事 ai-shashin へ -->
+        <div class="ai-bridge">
+          <div class="ai-bridge-txt">
+            <strong><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>AIで作った写真をお持ちですか？</strong>
+            <span>ChatGPT・Geminiなどで生成した写真も、履歴書用サイズ（縦4×横3cm）に仕上げられます。失敗しない作り方とコピペ依頼文はガイドへ。</span>
+          </div>
+          <a class="btn ghost small ai-bridge-link" href="guide/ai-shashin.html">AI写真の作り方ガイド</a>
+        </div>
 
         <!-- 1) 드롭존 -->
         <div class="card dropzone" id="dz" tabindex="0" role="button" aria-label="写真をアップロード">
@@ -796,6 +805,6 @@
 <!-- 인쇄 전용 루트 (화면에서는 숨김) -->
 <div id="printRoot" aria-hidden="true"></div>
 
-<script src="app.js?v=2.20"></script>
+<script src="app.js?v=2.22"></script>
 </body>
 </html>

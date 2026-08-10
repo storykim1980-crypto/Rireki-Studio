@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!-- AIで証明写真を作る方法 (v2.21 AI写真ブリッジ — 写真 스튜디오 유입 기사) -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070b18" media="(prefers-color-scheme: dark)">
+  <title>AIで証明写真を無料で作る方法【コピペ依頼文つき】ChatGPT・Gemini活用 | 履歴スタジオ</title>
+  <meta name="description" content="ChatGPT・Geminiの無料枠で履歴書用の証明写真を作る方法。コピーしてそのまま使える依頼文(プロンプト)3パターンと、生成した写真を縦4×横3cmの規格に仕上げる手順・注意点を解説。">
+  <link rel="canonical" href="https://www.rireki-studio.com/guide/ai-shashin.html">
+  <meta property="og:title" content="AIで証明写真を無料で作る方法【コピペ依頼文つき】">
+  <meta property="og:description" content="ChatGPT・Geminiで生成→規格サイズに仕上げる安全な手順。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.rireki-studio.com/guide/ai-shashin.html">
+  <meta property="og:image" content="https://www.rireki-studio.com/assets/ogp.png">
+  <link rel="icon" href="../assets/favicon.svg?v=1.0" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="../style.css?v=1.0">
+  <link rel="stylesheet" href="guide.css?v=2.21">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article",
+   "headline":"AIで履歴書用の証明写真を無料で作る方法【コピペ依頼文つき】",
+   "description":"ChatGPT・Geminiの無料枠で証明写真を生成し、規格サイズに仕上げる手順と注意点を解説。",
+   "datePublished":"2026-08-10","dateModified":"2026-08-10",
+   "author":{"@type":"Organization","name":"履歴スタジオ"},
+   "publisher":{"@type":"Organization","name":"履歴スタジオ","url":"https://www.rireki-studio.com/"},
+   "mainEntityOfPage":"https://www.rireki-studio.com/guide/ai-shashin.html"}
+  </script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://www.rireki-studio.com/"}, {"@type": "ListItem", "position": 2, "name": "ガイド", "item": "https://www.rireki-studio.com/guide/"}, {"@type": "ListItem", "position": 3, "name": "AIで証明写真を作る方法", "item": "https://www.rireki-studio.com/guide/ai-shashin.html"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "履歴書にAIで作った写真を使っても問題ありませんか？", "acceptedAnswer": {"@type": "Answer", "text": "法的な禁止規定はありませんが、本人と酷似していることが前提です。面接で会ったときに別人に見えるほどの美化は逆効果になります。企業や学校から写真の指定がある場合は、その指示に従ってください。"}}, {"@type": "Question", "name": "すべて無料でできますか？", "acceptedAnswer": {"@type": "Answer", "text": "はい。ChatGPT・Google Gemini・Microsoft Copilotはいずれも無料枠で画像生成が可能です（回数制限があり、時期により変動します）。当サイトの証明写真スタジオも完全無料・登録不要で使えます。"}}, {"@type": "Question", "name": "パスポートや免許証にも使えますか？", "acceptedAnswer": {"@type": "Answer", "text": "使えません。パスポート・運転免許証・マイナンバーカードなど公的機関に提出する写真は、加工・生成していない真正な写真が必須です。AIで生成した写真は履歴書・プロフィール用途に限定してください。"}}]}</script>
+</head>
+<body>
+<!-- SVG 아이콘 스프라이트 (이모지 폰트 비의존) -->
+<svg class="svg-sprite" aria-hidden="true" focusable="false"
+     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-cam" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  </defs>
+</svg>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html">
+        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="currentColor" opacity=".15"/><rect x="18" y="12" width="28" height="40" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><rect x="23" y="18" width="11" height="8" fill="currentColor" opacity=".6"/><line x1="23" y1="32" x2="41" y2="32" stroke="currentColor" stroke-width="3"/><line x1="23" y1="39" x2="41" y2="39" stroke="currentColor" stroke-width="3"/></svg>
+        <span class="brand-text">履歴スタジオ<small>Rireki Studio</small></span>
+      </a>
+      <nav class="header-actions">
+        <a class="btn primary" href="../index.html#tab=photo"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>今すぐ作る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="article-wrap">
+    <nav class="breadcrumb" aria-label="パンくず">
+      <a href="../index.html">ホーム</a> &gt; <a href="index.html">ガイド</a> &gt; AIで証明写真
+    </nav>
+
+    <article class="article">
+      <span class="a-cat">証明写真</span>
+      <h1>AIで履歴書用の証明写真を無料で作る方法<br>【コピペ依頼文つき】</h1>
+      <p class="a-date">公開日：2026年8月10日</p>
+
+      <p>「証明写真を撮りに行く時間もお金もない」——そんなときの新しい選択肢が、<strong>ChatGPTやGeminiなどの画像生成AIで自撮りを証明写真に変換する方法</strong>です。無料枠で試せて、仕上がりも年々自然になっています。</p>
+      <p>この記事では、<strong>コピーしてそのまま使える依頼文（プロンプト）3パターン</strong>と、生成した写真を履歴書の規格（縦4cm×横3cm）に仕上げる手順、使う前に必ず知っておきたい注意点までまとめました。</p>
+
+      <div class="point-box">
+        <strong>なぜ当サイトにはAI生成機能がないの？</strong><br>
+        当サイトは「写真がお使いの端末の外に一切出ない」設計を守るため、あえてAI生成サーバーには接続していません。<strong>生成はあなた自身のAIアカウントで行い、仕上げ（規格ぴったりの切り抜き・補正・プリント用紙作成）は当サイトで</strong>——この分業なら、無料とプライバシー保護の両方が成立します。
+      </div>
+
+      <nav class="toc" aria-label="目次">
+        <p>この記事の目次</p>
+        <ol>
+          <li><a href="#sec1">用意するもの</a></li>
+          <li><a href="#sec2">無料で使える画像生成AI 3選</a></li>
+          <li><a href="#sec3">コピペOK！依頼文（プロンプト）3パターン</a></li>
+          <li><a href="#sec4">生成した写真を証明写真に仕上げる手順</a></li>
+          <li><a href="#sec5">AI写真の仕上がりチェック 5か条</a></li>
+          <li><a href="#sec6">使う前に知っておきたい注意点</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="sec1">用意するもの</h2>
+      <ul>
+        <li><strong>正面を向いた明るい自撮り</strong>1枚（自宅の白い壁の前で撮ったもので十分です。撮り方のコツは<a href="smartphone-photo.html">スマホで証明写真を作る方法</a>を参照）</li>
+        <li><strong>画像生成AIのアカウント</strong>（次の項で紹介する無料枠でOK）</li>
+      </ul>
+      <p>AIへの依頼は日本語の文章を送るだけ。難しい設定は不要です。</p>
+
+      <h2 id="sec2">無料で使える画像生成AI 3選</h2>
+      <ul>
+        <li><strong>ChatGPT（OpenAI）</strong>：自撮りをアップロードして依頼文を送るだけ。依頼文の意図をくみ取る精度が高く、服装変換が得意です</li>
+        <li><strong>Google Gemini</strong>：Googleアカウントがあればすぐ使え、画像の部分的な編集（背景だけ変更など）に強いのが特徴です</li>
+        <li><strong>Microsoft Copilot</strong>：Microsoftアカウントで画像生成が可能。手軽さ重視ならこちらでも代替できます</li>
+      </ul>
+      <p>いずれも<strong>無料枠に1日あたりの生成回数の上限</strong>があります（時期により変動するため、最新の条件は各サービスの案内をご確認ください）。証明写真なら数回の試行で十分仕上がります。</p>
+
+      <h2 id="sec3">コピペOK！依頼文（プロンプト）3パターン</h2>
+      <p>AIに自撮りをアップロードしたら、下の依頼文をそのまま貼り付けて送ります。ポイントは<strong>「顔の特徴は変えない」と明記すること</strong>です。</p>
+
+      <div class="prompt-card">
+        <p class="pc-title">①スーツ変換・標準（いちばんおすすめ）</p>
+        <pre id="pr1">この写真を、就職活動で使う証明写真に変換してください。服装は紺色のスーツ（ジャケット）に白いシャツまたはブラウス姿にしてください。背景は白から淡いグレーの無地のグラデーションにしてください。顔の輪郭・目・鼻・口・髪型など人物の特徴は絶対に変えず、本人だと分かる自然な仕上がりにしてください。表情は自然な微笑みで、胸から上が写る正面構図にしてください。</pre>
+        <button class="btn small pc-copy" type="button" data-target="pr1"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>この依頼文をコピー</button>
+      </div>
+
+      <div class="prompt-card">
+        <p class="pc-title">②白背景・きっちり証明写真（服装はそのまま）</p>
+        <pre id="pr2">この写真を証明写真に整えてください。背景を無地の白に差し替え、頭の上にごくわずかな余白、顔が画面中央に来る胸上（上半身）の構図にしてください。顔立ち・髪型・肌色・服装は一切変更しないでください。照明は均一で、顔や背景に影が出ないようにしてください。</pre>
+        <button class="btn small pc-copy" type="button" data-target="pr2"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>この依頼文をコピー</button>
+      </div>
+
+      <div class="prompt-card">
+        <p class="pc-title">③背景だけ差し替え（撮影済みの写真向け）</p>
+        <pre id="pr3">この証明写真の背景だけを、淡いブルーグレーの無地に変更してください。顔・髪・服装・ポーズは完全にそのまま維持し、髪の輪郭が自然に見えるようにしてください。</pre>
+        <button class="btn small pc-copy" type="button" data-target="pr3"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>この依頼文をコピー</button>
+      </div>
+
+      <div class="point-box">
+        仕上がりが気に入らないときは、依頼文の最後に条件を付け足して再生成しましょう。例：<strong>「顔の特徴をもっと忠実に保ってください」「肩まで入る構図にしてください」「微笑みではなく真顔にしてください」</strong>
+      </div>
+
+      <h2 id="sec4">生成した写真を証明写真に仕上げる手順</h2>
+      <p>AIでできた写真は、自由なサイズ・構図で出力されます。これを当サイトの証明写真スタジオで<strong>履歴書の規格（縦4cm×横3cm・3:4）ぴったり</strong>に仕上げます。</p>
+      <ol>
+        <li><strong>アップロード</strong>：生成した写真をドラッグ＆ドロップ（画像は端末の中だけで処理され、外部に送信されません）</li>
+        <li><strong>範囲を決める</strong>：顔と肩がバランスよく収まるよう、3:4の枠をドラッグで調整</li>
+        <li><strong>背景・補正</strong>：背景の色味を整え、「履歴書 標準」プリセットで明るさを最適化</li>
+        <li><strong>保存</strong>：PNGで保存 → 履歴書への貼り付けは「プリント用紙（L判）」機能でコンビニ印刷も可能です</li>
+      </ol>
+
+      <div class="cta-box">
+        <p>生成した写真を、履歴書規格の証明写真に仕上げましょう。<br>無料・登録不要・画像は端末内で処理されます。</p>
+        <a class="btn" href="../index.html#tab=photo"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>証明写真スタジオで仕上げる</a>
+        <span class="cta-sub">データはブラウザ内にのみ保存。外部送信は一切ありません。</span>
+      </div>
+
+      <h2 id="sec5">AI写真の仕上がりチェック 5か条</h2>
+      <p>AIの仕上がりは毎回同じではありません。提出前にこの5点を確認しましょう。</p>
+      <ol>
+        <li><strong>髪の輪郭・耳まわり</strong>：背景となじんで不自然に欠けたり、にじんだりしていないか</li>
+        <li><strong>眼鏡・ピアス</strong>：フレームが変形したり、片方だけ増えたりしていないか</li>
+        <li><strong>襟・ネクタイ・ボタン</strong>：左右対称で、シャツの襟がきれいに揃っているか</li>
+        <li><strong>目の光・歯</strong>：白目の反射や歯並びが不自然でないか</li>
+        <li><strong>なにより本人に見えるか</strong>：家族・友人に「これ、あなたに見える？」と確認するのが最も確実です</li>
+      </ol>
+
+      <h2 id="sec6">使う前に知っておきたい注意点</h2>
+      <div class="caution-box">
+        <ul>
+          <li><strong>パスポート・運転免許証・マイナンバーカードなど公的書類には使えません。</strong>加工・生成した写真は受理されません。真正な写真が必須です</li>
+          <li><strong>本人と酷似していることが暗黙の前提です。</strong>面接で「写真と違う人が来た」と思われる過度な美化は、印象を大きく損ないます</li>
+          <li><strong>企業・学校・応募先から写真の指定がある場合は、必ずその指示に従ってください</strong>（写真館撮影の指定がある場合など）</li>
+          <li>ご自身の顔写真は重要な個人情報です。生成に使うAIサービスの<strong>利用規約（画像が学習に使われるか等の設定）</strong>を確認しておくと安心です</li>
+        </ul>
+      </div>
+
+      <h2>よくある質問</h2>
+      <h3>履歴書にAIで作った写真を使っても問題ありませんか？</h3>
+      <p>法的な禁止規定はありません。ただし<strong>本人と酷似していることが前提</strong>ですし、受け取る企業の考え方はさまざまです。指定がない一般的な履歴書・アルバイト応募では利用が広がっていますが、不安な場合は通常の撮影写真を使いましょう。</p>
+      <h3>すべて無料でできますか？</h3>
+      <p>はい。本記事で紹介した3つのAIはいずれも無料枠があり、当サイトの証明写真スタジオも<strong>完全無料・登録不要</strong>です。</p>
+      <h3>AIなしで証明写真を作りたい場合は？</h3>
+      <p>当サイトは自撮りの編集（背景を白に置き換え・明るさ補正・規格サイズ切り抜き）だけでも完結します。<a href="smartphone-photo.html">スマホで証明写真を無料で作る方法</a>の手順どおりに進めてください。</p>
+
+      <h3>関連ガイド</h3>
+      <div class="rel-grid">
+        <a class="rel-card" href="smartphone-photo.html"><span class="rc-cat">写真</span><div class="rc-title">スマホで証明写真を無料で作る方法</div><div class="rc-desc">背景白・サイズ変換・プリントまでの完全手順</div></a>
+        <a class="rel-card" href="shashin-size.html"><span class="rc-cat">写真</span><div class="rc-title">写真サイズは縦4cm×横3cm</div><div class="rc-desc">規格サイズ・撮影ルール・貼り方の基本</div></a>
+        <a class="rel-card" href="print-guide.html"><span class="rc-cat">印刷</span><div class="rc-title">履歴書の印刷方法まとめ</div><div class="rc-desc">コンビニ・自宅プリントの手順</div></a>
+      </div>
+
+      <div class="share-row" aria-label="共有">
+        <span class="share-lbl">この記事を共有:</span>
+        <a class="share-btn" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fwww.rireki-studio.com%2Fguide%2Fai-shashin.html&text=AI%E3%81%A7%E8%A8%BC%E6%98%8E%E5%86%99%E7%9C%9F%E3%82%92%E7%84%A1%E6%96%99%E3%81%A7%E4%BD%9C%E3%82%8B%E6%96%B9%E6%B3%95%E3%80%90%E3%82%B3%E3%83%94%E3%83%9A%E4%BE%9D%E9%A0%BC%E6%96%87%E3%81%A4%E3%81%8D%E3%80%91" target="_blank" rel="noopener">𝕏 でポスト</a>
+        <a class="share-btn" href="https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Fwww.rireki-studio.com%2Fguide%2Fai-shashin.html" target="_blank" rel="noopener">LINEで送る</a>
+      </div>
+
+      <!-- AdSense 인아티클 슬롯 (승인 후 활성화) -->
+      <div class="ad-slot" data-ad-on="0" aria-hidden="true"></div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <nav class="foot-links">
+      <a href="../terms.html">利用規約</a>
+      <a href="../privacy.html">プライバシーポリシー</a>
+      <a href="../contact.html">お問い合わせ</a>
+      <a href="../about.html">運営者情報</a>
+      <a href="../offline/rireki-studio-offline.zip">オフライン版</a>
+    </nav>
+    <p class="foot-note">履歴スタジオ — データはブラウザ内にのみ保存されます</p>
+  </footer>
+
+<script>
+/* AI依頼文 프롬프트 복사 버튼 (정적 HTML 바인딩 — clipboard API + 구형 폐백, innerHTML 미사용) */
+(function(){
+  'use strict';
+  function copyText(txt, done){
+    var legacy = function(){
+      var t = document.createElement('textarea');
+      t.value = txt; t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.append(t); t.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      t.remove(); done();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done, legacy);
+    } else legacy();
+  }
+  document.querySelectorAll('.pc-copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var pre = document.getElementById(btn.getAttribute('data-target'));
+      if (!pre) return;
+      copyText(pre.textContent, function(){
+        var old = btn.textContent;
+        btn.textContent = 'コピーしました'; btn.disabled = true;
+        setTimeout(function(){ btn.textContent = old; btn.disabled = false; }, 1600);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

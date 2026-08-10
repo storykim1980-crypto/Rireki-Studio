@@ -2183,7 +2183,7 @@ function bindImport(){
 }
 function bindDataButtons(){
   $('btnExport').addEventListener('click', exportJson);
-  $('btnBackup').addEventListener('click', exportJson);
+  /* v2.22: 헤더 バックアップ 버튼 삭제 — 書き出し는 設定 다이얼로그(btnExport)로 일원화 */
   $('btnImport').addEventListener('click', ()=> $('impFile').click());
   $('btnResetAll').addEventListener('click', ()=>{
     if (!confirm('すべての入力データを削除しますか？この操作は元に戻せません。')) return;

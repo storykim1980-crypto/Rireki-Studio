@@ -23,7 +23,7 @@
   <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=2.34">
+  <link rel="stylesheet" href="style.css?v=2.36">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication",
    "name":"履歴スタジオ","alternateName":"Rireki Studio",
@@ -159,6 +159,76 @@
         <span class="hero-chip c1"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>証明写真もワンタップ</span>
         <span class="hero-chip c2"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>A4ぴったり印刷</span>
         <span class="hero-chip c3"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>和暦 自動変換</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- v2.35: 証明写真 스튜디오 프로모 — 이 사이트의 차별화 자산(배경 자동제거+보정 슬라이더+브러시)을 히어로 직하에 강조.
+       Before/After 드래그 비교로 '보정 가능'을 즉각 시연. 외부 이미지 0·순수 인라인 SVG (오프라인 정책 유지) -->
+  <section class="photo-promo" id="photoPromo" aria-labelledby="pp-title">
+    <div class="pp-inner">
+      <div class="pp-copy">
+        <span class="pp-badge"><svg class="ic" aria-hidden="true"><use href="#i-aperture"/></svg>イチ推し機能 — 履歴スタジオだけ</span>
+        <h2 id="pp-title">スマホの自撮りが、<br><span class="hl">1分で「証明写真」</span>に。</h2>
+        <p class="pp-sub">面倒な背景は自動で除去。明るさ・コントラスト・彩度はスライダーで自在に補正し、はみ出しは仕上げブラシで微調整。履歴書にそのまま貼れる縦4cm×横3cmへ自動で裁断されるので、写真スタジオ代も移動時間もゼロです。</p>
+        <ul class="pp-feats">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-crop"/></svg>背景 自動除去</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg>明るさ・彩度 スライダー</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg>はみ出し 仕上げブラシ</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>縦4×横3cm 自動裁断</li>
+        </ul>
+        <div class="pp-cta">
+          <button class="btn hero-btn" id="ppGo" type="button"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>証明写真を今すぐつくる</button>
+          <a class="pp-guide" href="guide/smartphone-photo.html">スマホ1台で撮るコツ →</a>
+        </div>
+      </div>
+      <div class="pp-demo">
+        <div class="pp-ba" id="ppBa" role="slider" tabindex="0"
+             aria-label="補正前後の比較スライダー（左右にドラッグ）" aria-valuemin="4" aria-valuemax="96" aria-valuenow="50">
+          <!-- BEFORE: 방에서 찍은 스마호 셀카 (배경 지저분 + 조명 그림자) -->
+          <svg viewBox="0 0 300 360" aria-hidden="true">
+            <rect width="300" height="360" fill="#e9dcc7"/>
+            <rect x="18" y="24" width="86" height="98" rx="6" fill="#cfe4f4" stroke="#b7a684" stroke-width="5"/>
+            <line x1="61" y1="24" x2="61" y2="122" stroke="#b7a684" stroke-width="4"/>
+            <line x1="18" y1="73" x2="104" y2="73" stroke="#b7a684" stroke-width="4"/>
+            <rect x="212" y="36" width="62" height="80" rx="4" fill="#f4c63a" opacity=".85"/>
+            <rect x="220" y="46" width="46" height="42" rx="3" fill="#fff" opacity=".7"/>
+            <ellipse cx="52" cy="330" rx="38" ry="14" fill="#c8b394"/>
+            <path d="M52 330 c-14-30 -22-52 -14-78 6 18 10 24 14 30 0-26 8-44 16-56 4 20 2 34-2 46 10-14 20-22 30-26 -8 16-14 30-16 46 8-8 16-12 24-14 -10 14-16 30-18 52z" fill="#5a7d4f"/>
+            <ellipse cx="196" cy="152" rx="44" ry="50" fill="rgba(60,40,20,.14)"/>
+            <path d="M64 336 c0-60 40-102 86-102 s86 42 86 102 l0 24 -172 0z" fill="#697586"/>
+            <rect x="120" y="198" width="60" height="30" rx="12" fill="#eab892"/>
+            <circle cx="150" cy="152" r="52" fill="#f3c39d"/>
+            <path d="M98 152 a52 52 0 0 1 104 0 l-9 5 c-2-24-11-38-25-44 -3 11-12 16-25 16 s-23-5-27-14 c-9 9-14 21-18 37z" fill="#3a2c2c"/>
+            <g><rect x="10" y="10" width="118" height="24" rx="12" fill="rgba(20,26,46,.72)"/>
+            <text x="69" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="sans-serif">BEFORE 自撮り</text></g>
+          </svg>
+          <!-- AFTER: 깨끗한 스튜디오 배경 + 정장 + 証明写真 프레임 -->
+          <svg class="pp-after" viewBox="0 0 300 360" aria-hidden="true">
+            <defs>
+              <linearGradient id="ppBg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#5b83f2"/><stop offset="1" stop-color="#2c47a8"/>
+              </linearGradient>
+              <radialGradient id="ppLight" cx=".5" cy=".18" r=".7">
+                <stop offset="0" stop-color="rgba(255,255,255,.30)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/>
+              </radialGradient>
+            </defs>
+            <rect width="300" height="360" fill="url(#ppBg)"/>
+            <rect width="300" height="360" fill="url(#ppLight)"/>
+            <path d="M64 336 c0-60 40-102 86-102 s86 42 86 102 l0 24 -172 0z" fill="#1d2a52"/>
+            <path d="M132 232 l18-12 18 12 -18 34z" fill="#ffffff"/>
+            <path d="M147 226 h6 l4 12 -7 26 -7-26z" fill="#8b1e2d"/>
+            <rect x="120" y="198" width="60" height="30" rx="12" fill="#eab892"/>
+            <circle cx="150" cy="152" r="52" fill="#f3c39d"/>
+            <path d="M98 152 a52 52 0 0 1 104 0 l-9 5 c-2-24-11-38-25-44 -3 11-12 16-25 16 s-23-5-27-14 c-9 9-14 21-18 37z" fill="#3a2c2c"/>
+            <rect x="12" y="12" width="276" height="336" rx="10" fill="none" stroke="#ffffff" stroke-width="5"/>
+            <g><rect x="162" y="10" width="128" height="24" rx="12" fill="rgba(20,26,46,.72)"/>
+            <text x="226" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#ffe08a" font-family="sans-serif">AFTER 証明写真</text></g>
+          </svg>
+          <div class="pp-divider" aria-hidden="true"></div>
+          <div class="pp-handle" aria-hidden="true"></div>
+        </div>
+        <p class="pp-cap">← ドラッグで比較 →　自撮りが、その場で証明写真に</p>
       </div>
     </div>
   </section>
@@ -458,6 +528,8 @@
           </div>
 
           <div class="slider-row"><label for="rngTol">背景除去の強さ</label><input type="range" id="rngTol" min="10" max="100" value="45"></div>
+          <!-- v2.36: 白い服が背景に溶けるケースの自助ガイド（バグ問い合わせ予防） -->
+          <p class="tol-hint">白っぽい服が背景と似た色の場合、服の一部が消えることがあります。その際は数値を下げるか、下の「仕上げブラシ → 戻す」で修復してください。</p>
           <div class="slider-row"><label for="rngBri">明るさ</label><input type="range" id="rngBri" min="70" max="130" value="100"></div>
           <div class="slider-row"><label for="rngCon">コントラスト</label><input type="range" id="rngCon" min="70" max="130" value="100"></div>
           <div class="slider-row"><label for="rngSat">彩度</label><input type="range" id="rngSat" min="50" max="150" value="100"></div>
@@ -831,6 +903,6 @@
 <!-- 인쇄 전용 루트 (화면에서는 숨김) -->
 <div id="printRoot" aria-hidden="true"></div>
 
-<script src="app.js?v=2.34"></script>
+<script src="app.js?v=2.36"></script>
 </body>
 </html>

@@ -488,8 +488,9 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
 /* v2.33: ふりがな 표시 개선 — 라벨·칵나 동크기 나열에서, 厚労省 양식처럼 '라벨은 좌측 소형 / 칵나는 칸 전체 중앙+자간'으로 */
 .r-kana-line{ position:relative; width:100%; text-align:center; align-self:center; }
 .r-kana-label{ position:absolute; left:.4mm; top:50%; transform:translateY(-50%); font-size:2.2mm; color:#333; }
-.r-kana-val{ font-size:3.3mm; letter-spacing:.6mm; color:#111; }
-.r-name{ font-size:7mm; font-weight:700; letter-spacing:1.5mm; display:block; margin-top:.5mm; }
+.r-kana-val{ font-size:3.3mm; letter-spacing:.6mm; color:#111; padding-left:.6mm; }   /* 패딩 보정 = letter-spacing (시각적 정중앙) */
+.r-name{ font-size:7mm; font-weight:700; letter-spacing:1.5mm; display:block; margin-top:.5mm;
+  padding-left:1.5mm; text-align:center; }   /* v2.36: 중앙 정렬 + letter-spacing 뒷여백만큼 패딩 보정해 시각적 정중앙 */
 .r-sect{ background:#f0f0f0; text-align:center; font-weight:700; letter-spacing:4mm; padding:.8mm 0;   /* v2.30: 압축 */
   border-bottom:.2mm solid #555; border-right:.2mm solid #555; grid-column:1 / -1; }
 .a4.modern .r-sect{ background:#e9eefc; color:#1e3a8a; letter-spacing:2mm; }
@@ -532,6 +533,7 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
 .edit-canvas-wrap{ margin:.9rem 0; }
 .slider-row{ display:grid; grid-template-columns:110px 1fr; align-items:center; gap:.6rem; margin:.5rem 0; text-align:left; }
 .slider-row label{ font-size:.8rem; font-weight:800; color:var(--muted); }
+.tol-hint{ margin:.1rem 0 .5rem; font-size:.72rem; line-height:1.55; color:var(--muted); }  /* v2.36: 배경 제거 강도 가이드 */
 input[type="range"]{ width:100%; height:34px; accent-color:var(--accent); cursor:pointer; }
 .preset-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; margin-bottom:.9rem; }
 .preset-btn{ display:flex; flex-direction:column; align-items:center; gap:.25rem; padding:.7rem .2rem; min-height:64px;
@@ -792,3 +794,55 @@ dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
   .hp-cap em{ font-style:normal; color:#9db1e2; font-size:.64rem; font-weight:600; }
 }
 @media (max-width:359px){ .hp-cap em{ display:none; } }
+
+/* ================================================================
+   v2.35: 証明写真 스튜디오 프로모 밴드 (히어로 직하) — 차별화 기능 강조
+   브랜드 그라디언트로 히어로와 시각적 연속. Before/After 드래그 비교 데모 포함
+================================================================ */
+.photo-promo{ position:relative; color:#fff;
+  background:
+    radial-gradient(720px 380px at 8% -10%, rgba(242,185,13,.16), transparent 60%),
+    linear-gradient(160deg,#1e3a8a 0%, #2447c0 52%, #1b2f6e 100%);
+  padding:clamp(2.1rem,4vw,3.2rem) 1.2rem; border-top:1px solid rgba(255,255,255,.08); }
+.pp-inner{ max-width:1160px; margin:0 auto; display:grid; grid-template-columns:1.05fr .95fr;
+  gap:clamp(1.4rem,3.2vw,3rem); align-items:center; }
+.pp-badge{ display:inline-flex; align-items:center; gap:.4rem; font-size:.74rem; font-weight:800; letter-spacing:.02em;
+  color:#ffe9a8; background:rgba(246,201,69,.14); border:1px solid rgba(246,201,69,.38);
+  border-radius:999px; padding:.34rem .8rem; }
+.pp-badge .ic{ width:14px; height:14px; }
+.pp-copy h2{ margin:.85rem 0 .6rem; font-size:clamp(1.45rem,2.6vw,2.1rem); font-weight:900; line-height:1.4; letter-spacing:-.01em; }
+.pp-copy h2 .hl{ color:#ffd84d; }
+.pp-sub{ font-size:.92rem; line-height:1.95; color:rgba(255,255,255,.84); max-width:34em; }
+.pp-feats{ display:flex; flex-wrap:wrap; gap:.45rem .55rem; margin:1.05rem 0 1.25rem; padding:0; list-style:none; }
+.pp-feats li{ display:inline-flex; align-items:center; gap:.38rem; font-size:.78rem; font-weight:700;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+  padding:.4rem .72rem; border-radius:999px; }
+.pp-feats .ic{ width:15px; height:15px; }
+.pp-cta{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+.pp-guide{ font-size:.82rem; font-weight:700; color:#cfe0ff; text-decoration:underline; text-underline-offset:3px; }
+.pp-guide:hover{ color:#fff; }
+
+/* Before/After 비교: --ba 변수 = 분할선 위치(%). JS(pointer drag / 방향키)가 갱신 */
+.pp-demo{ justify-self:center; width:min(100%, 400px); }
+.pp-ba{ --ba:50%; position:relative; aspect-ratio:5/6; border-radius:18px; overflow:hidden;
+  box-shadow:0 24px 60px rgba(5,12,40,.45); cursor:ew-resize; touch-action:none;
+  user-select:none; -webkit-user-select:none; }
+.pp-ba:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+.pp-ba svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.pp-after{ clip-path:inset(0 0 0 var(--ba)); }            /* 분할선 왼쪽은 BEFORE, 오른쪽은 AFTER */
+.pp-divider{ position:absolute; top:0; bottom:0; left:var(--ba); width:3px; transform:translateX(-50%);
+  background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.18); pointer-events:none; }
+.pp-handle{ position:absolute; top:50%; left:var(--ba); transform:translate(-50%,-50%);
+  width:44px; height:44px; border-radius:50%; background:#fff;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.32); pointer-events:none; }
+/* 핸들 화살표: 글리프(◂▸) 폰트 미지원 환경에서 깨지는 것 대신 순수 CSS 삼각형 */
+.pp-handle::before,.pp-handle::after{ content:""; width:0; height:0; border-style:solid; }
+.pp-handle::before{ border-width:5px 7px 5px 0; border-color:transparent #1e3a8a transparent transparent; margin-right:4px; }
+.pp-handle::after{ border-width:5px 0 5px 7px; border-color:transparent transparent transparent #1e3a8a; margin-left:4px; }
+.pp-cap{ text-align:center; font-size:.75rem; font-weight:600; color:rgba(255,255,255,.74); margin:.7rem 0 0; }
+
+@media (max-width:860px){
+  .pp-inner{ grid-template-columns:1fr; }
+  .pp-demo{ width:min(100%,330px); }
+}

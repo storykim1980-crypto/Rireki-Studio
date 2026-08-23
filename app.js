@@ -766,8 +766,9 @@ function buildRirekiA4(){
   else photoBox.append(h('span',{text:'写真を貼る位置\n（縦4cm×横3cm）'}), );
 
   const nameRow = h('div',{class:'r-row name', style:'grid-template-columns:1fr;flex:1'},
-    h('div',{class:'c', style:'flex-direction:column;align-items:flex-start;justify-content:center;gap:.8mm'},
-      /* v2.33: 라벨(左소형) + 칵나(중앙) 분리 — 공식 양식 배치 */
+    /* v2.36: 칵나(중앙) 아래에 이름(좌측)이 어긋나 있던 배치 수정 — 이름도 중앙 정렬해
+       「ふりがな → 氏名」 세로축을 공식 양식처럼 일치시킴 */
+    h('div',{class:'c', style:'flex-direction:column;align-items:center;justify-content:center;gap:.8mm'},
       h('div',{class:'r-kana-line'},
         h('span',{class:'r-kana-label', text:'ふりがな'}),
         h('span',{class:'r-kana-val', text:p.nameKana||''})),
@@ -1092,7 +1093,7 @@ async function renderResumePNG(){
       birthLine = '生年月日　' + fmtYM(by,bm) + bm + '月' + bdy + '日生（満' + computeAge(by,bm,bdy) + '歳）';
     }
     for (const r of idRows){
-      if (r.big){ text(r.val, X1+3, y + r.h/2, 7, 'left', true); }
+      if (r.big){ text(r.val, (X1+X2)/2, y + r.h/2, 7, 'center', true); }   /* v2.36: 이름 중앙 정렬 (ふりがな와 세로축 일치) */
       else if (r.val === 'sex'){
         text(birthLine, X1+3, y + r.h/2, 4.2);
         text(p.gender ? '性別　' + p.gender : '性別', r.split+3, y + r.h/2, 4.2);
@@ -1334,29 +1335,100 @@ function doCrop(){
   composite();
   toast('範囲を確定しました。背景と補正を調整してください');
 }
-/* --- 12-3. 크로마키 배경 제거 (모서리 색 샘플 + 유사도 마스크) --- */
+/* --- 12-3. 배경 제거 마스크 (모서리 색 샘플 + 가장자리 연결 BFS 플러드필) ---
+   v2.36 근본 수정: 종전은 '배경색과 거리가 가까운 픽셀을 화면 전체에서 제거'하는 전역 크로마키라,
+   코 끝의 밝은 하이라이트나 흰 와이셔츠처럼 인물 "내부"의 밝은 영역까지 배경으로 오판해 지워버리는
+   심각한 결함이 있었다 (흰 얼룩·화질 붕괴의 원인).
+   → ①배경색 유사 픽셀이더라도 가장자리(테두리)와 연결된 영역만 배경으로 인정(BFS),
+     ②인물 내부 픽셀은 색이 아무리 비슷하든 절대 지우지 않음,
+     ③경계는 feather 대역 부분 알파 + 3×3 블러로 부드럽게. */
 function buildMask(){
   const src = photoS.cropped, w = src.width, hgt = src.height;
   const ctx = src.getContext('2d');
   const data = ctx.getImageData(0,0,w,hgt).data;
-  /* 모서리 4점 8×8 평균 → 배경 기준색 */
+  const N = w * hgt;
+  /* 모서리 4점 8×8 평균 → 배경 기준색.
+     v2.36+: 모서리끼리 색이 크게 다륾면(옷·인물이 모서리까지 닿은 경우) 초상권 사진 특성상
+     '위쪽 모서리 = 배경'이 가장 안전하므로 상단 2점만 사용해 기준색 오염을 막는다 */
   const pts = [[0,0],[w-8,0],[0,hgt-8],[w-8,hgt-8]];
-  let kr=0, kg=0, kb=0, n=0;
-  for (const [px,py] of pts){
+  const corners = pts.map(([px,py])=>{
+    let r=0,g=0,b=0,n2=0;
     for (let y=py;y<py+8;y++) for (let x=px;x<px+8;x++){
-      const i=(y*w+x)*4; kr+=data[i]; kg+=data[i+1]; kb+=data[i+2]; n++;
+      const i=(y*w+x)*4; r+=data[i]; g+=data[i+1]; b+=data[i+2]; n2++;
     }
+    return [r/n2, g/n2, b/n2];
+  });
+  let pairMax = 0;
+  for (let a=0;a<4;a++) for (let b=a+1;b<4;b++){
+    const d=Math.hypot(corners[a][0]-corners[b][0], corners[a][1]-corners[b][1], corners[a][2]-corners[b][2]);
+    if (d>pairMax) pairMax=d;
   }
+  const pool = pairMax > 60 ? [corners[0], corners[1]] : corners;   // 불일치 시 상단 모서리 우선
+  let kr=0, kg=0, kb=0, n=0;
+  for (const c of pool){ kr+=c[0]; kg+=c[1]; kb+=c[2]; n++; }
   kr/=n; kg/=n; kb/=n;
-  const t0 = photoS.tol * 2.0, t1 = t0 * 1.45;        // 유사도 임계 + 페더링 경계
+  const t0 = photoS.tol * 2.0, t1 = t0 * 1.45;        // 내부 유사도 임계 + 페더링 경계
+  /* 이웃 스텝 상한: 실물 스마트폰 사진의 어깨/옷깃 초점면은 1~3px로 비교적 선명해 코어 스텝이
+     9~25/px, 배경 벽의 조명 그라디언트는 0.1~3/px → 9 근처에서 둘을 가른다.
+     ※ 순백 셔츠 × 순백 벽처럼 색 자체가 동일한 경우는 물리적으로 구분 불가 → UI 힌트+브러시로 안내 */
+  const tLoc = Math.max(9, t0*0.1);
+  /* 1) 각 픽셀과 배경 기준색의 거리 맵 */
+  const dist = new Float32Array(N);
+  for (let p=0, i=0; p<N; p++, i=p*4){
+    const dr=data[i]-kr, dg=data[i+1]-kg, db=data[i+2]-kb;
+    dist[p] = Math.sqrt(dr*dr+dg*dg+db*db);
+  }
+  /* 2) 가장자리 연결 배경 판정 (BFS): 테두리에서 시작해 '배경 유사색'으로 이어진 픽셀만 isBg.
+     v2.36+: 이중 제약 — ①배경 기준색과의 거리 ≤ t0, ②전파 시 이웃 픽셀과의 색 스텝 ≤ tLoc.
+     ②가 어깨·옷깃의 희미한 윤곽선(그림자·색변화)에서 플러드를 멈춰줘,
+     배경색과 비슷한 밝은 옷까지 삼켜버리는 문제를 최대한 억제한다 */
+  const isBg = new Uint8Array(N);
+  const stack = new Int32Array(N); let sp = 0;
+  /* 시드 이중 기준: 상단 변은 t0(머리 위 배경이 가장 확실), 좌우·하단 변은 t0*0.45로 엄격하게 —
+     하단/측면 테두리를 채우는 밝은 '옷'이 시드로 오인돼 통째로 삼켜지는 것을 차단.
+     벽이 비네트 등으로 다소 어두워도(t0*0.45 이내) 정상 시드되도록 여유는 유지 */
+  const tSeed = t0 * 0.45;
+  const seedTop  = (idx)=>{ if (!isBg[idx] && dist[idx] <= t0){ isBg[idx]=1; stack[sp++]=idx; } };
+  const seedSide = (idx)=>{ if (!isBg[idx] && dist[idx] <= tSeed){ isBg[idx]=1; stack[sp++]=idx; } };
+  for (let x=0;x<w;x++){ seedTop(x); seedSide((hgt-1)*w+x); }
+  for (let y=0;y<hgt;y++){ seedSide(y*w); seedSide(y*w + w-1); }
+  while (sp){
+    const idx = stack[--sp];
+    const x = idx % w, y = (idx / w) | 0;
+    const fi = idx*4;
+    const tryRel = (to)=>{                        // 전파: 유사색 + 이웃 스텝 모두 만족해야
+      if (isBg[to] || dist[to] > t0) return;
+      const ti = to*4;
+      const dr=data[fi]-data[ti], dg=data[fi+1]-data[ti+1], db=data[fi+2]-data[ti+2];
+      if (dr*dr+dg*dg+db*db > tLoc*tLoc) return;
+      isBg[to]=1; stack[sp++]=to;
+    };
+    if (x>0) tryRel(idx-1);
+    if (x<w-1) tryRel(idx+1);
+    if (y>0) tryRel(idx-w);
+    if (y<hgt-1) tryRel(idx+w);
+  }
+  /* 3) 알파 맵: 배경=0 / 인물=255 / 배경에 맞닿은 feather 대역 경계 픽셀은 부분 알파 */
+  const alpha = new Uint8ClampedArray(N);
+  for (let p=0;p<N;p++){
+    if (isBg[p]){ alpha[p]=0; continue; }
+    const x=p%w, y=(p/w)|0;
+    const edge = (x>0 && isBg[p-1]) || (x<w-1 && isBg[p+1]) || (y>0 && isBg[p-w]) || (y<hgt-1 && isBg[p+w]);
+    alpha[p] = edge ? clamp(Math.round((dist[p]-t0)/(t1-t0)*255), 0, 255) : 255;
+  }
+  /* 4) 경계 3×3 박스 블러 (계단 현상 완화 — 내부는 인접 픽셀이 전부 255라 영향 없음) */
+  const blur = new Uint8ClampedArray(N);
+  for (let y=0;y<hgt;y++) for (let x=0;x<w;x++){
+    let s=0, c=0;
+    for (let dy=-1;dy<=1;dy++){ const yy=y+dy; if (yy<0||yy>=hgt) continue;
+      for (let dx=-1;dx<=1;dx++){ const xx=x+dx; if (xx<0||xx>=w) continue;
+        s += alpha[yy*w+xx]; c++; } }
+    blur[y*w+x] = s/c;
+  }
   const mask = document.createElement('canvas'); mask.width=w; mask.height=hgt;
   const mctx = mask.getContext('2d');
   const mi = mctx.createImageData(w,hgt);
-  for (let i=0; i<data.length; i+=4){
-    const d = Math.sqrt((data[i]-kr)**2 + (data[i+1]-kg)**2 + (data[i+2]-kb)**2);
-    const a = d <= t0 ? 0 : d >= t1 ? 255 : Math.round((d-t0)/(t1-t0)*255);
-    mi.data[i]=0; mi.data[i+1]=0; mi.data[i+2]=0; mi.data[i+3]=a;   // 알파=유지량
-  }
+  for (let p=0, i=0; p<N; p++, i=p*4) mi.data[i+3] = blur[p];   // 알파 = 인물 유지량
   mctx.putImageData(mi,0,0);
   photoS.mask = mask;
 }
@@ -1365,13 +1437,19 @@ function composite(){
   if (!photoS.cropped || !photoS.mask) return;
   const w = photoS.cropped.width, hgt = photoS.cropped.height;
   const P = PRESETS[photoS.preset];
-  /* 1) 마스크 적용 (인물만 추출) */
+  /* 1) 인물 레이어 준비 (원본 RGB 복사)
+     v2.36: 샤프닝은 마스크 적용 '전'에 수행한다. 종전엔 마스크 적용 후(투명 가장자리RGB=블랙)에
+     언샤프를 걸어 인물 윤곽에 검은 헤일로가 생기는 화질 결함이 있었다 → 원본에서 샤프닝 후 마스킹으로 해결 */
   const person = document.createElement('canvas'); person.width=w; person.height=hgt;
   const pctx = person.getContext('2d');
   pctx.drawImage(photoS.cropped,0,0);
+  /* 2) 샤프닝 (언샤프 3×3, 불투명 원본에서만 수행 → compounding 없음) */
+  if (P.sharp) sharpen(person);
+  /* 3) 마스크 적용 (인물만 추출) */
   pctx.globalCompositeOperation = 'destination-in';
   pctx.drawImage(photoS.mask,0,0);
-  /* 2) 자동 조명 보정 (평균 휘도 → 0.55 타깃) */
+  pctx.globalCompositeOperation = 'source-over';
+  /* 4) 자동 조명 보정 (평균 휘도 → 0.55 타깃) */
   let briAdj = 1;
   if (P.auto){
     try{
@@ -1383,8 +1461,6 @@ function composite(){
       if (cnt>0) briAdj = clamp(0.55/(sum/cnt), .8, 1.25);
     }catch(e){ console.warn('자동 밝기 생략:', e); }
   }
-  /* 3) 샤프닝 (언샤프 3×3) */
-  if (P.sharp) sharpen(person);
   /* 4) 보정 필터 적용본 생성 */
   const fb = clamp((photoS.bri/100)*(P.bri/100)*briAdj, .5, 2);
   const fc = (photoS.con/100)*(P.con/100);
@@ -1543,15 +1619,18 @@ function savePhotoPng(){
 }
 function insertPhotoToResume(){
   if (!photoS.result){ toast('まず写真を準備してください', 'warn'); return; }
-  /* localStorage 절약: 300×400 썸네일로 축소 */
-  const th = document.createElement('canvas'); th.width=300; th.height=400;
-  th.getContext('2d').drawImage(photoS.result,0,0,300,400);
+  /* v2.36: 썸네일 300×400 → 360×480 상향 (A4 300dpi 인쇄 시 3cm 폭 = 354px 필요.
+     종전엔 300pxを업스케일해 인쇄·확대 시 흐릿해지는 2차 화질 손실이 있었다) */
+  const th = document.createElement('canvas'); th.width=360; th.height=480;
+  const t2 = th.getContext('2d'); t2.imageSmoothingEnabled = true; t2.imageSmoothingQuality = 'high';
+  t2.drawImage(photoS.result,0,0,360,480);
   let url = th.toDataURL('image/png');
-  if (url.length > PHOTO_STORE_LIMIT*1.4){           // 초과 시 JPEG로 절감
-    const c2 = document.createElement('canvas'); c2.width=300; c2.height=400;
-    const cx = c2.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,300,400);
-    cx.drawImage(photoS.result,0,0,300,400);
-    url = c2.toDataURL('image/jpeg', .82);
+  if (url.length > PHOTO_STORE_LIMIT*1.4){           // 초과 시 고품질 JPEG로 절감
+    const c2 = document.createElement('canvas'); c2.width=360; c2.height=480;
+    const cx = c2.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,360,480);
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(photoS.result,0,0,360,480);
+    url = c2.toDataURL('image/jpeg', .88);
   }
   store.update(st=>{ st.profile.photoDataUrl = url; });
   setStep(4);
@@ -2441,6 +2520,44 @@ function bindSettings(){
 }
 function openDlg(d){ try{ d.showModal(); }catch(e){ d.setAttribute('open',''); } }
 function closeDlg(d){ try{ d.close(); }catch(e){ d.removeAttribute('open'); } }
+/* v2.35: 히어로 証明写真 프로모 — CTA로 写真탭 이동 + Before/After 드래그 비교
+   (pointer 이벤트 + 방향키 접근성. 실패핏이든 정적 이미지로 자연 소멸하도록 전부 try 방어) */
+function bindPhotoPromo(){
+  const ba = $('ppBa');
+  const go = $('ppGo');
+  if (go) go.addEventListener('click', ()=>{
+    const b = document.querySelector('.tab-btn[data-tab="photo"]');
+    if (b) b.click();
+  });
+  if (!ba) return;
+  const clamp = (v)=> Math.max(4, Math.min(96, v));
+  const setPct = (pc)=>{
+    pc = clamp(pc);
+    ba.style.setProperty('--ba', pc + '%');
+    ba.setAttribute('aria-valuenow', String(Math.round(pc)));
+  };
+  let dragging = false;
+  ba.addEventListener('pointerdown', (e)=>{
+    dragging = true;
+    try{ ba.setPointerCapture(e.pointerId); }catch(_){}
+    const r = ba.getBoundingClientRect();
+    if (r.width > 0) setPct((e.clientX - r.left) / r.width * 100);
+  });
+  ba.addEventListener('pointermove', (e)=>{
+    if (!dragging) return;
+    const r = ba.getBoundingClientRect();
+    if (r.width > 0) setPct((e.clientX - r.left) / r.width * 100);
+  });
+  const stop = ()=>{ dragging = false; };
+  ba.addEventListener('pointerup', stop);
+  ba.addEventListener('pointercancel', stop);
+  ba.addEventListener('keydown', (e)=>{
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const cur = parseFloat(ba.getAttribute('aria-valuenow') || '50');
+    setPct(cur + (e.key === 'ArrowLeft' ? -6 : 6));
+  });
+}
 function bindTabs(){
   const btns = document.querySelectorAll('.tab-btn');
   btns.forEach(b => b.addEventListener('click', ()=>{
@@ -2863,6 +2980,7 @@ function init(){
     safe('fill-profile', fillProfileForm);
     safe('taishoku', ()=>{ bindTaishoku(); fillTaishokuForm(); });
     safe('sofu', ()=>{ bindSofu(); fillSofuForm(); });
+    safe('photo-promo', bindPhotoPromo);   /* v2.35: 히어로 프로모 (CTA→写真탭, Before/After 드래그) */
     renderDynamic();
     applyTheme();
     setStep(1);

@@ -1,5 +1,4 @@
 # 履歴スタジオ robots.txt
-# ※ 도메인 확정 후 Sitemap 주소의 도메인 부분만 실제 도메인으로 교체 (deploy-guide.md §5 참조)
 User-agent: *
 Allow: /
 Disallow: /offline/

@@ -485,7 +485,10 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
 .r-row .c{ border-right:.2mm solid #555; padding:1.2mm 1.6mm; min-height:6.8mm; display:flex; align-items:center; }   /* v2.30: A4 정확히 맞춤 압축 */
 .r-row .c.center{ justify-content:center; }
 .r-row.name .c{ min-height:14mm; }
-.r-name-kana{ font-size:2.6mm; color:#222; display:block; }
+/* v2.33: ふりがな 표시 개선 — 라벨·칵나 동크기 나열에서, 厚労省 양식처럼 '라벨은 좌측 소형 / 칵나는 칸 전체 중앙+자간'으로 */
+.r-kana-line{ position:relative; width:100%; text-align:center; align-self:center; }
+.r-kana-label{ position:absolute; left:.4mm; top:50%; transform:translateY(-50%); font-size:2.2mm; color:#333; }
+.r-kana-val{ font-size:3.3mm; letter-spacing:.6mm; color:#111; }
 .r-name{ font-size:7mm; font-weight:700; letter-spacing:1.5mm; display:block; margin-top:.5mm; }
 .r-sect{ background:#f0f0f0; text-align:center; font-weight:700; letter-spacing:4mm; padding:.8mm 0;   /* v2.30: 압축 */
   border-bottom:.2mm solid #555; border-right:.2mm solid #555; grid-column:1 / -1; }
@@ -664,6 +667,7 @@ dialog#dlgZoom{ width:min(96vw,880px); }   /* 확대 보기: A4 원본(≈794px)
 dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
 .dlg-inner{ padding:1.25rem; position:relative; }
 .dlg-inner h2{ margin-top:0; font-size:1.12rem; font-weight:800; }
+.zoom-title{ font-size:.85rem; font-weight:800; color:var(--muted); margin:0 0 .55rem; }   /* v2.34: 어떤 문서의 확대인지 표기 */
 .dlg-close{ margin-top:.9rem; width:100%; }
 .zoom-box{ overflow-x:hidden; overflow-y:auto; max-height:80vh; max-height:80dvh; border-radius:8px; } /* dvh: iOS URL바 가변 대응 / 폭은 JS가 정확히 맞춤 (v2.25) */
 .zoom-box .a4{ transform-origin:top left; box-shadow:none; margin:0; }   /* JS가 폭맞춤 스케일 적용 (v2.25) */

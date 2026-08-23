@@ -144,11 +144,14 @@ function fmtYM(y, m){
   if (!y) return '';
   return era === 'wareki' ? toWareki(y, m) : y + '年';
 }
-/* 헤더 날짜: 令和7年8月7日現在 / 2026年8月7日現在 */
+/* 헤더 날짜: 令和8年8月23日 / 2026年8月23日
+   v2.34: 종전의 '現在' 꼬리표 제거 — 「○日現在」는 厚労省 양식의 관례였으나, 職務経歴書를 비롯한
+   최신 양식은 '날짜만' 표기가 일반적. 꼬리표가 있는 쪽이 오히려 어색하다는 사용감 피드백 반영.
+   (이력서·직무경력서 DOM+PNG 모두 이 함수 하나를 공유하므로 일괄 통일됨) */
 function fmtDateHeader(dt){
   const era = store.get().settings.eraNotation;
   const y = dt.getFullYear(), m = dt.getMonth() + 1, d = dt.getDate();
-  return (era === 'wareki' ? toWareki(y, m, d) : y + '年') + m + '月' + d + '日現在';
+  return (era === 'wareki' ? toWareki(y, m, d) : y + '年') + m + '月' + d + '日';
 }
 
 /* ================================================================
@@ -764,7 +767,10 @@ function buildRirekiA4(){
 
   const nameRow = h('div',{class:'r-row name', style:'grid-template-columns:1fr;flex:1'},
     h('div',{class:'c', style:'flex-direction:column;align-items:flex-start;justify-content:center;gap:.8mm'},
-      h('span',{class:'r-name-kana', text:(p.nameKana ? 'ふりがな　' + p.nameKana : 'ふりがな')}),
+      /* v2.33: 라벨(左소형) + 칵나(중앙) 분리 — 공식 양식 배치 */
+      h('div',{class:'r-kana-line'},
+        h('span',{class:'r-kana-label', text:'ふりがな'}),
+        h('span',{class:'r-kana-val', text:p.nameKana||''})),
       h('span',{class:'r-name', text:p.nameKanji || '氏　　名'})
     ));
   const birthText = (()=>{
@@ -784,7 +790,10 @@ function buildRirekiA4(){
   /* 주소·연락처 블록 */
   const addr = h('div',{class:'r-rows', style:'margin-top:2.5mm'},
     h('div',{class:'r-row hist', style:'grid-template-columns:1fr;min-height:6mm'},
-      h('div',{class:'c', style:'min-height:6mm', text: p.addressKana ? 'ふりがな　' + p.addressKana : 'ふりがな'})),
+      h('div',{class:'c', style:'min-height:6mm'},
+        h('div',{class:'r-kana-line'},                       /* v2.33: 주소 칵나도 동일 배치 */
+          h('span',{class:'r-kana-label', text:'ふりがな'}),
+          h('span',{class:'r-kana-val', text:p.addressKana||''})))),
     h('div',{class:'r-row hist', style:'grid-template-columns:18mm 1fr'},
       h('div',{class:'c center', text:'現住所'}),
       h('div',{class:'c', text:(p.postal ? '〒' + p.postal + '　' : '') + (p.address || '')})),
@@ -950,26 +959,39 @@ function bindPreviewFit(){
   /* 뷰포트 '높이' 변화(창 세로 리사이즈/회전)는 RO가 감지 못하므로 항상 함께 리스닝 (v2.25) */
   window.addEventListener('resize', refitAll);
   window.addEventListener('orientationchange', refitAll);
-  $('pvZoomBtn').addEventListener('click', ()=>{
-    const box = $('zoomBox'); box.replaceChildren();
-    const clone = $('a4Preview').cloneNode(true);   // DOM 복제(innerHTML 미사용)
-    clone.style.transform = 'none';
-    clone.style.marginLeft = '0';
-    box.append(clone);
-    openDlg($('dlgZoom'));
-    /* 확대 다이얼로그: 폭에 맞춰 스케일링해 가로 스크롤 제거 — 세로로만 읽으면 됨 (v2.25) */
-    requestAnimationFrame(()=>{
-      try{
-        const bw = box.clientWidth - 2;
-        if (bw > 0){
-          const s = Math.min(1, bw / mmToPx(210));
-          clone.style.transform = 'scale(' + s + ')';
-          clone.style.transformOrigin = 'top left';
-          box.style.height = Math.ceil(clone.offsetHeight * s + 4) + 'px';
-        }
-      }catch(e){ /* 실패 시 원본 크기 그대로 스크롤 */ }
+  /* 확대 표시: 4개 문서 공용 (v2.34: 기존 이력서 전용에서 職務経歴書/退職届/送付状로 확장 — 사용자 요청)
+     클론을 dlgZoom의 zoomBox에 넣고 폭 맞춤 스케일링. 다이얼로그는 하나를 재사용 */
+  const ZOOM_DOCS = [
+    ['pvZoomBtn',  'a4Preview',  '履歴書'],
+    ['pvZoomBtn2', 'a4Preview2', '職務経歴書'],
+    ['pvZoomBtn3', 'a4PreviewT', '退職届 / 退職願'],
+    ['pvZoomBtn4', 'a4PreviewS', '送付状']
+  ];
+  for (const [btnId, prevId, label] of ZOOM_DOCS){
+    const btn = $(btnId); if (!btn) continue;
+    btn.addEventListener('click', ()=>{
+      const src = $(prevId); if (!src) return;
+      const tt = $('zoomTitle'); if (tt) tt.textContent = label + ' — 拡大表示';
+      const box = $('zoomBox'); box.replaceChildren();
+      const clone = src.cloneNode(true);   // DOM 복제(innerHTML 미사용)
+      clone.style.transform = 'none';
+      clone.style.marginLeft = '0';
+      box.append(clone);
+      openDlg($('dlgZoom'));
+      /* 확대 다이얼로그: 폭에 맞춰 스케일링해 가로 스크롤 제거 — 세로로만 읽으면 됨 (v2.25) */
+      requestAnimationFrame(()=>{
+        try{
+          const bw = box.clientWidth - 2;
+          if (bw > 0){
+            const s = Math.min(1, bw / mmToPx(210));
+            clone.style.transform = 'scale(' + s + ')';
+            clone.style.transformOrigin = 'top left';
+            box.style.height = Math.ceil(clone.offsetHeight * s + 4) + 'px';
+          }
+        }catch(e){ /* 실패 시 원본 크기 그대로 스크롤 */ }
+      });
     });
-  });
+  }
   $('btnZoomClose').addEventListener('click', ()=> closeDlg($('dlgZoom')));
 }
 
@@ -1076,8 +1098,14 @@ async function renderResumePNG(){
         text(p.gender ? '性別　' + p.gender : '性別', r.split+3, y + r.h/2, 4.2);
         line(r.split, y, r.split, y + r.h);
       } else if (r.label){
-        fset(3,false); ctx.fillStyle='#111111'; ctx.textAlign='left';
-        ctx.fillText(r.label + (r.val ? '　' + r.val : ''), (X1+3)*K, (y + r.h/2)*K);
+        /* v2.33: DOM과 동일하게 라벨(左소형)+칵나(칸 전체 중앙) 분리 배치 */
+        fset(2.2,false); ctx.fillStyle='#444444'; ctx.textAlign='left';
+        ctx.fillText(r.label, (X1+2.4)*K, (y + r.h/2)*K);
+        if (r.val){
+          fset(3.3,false); ctx.fillStyle='#111111'; ctx.textAlign='center';
+          try{ ctx.letterSpacing = (0.6*K)+'px'; ctx.fillText(r.val, ((X1+X2)/2)*K, (y + r.h/2)*K); ctx.letterSpacing = '0px'; }
+          catch(e){ ctx.fillText(r.val, ((X1+X2)/2)*K, (y + r.h/2)*K); }   // letterSpacing 미지원 방어
+        }
       }
       y += r.h; line(X1, y, X2, y);
     }
@@ -1099,13 +1127,21 @@ async function renderResumePNG(){
 
     /* --- 주소·연락처 블록 (사진 박스 하단 y=68 아래에서 시작 → 겹침 방지) --- */
     y = 72; const addrRows = [
-      { h:6,  v: p.addressKana ? 'ふりがな　' + p.addressKana : 'ふりがな', small:true },
+      { h:6,  v:'kana', val:(p.addressKana||'') },   /* v2.33: 칵나 전용 행 — 라벨+중앙 정렬 렌더 */
       { h:10, v: '現住所　' + (p.postal ? '〒' + p.postal + '　' : '') + (p.address||'') },
       { h:8,  v:'tel', split:96 }
     ];
     line(X1, y, R, y);
     for (const r of addrRows){
-      if (r.v === 'tel'){
+      if (r.v === 'kana'){
+        fset(2.2,false); ctx.fillStyle='#444444'; ctx.textAlign='left';
+        ctx.fillText('ふりがな', (X1+2.4)*K, (y + r.h/2)*K);
+        if (r.val){
+          fset(3.2,false); ctx.fillStyle='#111111'; ctx.textAlign='center';
+          try{ ctx.letterSpacing = (0.5*K)+'px'; ctx.fillText(r.val, ((X1+R)/2)*K, (y + r.h/2)*K); ctx.letterSpacing = '0px'; }
+          catch(e){ ctx.fillText(r.val, ((X1+R)/2)*K, (y + r.h/2)*K); }
+        }
+      } else if (r.v === 'tel'){
         text('電話　' + (p.phone||''), X1+3, y + r.h/2, r.small?3:4.2);
         text('Eメール　' + (p.email||''), r.split+3, y + r.h/2, 4.2);
         line(r.split, y, r.split, y + r.h);
@@ -1125,16 +1161,21 @@ async function renderResumePNG(){
     const sect = (label)=>{
       y += 4; text(label, 105, y + HK/2, 4.4, 'center', true);
       line(X1,y,R,y,.35); y += HK; line(X1,y,R,y,.35);
-      line(X1,y-HK,X1,y); line(X1+C1,y-HK,X1+C1,y); line(X1+C1+C2,y-HK,X1+C1+C2,y); line(R,y-HK,R,y);
+      /* v2.33: セクション見出し行은 전폭(年/月 칸분할 없음) — DOM 미리보기·공식 양식과 일치 */
+      line(X1,y-HK,X1,y); line(R,y-HK,R,y);
     };
     const row = (r, center)=>{
-      if (r){
+      if (r && center !== true){
         text(fmtYM(r.y, r.m), X1+C1/2, y + HK/2, 3.6, 'center');
         text(r.m ? r.m+'月' : '', X1+C1+C2/2, y + HK/2, 3.6, 'center');
-        text(center===true ? '以　上' : r.text, center ? R-8 : X1+C1+C2+3, y + HK/2, 4, center ? 'right' : 'left');
+        text(r.text, X1+C1+C2+3, y + HK/2, 4, 'left');
+      } else if (r && center === true){
+        /* 「以　上」행도 전폭 — 우측 정렬 텍스트만 (v2.33) */
+        text('以　上', R-8, y + HK/2, 4, 'right');
       }
       line(X1,y,R,y,.3); line(X1,y+HK,R,y+HK,.3);
-      line(X1,y,X1,y+HK); line(X1+C1,y,X1+C1,y+HK); line(X1+C1+C2,y,X1+C1+C2,y+HK); line(R,y,R,y+HK);
+      line(X1,y,X1,y+HK); line(R,y,R,y+HK);
+      if (!center){ line(X1+C1,y,X1+C1,y+HK); line(X1+C1+C2,y,X1+C1+C2,y+HK); }
       y += HK;
     };
     const blankTotal = Math.max(2, 11 - (eduR.length + workR.length));

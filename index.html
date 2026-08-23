@@ -23,7 +23,7 @@
   <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=2.29">
+  <link rel="stylesheet" href="style.css?v=2.32">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication",
    "name":"履歴スタジオ","alternateName":"Rireki Studio",
@@ -317,11 +317,24 @@
 
           <!-- 志望動機・本人希望 -->
           <section class="card" aria-labelledby="h-mot">
-            <h2 class="card-title" id="h-mot">志望の動機</h2>
+            <div class="card-head-flex">
+              <h2 class="card-title" id="h-mot">志望の動機</h2>
+              <!-- v2.32: 불필요한 란을 인쇄/PNG에서 통째로 제외하는 토글 (Web応募·企業指定書式 대응) -->
+              <label class="sec-toggle" title="OFFにすると、この欄は履歴書の印刷・画像から除外されます（入力内容は保持されます）">
+                <input type="checkbox" id="tgMot" checked>印刷に含める
+              </label>
+            </div>
+            <p class="off-note" id="motOffNote" hidden>現在OFFのため、この欄は印刷・画像に出力されません（入力内容は保持されます）</p>
             <textarea id="ta_motivation" rows="7" maxlength="800" placeholder="例文タブのテンプレートを参考に、企業への思いを具体的に。"></textarea>
             <div class="gauge"><div class="gauge-bar" id="motGauge"></div></div>
-            <p class="hint"><span id="motCount">0</span> / 400字（目安 300〜400字）</p>
-            <h2 class="card-title" style="margin-top:1.2rem">本人希望欄</h2>
+            <p class="hint"><span id="motCount">0</span> / 400字（目安 300〜400字）　※Web応募など各欄が不要な場合は「印刷に含める」をOFFにできます</p>
+            <div class="card-head-flex" style="margin-top:1.2rem">
+              <h2 class="card-title">本人希望欄</h2>
+              <label class="sec-toggle" title="OFFにすると、この欄は履歴書の印刷・画像から除外されます（入力内容は保持されます）">
+                <input type="checkbox" id="tgReq" checked>印刷に含める
+              </label>
+            </div>
+            <p class="off-note" id="reqOffNote" hidden>現在OFFのため、この欄は印刷・画像に出力されません（入力内容は保持されます）</p>
             <textarea id="ta_requests" rows="3" maxlength="300" placeholder="特に希望する条件があれば記入（勤務地・職種など）"></textarea>
           </section>
 
@@ -335,6 +348,7 @@
         <div class="pv-col">
           <div class="pv-toolbar">
             <span class="pv-label">A4 プレビュー</span>
+            <span class="pv-warn" id="pvWarn1" hidden>⚠ 内容がA4を超えています（印刷は2ページに分かれます）</span>
             <button class="btn ghost small" id="pvZoomBtn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-zoom"/></svg>拡大表示</button>
           </div>
           <div class="pv-fit" id="pvFit1">
@@ -809,6 +823,6 @@
 <!-- 인쇄 전용 루트 (화면에서는 숨김) -->
 <div id="printRoot" aria-hidden="true"></div>
 
-<script src="app.js?v=2.29"></script>
+<script src="app.js?v=2.32"></script>
 </body>
 </html>

@@ -162,7 +162,7 @@ hr{ border:0; border-top:1px solid var(--line); margin:1.1rem 0; }
   -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.85), transparent 78%);
 }
 .hero-inner{ position:relative; z-index:1; max-width:1160px; margin:0 auto;
-  padding:clamp(2.8rem,6vw,5rem) clamp(1.1rem,4vw,2.4rem) clamp(1.6rem,3vw,2.4rem);
+  padding:clamp(2.8rem,6vw,5rem) clamp(1.1rem,4vw,2.4rem) clamp(2.3rem,4vw,3rem);   /* v2.28: 통계 스트립 삭제로 하단 여백 보정 */
   display:grid; grid-template-columns:1.06fr .94fr; gap:clamp(1.8rem,4.5vw,3.4rem); align-items:center; }
 
 /* --- 좌컬럼: 카피 --- */
@@ -258,17 +258,6 @@ hr{ border:0; border-top:1px solid var(--line); margin:1.1rem 0; }
 @keyframes hvFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-9px); } }
 @media (prefers-reduced-motion:reduce){ .hero-chip{ animation:none; } }
 
-/* --- 하단 실總 스트립 (정직한 실측 수치) --- */
-.hero-stats{ position:relative; z-index:1; max-width:1160px; margin:0 auto;
-  padding:0 clamp(1.1rem,4vw,2.4rem) clamp(2.4rem,4vw,3.2rem);
-  display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(.7rem,1.8vw,1.2rem); }
-.stein{ text-align:center; padding:1.05rem .6rem; border-radius:16px;
-  background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.15);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
-.stein b{ display:block; font-size:clamp(1.45rem,2.6vw,1.95rem); font-weight:900; color:#ffd84d;
-  font-variant-numeric:tabular-nums; line-height:1.1; }
-.stein span{ font-size:.68rem; font-weight:700; color:#b9c6ee; letter-spacing:.02em; }
-
 /* --- 반응형 --- */
 @media (max-width:980px){
   .hero-inner{ grid-template-columns:1fr; gap:2.2rem; text-align:left; }
@@ -276,7 +265,7 @@ hr{ border:0; border-top:1px solid var(--line); margin:1.1rem 0; }
 }
 @media (max-width:767px){
   /* v2.20 모바일 히어로 초압축 — 장식 비주얼 OFF·카피 1줄화: 첫 화면에서 탭 전환 인지 가능 */
-  .hero-inner{ padding:1.7rem 1.05rem 1rem; gap:0; }
+  .hero-inner{ padding:1.7rem 1.05rem 1.5rem; gap:0; }   /* v2.28: 스트립 삭제분 보정 */
   .hero-copy h1{ margin:.8rem 0 .7rem; font-size:clamp(1.55rem, 7.4vw, 1.8rem); }
   .hero-sub{ margin-bottom:.95rem; line-height:1.8; }
   .hero-sub .sub-full{ display:none; } .hero-sub .sub-short{ display:inline; }
@@ -290,8 +279,6 @@ hr{ border:0; border-top:1px solid var(--line); margin:1.1rem 0; }
   .hs-txt strong{ font-size:.7rem; white-space:normal; line-height:1.3; }
   .hs-txt small{ font-size:.54rem; white-space:normal; line-height:1.3; }
   .hs-num{ width:24px; height:24px; font-size:.72rem; }
-  .hero-stats{ grid-template-columns:repeat(2,1fr); gap:.55rem; padding-bottom:1.25rem; }
-  .stein{ padding:.68rem .35rem; }
   /* 협폭: 카드가 잘리지 않도록 — 비주얼 축소 + 칩/게이지를 컨테이너 안으로 */
   .hero-visual{ width:min(88vw, 330px); }
   .doc-front{ width:94%; }
@@ -426,23 +413,36 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
 .crud-item{ border:1px solid var(--line); border-radius:12px; padding:.65rem;
   background:color-mix(in srgb,var(--panel) 65%,var(--bg)); transition:box-shadow .15s, border-color .15s; }
 .crud-item:hover{ border-color:color-mix(in srgb,var(--accent) 35%,var(--line)); box-shadow:var(--sh-1); }
+.crud-item textarea{ margin-top:.55rem; }   /* v2.28: 職務経歴(詳細) 인라인 편집 카드 */
 .crud-row{ display:grid; grid-template-columns:1fr; gap:.45rem; }
 .crud-tools{ display:flex; gap:.35rem; }
 .crud-tools .btn{ min-height:38px; min-width:44px; padding:.25rem .55rem; }
 .crud-bottom{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; margin-top:.5rem; }
 .check-inline{ display:flex; align-items:center; gap:.45rem; font-size:.82rem; color:var(--muted); cursor:pointer; min-height:38px; font-weight:700; }
 .check-inline input{ width:20px; height:20px; accent-color:var(--accent); }
+
+/* v2.32: 섹션 표시 토글 — 카드 제목 행을 좌우 분할, 우측에 44px 터치 타깃 스위치 */
+.card-head-flex{ display:flex; align-items:center; justify-content:space-between; gap:.4rem .8rem; flex-wrap:wrap; }
+.card-head-flex .card-title{ margin:0; }
+.sec-toggle{ display:inline-flex; align-items:center; gap:.45rem; min-height:44px; padding:.1rem .55rem;
+  font-size:.8rem; font-weight:700; color:var(--muted); cursor:pointer; border-radius:999px;
+  user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; }
+.sec-toggle input{ width:20px; height:20px; accent-color:var(--accent); flex:none; cursor:pointer; }
+.sec-toggle:has(input:not(:checked)){ color:var(--warn); background:color-mix(in srgb, var(--warn) 8%, transparent); }
+.off-note{ font-size:.78rem; font-weight:700; color:var(--warn); margin:.15rem 0 .4rem; }
 .empty-note{ color:var(--muted); font-size:.84rem; padding:1rem; text-align:center; font-weight:600;
   border:1.5px dashed color-mix(in srgb,var(--accent) 30%,var(--line)); border-radius:12px;
   background:color-mix(in srgb,var(--accent) 3%,transparent); }
 
 /* ===== 10. A4 미리보기 (실물 렌더 — 값 유지) ===== */
 .pv-col{ position:relative; }
-.pv-toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; }
+.pv-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; margin-bottom:.5rem; }
+.pv-warn{ font-size:.7rem; font-weight:800; color:#b45309; background:#fff7e0; border:1px solid #f2d27a;
+  border-radius:999px; padding:.28rem .7rem; line-height:1.3; }   /* v2.30: A4 초과 배지 */
 .pv-label{ font-size:.72rem; font-weight:800; color:var(--muted); letter-spacing:.12em;
   background:var(--panel); border:1px solid var(--line); padding:.3rem .7rem; border-radius:99px; box-shadow:var(--sh-1); }
-.pv-fit{ overflow-x:auto; border-radius:12px; }
-.a4{ width:210mm; height:297mm; background:#fff; color:#000; padding:11mm 12mm; position:relative; transform-origin:top left;
+.pv-fit{ overflow:hidden; border-radius:12px; }   /* 항상 정확히 피팅되므로 스크롤바 방지 (v2.25) */
+.a4{ width:210mm; min-height:297mm; background:#fff; color:#000; padding:9mm 12mm; position:relative; transform-origin:top left;   /* v2.30: 고정 297mm 폐지 + A4 정확히 맞춤 압축 */
   font-family:var(--font-mincho); font-size:3.4mm;
   box-shadow:0 24px 60px rgba(8,15,50,.35), 0 4px 14px rgba(8,15,50,.2); border-radius:2px; flex:none; }
 .a4.tall{ height:auto; min-height:297mm; }
@@ -473,8 +473,8 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
 .a4 .sf-list .ki{ text-align:center; margin-bottom:2mm; }
 .a4 .sf-list .ijo{ text-align:right; margin-top:2mm; }
 .a4.modern{ font-family:var(--font-sans); }
-.a4 .r-title{ text-align:center; font-size:6.5mm; font-weight:700; letter-spacing:6mm; margin:0 0 3mm; }
-.a4 .r-date{ text-align:right; font-size:3.2mm; margin-bottom:2mm; }
+.a4 .r-title{ text-align:center; font-size:6.5mm; font-weight:700; letter-spacing:6mm; margin:0 0 2mm; }
+.a4 .r-date{ text-align:right; font-size:3.2mm; margin-bottom:1.5mm; }
 .r-idwrap{ display:grid; grid-template-columns:1fr 30mm; gap:4mm; }
 .r-photo{ width:30mm; height:40mm; border:.2mm solid #555; display:flex; align-items:center; justify-content:center;
   color:#888; font-size:3mm; text-align:center; background:#fafafa; overflow:hidden; white-space:pre-line; }
@@ -482,15 +482,15 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
 .r-ph-cap{ font-size:2.6mm; color:#666; text-align:center; margin-top:.6mm; }
 .r-rows{ border-top:.35mm solid #333; border-left:.35mm solid #333; }
 .r-row{ display:grid; grid-template-columns:18mm 15mm 1fr 26mm; border-bottom:.2mm solid #555; }
-.r-row .c{ border-right:.2mm solid #555; padding:1.2mm 1.6mm; min-height:8mm; display:flex; align-items:center; }
+.r-row .c{ border-right:.2mm solid #555; padding:1.2mm 1.6mm; min-height:6.8mm; display:flex; align-items:center; }   /* v2.30: A4 정확히 맞춤 압축 */
 .r-row .c.center{ justify-content:center; }
 .r-row.name .c{ min-height:14mm; }
 .r-name-kana{ font-size:2.6mm; color:#222; display:block; }
 .r-name{ font-size:7mm; font-weight:700; letter-spacing:1.5mm; display:block; margin-top:.5mm; }
-.r-sect{ background:#f0f0f0; text-align:center; font-weight:700; letter-spacing:4mm; padding:1mm 0;
+.r-sect{ background:#f0f0f0; text-align:center; font-weight:700; letter-spacing:4mm; padding:.8mm 0;   /* v2.30: 압축 */
   border-bottom:.2mm solid #555; border-right:.2mm solid #555; grid-column:1 / -1; }
 .a4.modern .r-sect{ background:#e9eefc; color:#1e3a8a; letter-spacing:2mm; }
-.hist .c{ min-height:7.2mm; padding:.8mm 1.6mm; }
+.hist .c{ min-height:6mm; padding:.8mm 1.6mm; }   /* v2.30: A4 정확히 맞춤 압축 */
 .hist .center{ justify-content:center; }
 .r-blankbox{ border-bottom:.2mm solid #555; border-right:.2mm solid #555; }
 .r-mot .c{ display:block; white-space:pre-wrap; line-height:1.9; padding:2.2mm; min-height:34mm; grid-column:1 / -1; }
@@ -660,12 +660,13 @@ input[type="range"]{ width:100%; height:34px; accent-color:var(--accent); cursor
 /* ===== 13. 다이얼로그/토스트/푸터 ===== */
 dialog{ border:1px solid var(--line); border-radius:20px; background:var(--panel); color:var(--fg);
   padding:0; width:min(94vw,580px); box-shadow:0 30px 80px rgba(5,12,40,.45); }
+dialog#dlgZoom{ width:min(96vw,880px); }   /* 확대 보기: A4 원본(≈794px)이 거의 1:1로 보이는 폭 (v2.25) */
 dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
 .dlg-inner{ padding:1.25rem; position:relative; }
 .dlg-inner h2{ margin-top:0; font-size:1.12rem; font-weight:800; }
 .dlg-close{ margin-top:.9rem; width:100%; }
-.zoom-box{ overflow:auto; max-height:80vh; max-height:80dvh; border-radius:8px; } /* dvh: iOS URL바 가변 대응 */
-.zoom-box .a4{ transform:none !important; box-shadow:none; }
+.zoom-box{ overflow-x:hidden; overflow-y:auto; max-height:80vh; max-height:80dvh; border-radius:8px; } /* dvh: iOS URL바 가변 대응 / 폭은 JS가 정확히 맞춤 (v2.25) */
+.zoom-box .a4{ transform-origin:top left; box-shadow:none; margin:0; }   /* JS가 폭맞춤 스케일 적용 (v2.25) */
 
 #toastRoot{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(112px + 12px + env(safe-area-inset-bottom));
   z-index:60; display:grid; gap:.5rem; width:min(92vw,420px); pointer-events:none; }
@@ -749,6 +750,7 @@ dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
   #appScreen,#toastRoot,dialog,.hero{ display:none !important; }
   #printRoot{ display:block !important; }
   #printRoot .a4{ box-shadow:none; transform:none !important; margin:0; }
+#printRoot .r-row, #printRoot .r-sect{ break-inside:avoid; }   /* v2.30: 2페이지 넘김 시 행 중간 절단 방지 */
   #printRoot .a4.tall{ height:auto; }
 }
 

@@ -170,7 +170,8 @@ function defaultState(){
     /* 内定対応パック (탭8 — 手取り 시뮬레이션・비교 조건 영속) */
     pay: { monthly:null, bonus:2, age:'u39', noJumin:false, cmpA:{monthly:null,bonus:2}, cmpB:{monthly:null,bonus:1} },
     payUi: { scene:'accept', company:'', phoneScene:'thanks' },
-    settings: { theme:'auto', eraNotation:'wareki', template:'jis-a4', bgColor:'#ffffff', autoSave:true },
+    settings: { theme:'auto', eraNotation:'wareki', template:'jis-a4', bgColor:'#ffffff', autoSave:true,
+                showMot:true, showReq:true },   /* v2.32: 志望動機/本人希望欄 인쇄 포함 여부 (기본 ON = JIS 표준) */
     meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
   };
 }
@@ -277,6 +278,9 @@ function sanitizeState(src){
   s.settings.template   = st.template === 'modern' ? 'modern' : 'jis-a4';
   s.settings.bgColor    = /^#[0-9a-f]{6}$/i.test(st.bgColor||'') ? st.bgColor : '#ffffff';
   s.settings.autoSave   = st.autoSave !== false;
+  /* v2.32: 섹션 표시 플래그 — 기존 백업(키 없음)은 true 유지로 후방호환 */
+  s.settings.showMot    = st.showMot !== false;
+  s.settings.showReq    = st.showReq !== false;
   s.meta = { createdAt:str(src.meta&&src.meta.createdAt)||s.meta.createdAt, updatedAt:new Date().toISOString() };
   return s;
 }
@@ -379,6 +383,21 @@ function bindProfileForm(){
   bindTextArea('ta_requests','requests',null,null);
   bindTextArea('ta_workSummary','workSummary','sumCount',null);
   bindTextArea('ta_selfPr','selfPr','prCount',null);
+  /* v2.32: 섹션 인쇄 포함 토글 — OFF = プレビュー/印刷/PNG에서 해당 란 전체 제외 (입력 내용은 유지) */
+  const bindSecToggle = (cbId, key, noteId)=>{
+    const cb = $(cbId); if (!cb) return;
+    cb.addEventListener('change', ()=>{
+      store.update(st=>{ st.settings[key] = cb.checked; }, {render:'light'});
+      /* 연속 입력과 달리 '설정 토글'은 단발 동작 — 디바운스(400ms) 안 기다리고 즉시 확정 저장해
+         토글 직후 탭을 닫아도 설정이 날아가지 않도록 한다 (v2.32 하드닝) */
+      store.save();
+      const note = $(noteId); if (note) note.hidden = cb.checked;
+      toast(cb.checked ? 'この欄を履歴書に含めます'
+                       : 'この欄は印刷・画像から除外されます（入力内容は保持されます）');
+    });
+  };
+  bindSecToggle('tgMot','showMot','motOffNote');
+  bindSecToggle('tgReq','showReq','reqOffNote');
 }
 function bindTextArea(id, key, countId, gaugeId){
   const el = $(id); if (!el) return;
@@ -423,6 +442,13 @@ function fillProfileForm(){
   updateCharCounter(store.get().motivation,'motCount','motGauge');
   updateCharCounter(store.get().workSummary,'sumCount',null);
   updateCharCounter(store.get().selfPr,'prCount',null);
+  /* v2.32: 섹션 표시 토글 상태 복원 (재방문/백업 복원 시에도 OFF 유지) */
+  const stg = store.get().settings;
+  const tgm = $('tgMot'), tgr = $('tgReq');
+  if (tgm) tgm.checked = stg.showMot !== false;
+  if (tgr) tgr.checked = stg.showReq !== false;
+  const nMot = $('motOffNote'); if (nMot) nMot.hidden = !tgm || tgm.checked;
+  const nReq = $('reqOffNote'); if (nReq) nReq.hidden = !tgr || tgr.checked;
 }
 function showOnlyValidErrors(){
   for (const key of ['nameKanji','nameKana','phone','postal','email','addressKana']){
@@ -617,9 +643,12 @@ function computeWarnings(){
   if (!p.phone.trim())     w.push('電話番号が未入力です');
   if (!p.address.trim())   w.push('現住所が未入力です');
   if (!p.photoDataUrl)     w.push('証明写真が未登録です（「証明写真」タブで作成できます）');
-  const ml = s.motivation.trim().length;
-  if (ml > 0 && ml < 150)  w.push('志望動機が短めです（目安300〜400字）');
-  if (ml > 420)            w.push('志望動機が枠を超える可能性があります（現在 ' + ml + '字）');
+  /* v2.32: 志望動機 란을 인쇄에서 제외한 사용자에게 글자수 경고는 무의미 → 스킵 */
+  if (s.settings.showMot !== false){
+    const ml = s.motivation.trim().length;
+    if (ml > 0 && ml < 150)  w.push('志望動機が短めです（目安300〜400字）');
+    if (ml > 420)            w.push('志望動機が枠を超える可能性があります（現在 ' + ml + '字）');
+  }
   /* 공백기간 감지: 정렬 후 인접 경력 사이 3개월 초과 → 경고 */
   const jobs = s.workHistory.filter(j=>j.startY).slice().sort((a,b)=> (a.startY*12+(a.startM||1)) - (b.startY*12+(b.startM||1)));
   for (let i = 0; i < jobs.length - 1; i++){
@@ -639,19 +668,24 @@ function sectionScores(){
   const s = store.get(); const p = s.profile;
   const req = ['nameKanji','nameKana','birthDate','phone','address'];
   const profileRatio = req.filter(k => (p[k]||'').trim()).length / req.length;
-  return [
+  const list = [
     { label:'基本情報', ratio: profileRatio, weight:25 },
     { label:'写真',     ratio: p.photoDataUrl ? 1 : 0, weight:10 },
     { label:'学歴',     ratio: s.education.some(e=>e.school.trim()&&e.year) ? 1 : (s.education.length ? .5 : 0), weight:15 },
     { label:'職歴',     ratio: s.workHistory.some(e=>e.company.trim()&&e.startY) ? 1 : (s.workHistory.length ? .5 : 0), weight:15 },
-    { label:'資格',     ratio: s.licenses.some(e=>e.name.trim()) ? 1 : (s.licenses.length ? .5 : 0), weight:5 },
-    { label:'志望動機', ratio: Math.min(1, s.motivation.trim().length / 300), weight:20 },
-    { label:'職務経歴', ratio: Math.min(1, (s.workSummary.trim().length + s.selfPr.trim().length) / 200), weight:10 }
+    { label:'資格',     ratio: s.licenses.some(e=>e.name.trim()) ? 1 : (s.licenses.length ? .5 : 0), weight:5 }
   ];
+  /* v2.32: 인쇄 제외한 志望動機는 완성도 계산에서도 제외 (대신 가중치 재정규화로 총점 왜곡 방지) */
+  if (s.settings.showMot !== false)
+    list.push({ label:'志望動機', ratio: Math.min(1, s.motivation.trim().length / 300), weight:20 });
+  list.push({ label:'職務経歴', ratio: Math.min(1, (s.workSummary.trim().length + s.selfPr.trim().length) / 200), weight:10 });
+  return list;
 }
 function renderDashboard(){
   const secs = sectionScores();
-  const total = Math.round(secs.reduce((sum,x)=> sum + x.ratio * x.weight, 0));
+  /* v2.32: 제외된 섹션(志望動機 OFF 등)이 있으면 가중치 합 기준으로 재정규화 — 기본(100 합)일 때 결과 동일 */
+  const sumW = secs.reduce((a,x)=> a + x.weight, 0);
+  const total = sumW ? Math.round(secs.reduce((sum,x)=> sum + x.ratio * x.weight, 0) / sumW * 100) : 0;
   const C = 2 * Math.PI * 52;                                  // 도넛 원주 (r=52)
   const val = C * (1 - total/100);
   $('dcVal').style.strokeDashoffset = String(val);
@@ -680,10 +714,19 @@ function renderDashboard(){
 function historyRows(){
   const s = store.get(); const rows = [];
   for (const e of s.education){
-    if (!e.year) continue;
-    const ym = e.year*12 + (e.month||0);
-    const school = (e.school||'').replace(/[\s　]*(入学|卒業|中退)$/u, '');   /* 卒業 이중 표기 방지 (v2.27) */
-    rows.push({ y:e.year, m:e.month, key:ym, text:school + (school ? ' ' : '') + EDU_TYPES[e.type] });
+    /* v2.31: 연도 미선택 상태에서 학교명만 입력하든 행이 미리보기에서 통째로 사라지던 문제 수정
+       (기존 if(!e.year) continue → 입력 중이던 행의 조용한 유실. '내용만 먼저 적고 연도는 나중에' 라는
+        자연스러운 입력 순서를 깨뜨려 사용자가 버그로 인지하게 됨. licenses는 이름만으로 표시되는데 불일치했음) */
+    if (!e.year && !(e.school||'').trim()) continue;
+    const ym = e.year ? e.year*12 + (e.month||0) : 99998;   // 연도 미정 행은 現在に至る(99999) 직전으로
+    /* v2.31: 학교명 끝에 사용자가 직접 적은 卒業/中退/入学을 '종류 셀렉트 값'보다 우선해 표기.
+       종전엔 무조건 잘라내고 셀렉트 기본값(入学)을 붙여 「○○大学 卒業」입력이 「○○大学 入学」으로
+       뒤바뀌어 인쇄되는 치명적 오표기 발생 (v2.27 dedupe 로직의 부작용) */
+    const rawEdu = (e.school||'');
+    const sufM = rawEdu.match(/[\s　]*(入学|卒業|中退)$/u);
+    const school = sufM ? rawEdu.replace(/[\s　]*(入学|卒業|中退)$/u, '') : rawEdu;
+    const eduLabel = sufM ? sufM[1] : EDU_TYPES[e.type];
+    rows.push({ y:e.year, m:e.month, key:ym, text:school + (school ? ' ' : '') + eduLabel, kind:'edu' });   /* v2.30: kind 태그 */
   }
   /* 회사명/학교명 끝에 사용자가 入社·退社·卒業 등을 직접 적은 경우 자동 접미사와의 이중 표기를 정리 (v2.27)
      예: 「株式会社○○ 入社」라고 입력하면 「…入社 入社」가 되던 것 방지 */
@@ -691,17 +734,17 @@ function historyRows(){
   const RE_WORK_SUFFIX = /[\s　]*(入社|退社|入|退)$/u;
   let hasCurrent = false;
   for (const w of s.workHistory){
-    if (!w.startY) continue;
+    /* v2.31: 회사명만 입력(입사년 미선택)한 경우에도 행이 사라지던 문제 동일 수정 */
+    if (!w.startY && !(w.company||'').trim()) continue;
     const comp = stripEnd(w.company, RE_WORK_SUFFIX);
-    rows.push({ y:w.startY, m:w.startM, key:w.startY*12+(w.startM||0), text:comp + (comp?' ':'') + '入社' });
+    rows.push({ y:w.startY, m:w.startM, key: w.startY ? w.startY*12+(w.startM||0) : 99998, text:comp + (comp?' ':'') + '入社', kind:'work' });
     if (w.endY){
-      rows.push({ y:w.endY, m:w.endM, key:w.endY*12+(w.endM||0)+0.5, text:comp + (comp?' ':'') + '退社' });
+      rows.push({ y:w.endY, m:w.endM, key:w.endY*12+(w.endM||0)+0.5, text:comp + (comp?' ':'') + '退社', kind:'work' });
     } else {
-      hasCurrent = true;   /* 「現在に至る」은 재직 행이 몇 개든 맨 마지막에 '단 1회만' 출력 — JIS 표준 (v2.27)
-                              종전: 재직-checked 행마다 1행씩push되어 現在に至る가 N회 중복되던 버그 */
+      hasCurrent = true;   /* 「現在に至る」은 재직 행이 몇 개든 맨 마지막에 '단 1회만' 출력 — JIS 표준 (v2.27) */
     }
   }
-  if (hasCurrent) rows.push({ y:new Date().getFullYear(), m:new Date().getMonth()+1, key:99999, text:'現在に至る', isNow:true });
+  if (hasCurrent) rows.push({ y:new Date().getFullYear(), m:new Date().getMonth()+1, key:99999, text:'現在に至る', isNow:true, kind:'work' });
   rows.sort((a,b)=> a.key - b.key);
   return rows;
 }
@@ -739,7 +782,7 @@ function buildRirekiA4(){
   a4.append(idWrap);
 
   /* 주소·연락처 블록 */
-  const addr = h('div',{class:'r-rows', style:'margin-top:4mm'},
+  const addr = h('div',{class:'r-rows', style:'margin-top:2.5mm'},
     h('div',{class:'r-row hist', style:'grid-template-columns:1fr;min-height:6mm'},
       h('div',{class:'c', style:'min-height:6mm', text: p.addressKana ? 'ふりがな　' + p.addressKana : 'ふりがな'})),
     h('div',{class:'r-row hist', style:'grid-template-columns:18mm 1fr'},
@@ -754,14 +797,11 @@ function buildRirekiA4(){
   /* 학력·직력 블록 (고정 행수로 1페이지 유지) */
   const hist = historyRows();
   const TOTAL = 11; const blankCount = Math.max(2, TOTAL - hist.length);
-  const histGrid = h('div',{class:'r-rows', style:'margin-top:4mm'});
+  const histGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
   histGrid.append(h('div',{class:'r-sect', text:'学　歴'}));
   /* 학력/직력을 한 그리드에: 学歴 header → 학력 rows → 職歴 header → 직력 rows */
   const eduList = [], workList = [];
-  for (const r of hist){
-    const isEdu = /入学|卒業/.test(r.text) && !/入社|退社/.test(r.text);
-    (isEdu ? eduList : workList).push(r);
-  }
+  for (const r of hist){ (r.kind === 'edu' ? eduList : workList).push(r); }   /* v2.30: kind 태그 분류(캔버스 렌더러와 통일) */
   eduList.forEach(r=> histGrid.append(histRow(r)));
   histGrid.append(h('div',{class:'r-sect', text:'職　歴'}));
   workList.forEach(r=> histGrid.append(histRow(r)));
@@ -772,10 +812,10 @@ function buildRirekiA4(){
   a4.append(histGrid);
 
   /* 자격 블록 */
-  const licGrid = h('div',{class:'r-rows', style:'margin-top:4mm'});
+  const licGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
   licGrid.append(h('div',{class:'r-sect', text:'免許・資格'}));
   const lics = s.licenses.filter(l=>l.year||l.name.trim());
-  lics.slice(0,4).forEach(l=> licGrid.append(
+  lics.forEach(l=> licGrid.append(    /* v2.30: slice(0,4) 캡 폐지 — 5개째 이후 資格 조용한 유실 방지 */
     h('div',{class:'r-row hist', style:'grid-template-columns:18mm 15mm 1fr'},
       h('div',{class:'c center', text: l.year? fmtYM(l.year,l.month):''}),
       h('div',{class:'c center', text: l.month? l.month+'月':''}),
@@ -785,19 +825,23 @@ function buildRirekiA4(){
       h('div',{class:'c'}), h('div',{class:'c'}), h('div',{class:'c'})));
   a4.append(licGrid);
 
-  /* 志望動機 */
-  const motGrid = h('div',{class:'r-rows', style:'margin-top:4mm'});
-  motGrid.append(h('div',{class:'r-sect', text:'志望の動機'}));
-  motGrid.append(h('div',{class:'r-row r-mot', style:'grid-template-columns:1fr'},
-    h('div',{class:'c', style:'min-height:26mm', text:s.motivation||''})));
-  a4.append(motGrid);
-
-  /* 本人希望欄 */
-  const reqGrid = h('div',{class:'r-rows', style:'margin-top:4mm'});
-  reqGrid.append(h('div',{class:'r-sect', text:'本人希望欄'}));
-  reqGrid.append(h('div',{class:'r-row r-mot', style:'grid-template-columns:1fr'},
-    h('div',{class:'c', style:'min-height:12mm', text:s.requests||'貴社の規定に従います。'})));
-  a4.append(reqGrid);
+  /* 志望動機 · 本人希望欄 (v2.32: 설정에서 OFF 시 섹션째로 미출력 —
+     Web応募/企業指定書式처럼 두 란이 불필요한 사용자에게 빈 박스가 어색하게 남지 않도록.
+     입력 내용은 store에 그대로 보존, 프린트/PNG와도 동일 플래그 공유) */
+  if (s.settings.showMot !== false){
+    const motGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
+    motGrid.append(h('div',{class:'r-sect', text:'志望の動機'}));
+    motGrid.append(h('div',{class:'r-row r-mot', style:'grid-template-columns:1fr'},
+      h('div',{class:'c', style:'min-height:22mm', text:s.motivation||''})));   /* v2.30: 압축 */
+    a4.append(motGrid);
+  }
+  if (s.settings.showReq !== false){
+    const reqGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
+    reqGrid.append(h('div',{class:'r-sect', text:'本人希望欄'}));
+    reqGrid.append(h('div',{class:'r-row r-mot', style:'grid-template-columns:1fr'},
+      h('div',{class:'c', style:'min-height:10mm', text:s.requests||'貴社の規定に従います。'})));   /* v2.30: 압축 */
+    a4.append(reqGrid);
+  }
 
   return a4;
 }
@@ -881,6 +925,11 @@ function renderPreview(){
   host.parentNode.replaceChild(fresh, host);
   fresh.id = 'a4Preview';
   fitA4(fresh, $('pvFit1'));
+  /* v2.30: A4 초과 시 배지 표시 — 종전엔 화면엔 보이는데 인쇄/PNG에서만 잘려 사용자가 인지 불가능했음 */
+  try{
+    const wn = $('pvWarn1');
+    if (wn) wn.hidden = fresh.offsetHeight <= mmToPx(297) + 2;
+  }catch(e){}
 }
 function renderPreview2(){
   const host = $('a4Preview2');
@@ -944,10 +993,11 @@ async function downloadResumePNG(){
   try{
     const test = document.createElement('canvas');
     if (!test.getContext || !test.getContext('2d')) throw new Error('canvas-unsupported');
-    const blob = await renderResumePNG();
-    if (!blob) throw new Error('blob-null');
-    downloadBlob(blob, 'rirekisho-' + todayStr() + '.png');
-    toast('履歴書のPNG画像を保存しました（ダウンロードフォルダをご確認ください）');
+    const result = await renderResumePNG();
+    if (!result || !result.blob) throw new Error('blob-null');
+    downloadBlob(result.blob, 'rirekisho-' + todayStr() + '.png');
+    if (result.overflow) toast('内容がA4を超えているため、縦長の画像として保存しました（すべての項目が入っています）', 'warn');  /* v2.30 */
+    else toast('履歴書のPNG画像を保存しました（ダウンロードフォルダをご確認ください）');
   }catch(e){
     toast('画像の生成に失敗しました。「印刷 / PDF保存」をご利用ください', 'error');
   }
@@ -966,29 +1016,7 @@ async function renderResumePNG(){
   ctx.lineCap = 'butt'; ctx.textBaseline = 'middle';
   const bg = s.settings.bgColor || '#ffffff';
 
-  const line  = (x1,y1,x2,y2,w)=>{ ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=(w||.35)*K;
-    ctx.beginPath(); ctx.moveTo(x1*K,y1*K); ctx.lineTo(x2*K,y2*K); ctx.stroke(); };
-  const text  = (t,x,y,mm,align,bold)=>{ fset(mm,!!bold); ctx.fillStyle='#111111';
-    ctx.textAlign = align||'left'; ctx.fillText(t, x*K, y*K); };
-  const wrap  = (str, mm, maxWmm)=>{          // 폭 초과 시 개행 + 禁則処理(킨소쿠) 적용
-    fset(mm,false); const maxW = maxWmm*K; const lines=[]; let cur='';
-    const NO_START = '。、）』」!?！？・ー—─…‥ァィゥェォッャュョぁぃぅぇぉっゃゅょ％‰°′″℃'; // 행두금지 문자
-    const NO_END   = '（「『【〔［｛〈《';                                       // 행말금지 문자
-    for (const ch of String(str)){
-      if (ch === '\n'){ lines.push(cur); cur=''; continue; }
-      if (cur && ctx.measureText(cur + ch).width > maxW){
-        if (NO_START.indexOf(ch) >= 0){ cur += ch; }                                 // 구두점 등은 줄 끝에 매달기(垂れ下げ)
-        else if (NO_END.indexOf(cur.charAt(cur.length-1)) >= 0){ lines.push(cur.slice(0,-1)); cur = cur.charAt(cur.length-1) + ch; } // 여는 괄호는 다음 줄로
-        else { lines.push(cur); cur = ch; }
-      } else cur += ch;
-    }
-    if (cur) lines.push(cur);
-    return lines;
-  };
-
-  const L = 14, R = 196;                      // 좌우 기준선(mm)
-
-  /* --- 사진 (비동기 로드 후 합성) --- */
+  /* --- 사진 (2패스 공용으로 미리 로드) --- */
   const photoImg = p.photoDataUrl ? await new Promise(res=>{
     const im = new Image();
     im.onload = ()=> res(im);
@@ -997,116 +1025,155 @@ async function renderResumePNG(){
     im.src = p.photoDataUrl;
   }) : null;
 
-  /* --- 타이틀 / 날짜 --- */
-  text(fmtDateHeader(new Date()), R, 12, 3.6, 'right');
-  text('履　歴　書', 105, 20, 8, 'center', true);
+  /* 본체 레이아웃: 지정 ctx에 그리고 최종 y(mm)를 반환.
+     v2.30: ①측정 패스로 실제 소요 높이 산정 → 캔버스를 필요한 높이로 확정 → ②본 패스.
+     종전엔 1754px(=297mm) '고정'이라 내용이 넘치면 어떤 경고도 없이 잘려나갔다 */
+  const drawAll = (ctx)=>{
+    const fset = (mm, bold)=> ctx.font = (bold ? '700 ' : '') + (mm * K) + 'px ' + stack;
+    ctx.lineCap = 'butt'; ctx.textBaseline = 'middle';
+    const line  = (x1,y1,x2,y2,w)=>{ ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=(w||.35)*K;
+      ctx.beginPath(); ctx.moveTo(x1*K,y1*K); ctx.lineTo(x2*K,y2*K); ctx.stroke(); };
+    const text  = (t,x,y,mm,align,bold)=>{ fset(mm,!!bold); ctx.fillStyle='#111111';
+      ctx.textAlign = align||'left'; ctx.fillText(t, x*K, y*K); };
+    const wrap  = (str, mm, maxWmm)=>{          // 폭 초과 시 개행 + 禁則処理(킨소쿠) 적용
+      fset(mm,false); const maxW = maxWmm*K; const lines=[]; let cur='';
+      const NO_START = '。、）』」!?！？・ー—─…‥ァィゥェォッャュョぁぃぅぇぉっゃゅょ％‰°′″℃'; // 행두금지 문자
+      const NO_END   = '（「『【〔［｛〈《';                                       // 행말금지 문자
+      for (const ch of String(str)){
+        if (ch === '\n'){ lines.push(cur); cur=''; continue; }
+        if (cur && ctx.measureText(cur + ch).width > maxW){
+          if (NO_START.indexOf(ch) >= 0){ cur += ch; }                                 // 구두점 등은 줄 끝에 매달기(垂れ下げ)
+          else if (NO_END.indexOf(cur.charAt(cur.length-1)) >= 0){ lines.push(cur.slice(0,-1)); cur = cur.charAt(cur.length-1) + ch; } // 여는 괄호는 다음 줄로
+          else { lines.push(cur); cur = ch; }
+        } else cur += ch;
+      }
+      if (cur) lines.push(cur);
+      return lines;
+    };
 
-  /* --- 신원 블록 (ふりがな / 氏名 / 生年月日+性別) --- */
-  const X1 = L, X2 = 158, PHW = 30, PHX = R - PHW;   // 사진 30×40 (JIS)
-  let y = 28;
-  const idRows = [ {h:7, label:'ふりがな', val:(p.nameKana||'')},
-                   {h:14, label:'', val:(p.nameKanji||'氏　　名'), big:true},
-                   {h:9, label:'', val:'sex', split:124} ];
-  line(X1,y,X2,y); 
-  let birthLine = '生年月日';
-  if (p.birthDate){
-    const [by,bm,bdy] = p.birthDate.split('-').map(Number);
-    birthLine = '生年月日　' + fmtYM(by,bm) + bm + '月' + bdy + '日生（満' + computeAge(by,bm,bdy) + '歳）';
-  }
-  for (const r of idRows){
-    if (r.big){ text(r.val, X1+3, y + r.h/2, 7, 'left', true); }
-    else if (r.val === 'sex'){
-      text(birthLine, X1+3, y + r.h/2, 4.2);
-      text(p.gender ? '性別　' + p.gender : '性別', r.split+3, y + r.h/2, 4.2);
-      line(r.split, y, r.split, y + r.h);
-    } else if (r.label){
-      fset(3,false); ctx.fillStyle='#111111'; ctx.textAlign='left';
-      ctx.fillText(r.label + (r.val ? '　' + r.val : ''), (X1+3)*K, (y + r.h/2)*K);
+    const L = 14, R = 196;                      // 좌우 기준선(mm)
+
+    /* --- 타이틀 / 날짜 --- */
+    text(fmtDateHeader(new Date()), R, 12, 3.6, 'right');
+    text('履　歴　書', 105, 20, 8, 'center', true);
+
+    /* --- 신원 블록 (ふりがな / 氏名 / 生年月日+性別) --- */
+    const X1 = L, X2 = 158, PHW = 30, PHX = R - PHW;   // 사진 30×40 (JIS)
+    let y = 28;
+    const idRows = [ {h:7, label:'ふりがな', val:(p.nameKana||'')},
+                     {h:14, label:'', val:(p.nameKanji||'氏　　名'), big:true},
+                     {h:9, label:'', val:'sex', split:124} ];
+    line(X1,y,X2,y);
+    let birthLine = '生年月日';
+    if (p.birthDate){
+      const [by,bm,bdy] = p.birthDate.split('-').map(Number);
+      birthLine = '生年月日　' + fmtYM(by,bm) + bm + '月' + bdy + '日生（満' + computeAge(by,bm,bdy) + '歳）';
     }
-    y += r.h; line(X1, y, X2, y);
-  }
-  line(X1, 28, X1, y); line(X2, 28, X2, y);
-  /* 사진 박스/이미지 */
-  line(PHX, 28, R, 28); line(PHX, 68, R, 68); line(PHX, 28, PHX, 68); line(R, 28, R, 68);
-  if (photoImg){
-    /* 3:4 커버 크롭 (결과 캔버스는 이미 3:4지만 방어적 처리) */
-    const sw = photoImg.width, sh = photoImg.height, target = 3/4;
-    let sx=0, sy=0, cw=sw, ch=sh;
-    if (sw/sh > target) cw = sh*target, sx = (sw-cw)/2; else ch = sw/target, sy = (sh-ch)/2;
-    ctx.fillStyle = bg; ctx.fillRect((PHX+.4)*K, (28.4)*K, (PHW-.8)*K, (40-.8)*K);
-    ctx.drawImage(photoImg, sx, sy, cw, ch, (PHX+.4)*K, 28.4*K, (PHW-.8)*K, (40-.8)*K);
-  } else {
-    fset(3.2,false); ctx.fillStyle='#666666'; ctx.textAlign='center';
-    ctx.fillText('写真を貼る位置', (PHX+PHW/2)*K, 47*K);
-    ctx.fillText('(縦4cm×横3cm)', (PHX+PHW/2)*K, 52*K);
-  }
-
-  /* --- 주소·연락처 블록 (사진 박스 하단 y=68 아래에서 시작 → 겹침 방지) --- */
-  y = 72; const addrRows = [
-    { h:6,  v: p.addressKana ? 'ふりがな　' + p.addressKana : 'ふりがな', small:true },
-    { h:10, v: '現住所　' + (p.postal ? '〒' + p.postal + '　' : '') + (p.address||'') },
-    { h:8,  v:'tel', split:96 }
-  ];
-  line(X1, y, R, y);
-  for (const r of addrRows){
-    if (r.v === 'tel'){
-      text('電話　' + (p.phone||''), X1+3, y + r.h/2, r.small?3:4.2);
-      text('Eメール　' + (p.email||''), r.split+3, y + r.h/2, 4.2);
-      line(r.split, y, r.split, y + r.h);
+    for (const r of idRows){
+      if (r.big){ text(r.val, X1+3, y + r.h/2, 7, 'left', true); }
+      else if (r.val === 'sex'){
+        text(birthLine, X1+3, y + r.h/2, 4.2);
+        text(p.gender ? '性別　' + p.gender : '性別', r.split+3, y + r.h/2, 4.2);
+        line(r.split, y, r.split, y + r.h);
+      } else if (r.label){
+        fset(3,false); ctx.fillStyle='#111111'; ctx.textAlign='left';
+        ctx.fillText(r.label + (r.val ? '　' + r.val : ''), (X1+3)*K, (y + r.h/2)*K);
+      }
+      y += r.h; line(X1, y, X2, y);
+    }
+    line(X1, 28, X1, y); line(X2, 28, X2, y);
+    /* 사진 박스/이미지 */
+    line(PHX, 28, R, 28); line(PHX, 68, R, 68); line(PHX, 28, PHX, 68); line(R, 28, R, 68);
+    if (photoImg){
+      /* 3:4 커버 크롭 (결과 캔버스는 이미 3:4지만 방어적 처리) */
+      const sw = photoImg.width, sh = photoImg.height, target = 3/4;
+      let sx=0, sy=0, cw=sw, ch=sh;
+      if (sw/sh > target) cw = sh*target, sx = (sw-cw)/2; else ch = sw/target, sy = (sh-ch)/2;
+      ctx.fillStyle = bg; ctx.fillRect((PHX+.4)*K, (28.4)*K, (PHW-.8)*K, (40-.8)*K);
+      ctx.drawImage(photoImg, sx, sy, cw, ch, (PHX+.4)*K, 28.4*K, (PHW-.8)*K, (40-.8)*K);
     } else {
-      text(r.v, X1+3, y + r.h/2, r.small ? 3 : 4.2);
+      fset(3.2,false); ctx.fillStyle='#666666'; ctx.textAlign='center';
+      ctx.fillText('写真を貼る位置', (PHX+PHW/2)*K, 47*K);
+      ctx.fillText('(縦4cm×横3cm)', (PHX+PHW/2)*K, 52*K);
     }
-    y += r.h; line(X1, y, R, y);
-  }
-  line(X1, y - 24, X1, y); line(R, y - 24, R, y);
 
-  /* --- 학력·직력 그리드 --- */
-  const C1 = 18, C2 = 15;   // 年 폭 / 月 폭
-  const hist = historyRows();
-  const eduR = [], workR = [];
-  for (const r of hist){ (/入社|退社/.test(r.text) ? workR : eduR).push(r); }
-  const HK = 6.8;
-  const sect = (label)=>{
-    y += 4; text(label, 105, y + HK/2, 4.4, 'center', true);
-    line(X1,y,R,y,.35); y += HK; line(X1,y,R,y,.35);
-    line(X1,y-HK,X1,y); line(X1+C1,y-HK,X1+C1,y); line(X1+C1+C2,y-HK,X1+C1+C2,y); line(R,y-HK,R,y);
-  };
-  const row = (r, center)=>{
-    if (r){
-      text(fmtYM(r.y, r.m), X1+C1/2, y + HK/2, 3.6, 'center');
-      text(r.m ? r.m+'月' : '', X1+C1+C2/2, y + HK/2, 3.6, 'center');
-      text(center===true ? '以　上' : r.text, center ? R-8 : X1+C1+C2+3, y + HK/2, 4, center ? 'right' : 'left');
+    /* --- 주소·연락처 블록 (사진 박스 하단 y=68 아래에서 시작 → 겹침 방지) --- */
+    y = 72; const addrRows = [
+      { h:6,  v: p.addressKana ? 'ふりがな　' + p.addressKana : 'ふりがな', small:true },
+      { h:10, v: '現住所　' + (p.postal ? '〒' + p.postal + '　' : '') + (p.address||'') },
+      { h:8,  v:'tel', split:96 }
+    ];
+    line(X1, y, R, y);
+    for (const r of addrRows){
+      if (r.v === 'tel'){
+        text('電話　' + (p.phone||''), X1+3, y + r.h/2, r.small?3:4.2);
+        text('Eメール　' + (p.email||''), r.split+3, y + r.h/2, 4.2);
+        line(r.split, y, r.split, y + r.h);
+      } else {
+        text(r.v, X1+3, y + r.h/2, r.small ? 3 : 4.2);
+      }
+      y += r.h; line(X1, y, R, y);
     }
-    line(X1,y,R,y,.3); line(X1,y+HK,R,y+HK,.3);
-    line(X1,y,X1,y+HK); line(X1+C1,y,X1+C1,y+HK); line(X1+C1+C2,y,X1+C1+C2,y+HK); line(R,y,R,y+HK);
-    y += HK;
+    line(X1, y - 24, X1, y); line(R, y - 24, R, y);
+
+    /* --- 학력·직력 그리드 --- */
+    const C1 = 18, C2 = 15;   // 年 폭 / 月 폭
+    const hist = historyRows();
+    const eduR = [], workR = [];
+    for (const r of hist){ (r.kind === 'work' ? workR : eduR).push(r); }   /* v2.30: 분류 버그 수정 — 종전 '現在に至る'가 学歴 블록에 들어감 */
+    const HK = 6.8;
+    const sect = (label)=>{
+      y += 4; text(label, 105, y + HK/2, 4.4, 'center', true);
+      line(X1,y,R,y,.35); y += HK; line(X1,y,R,y,.35);
+      line(X1,y-HK,X1,y); line(X1+C1,y-HK,X1+C1,y); line(X1+C1+C2,y-HK,X1+C1+C2,y); line(R,y-HK,R,y);
+    };
+    const row = (r, center)=>{
+      if (r){
+        text(fmtYM(r.y, r.m), X1+C1/2, y + HK/2, 3.6, 'center');
+        text(r.m ? r.m+'月' : '', X1+C1+C2/2, y + HK/2, 3.6, 'center');
+        text(center===true ? '以　上' : r.text, center ? R-8 : X1+C1+C2+3, y + HK/2, 4, center ? 'right' : 'left');
+      }
+      line(X1,y,R,y,.3); line(X1,y+HK,R,y+HK,.3);
+      line(X1,y,X1,y+HK); line(X1+C1,y,X1+C1,y+HK); line(X1+C1+C2,y,X1+C1+C2,y+HK); line(R,y,R,y+HK);
+      y += HK;
+    };
+    const blankTotal = Math.max(2, 11 - (eduR.length + workR.length));
+    sect('学　歴'); eduR.forEach(r=>row(r));
+    sect('職　歴'); workR.forEach(r=>row(r));
+    for (let i=0;i<blankTotal;i++) row(null);
+    row({ y:0, m:0, text:'以上' }, true);
+
+    /* --- 자격 블록 --- */
+    y += 2; sect('免許・資格');
+    const lics = s.licenses.filter(l=> l.year || l.name.trim());   /* v2.30: slice(0,4) 캡 폐지 — 자격 조용한 유실 방지 */
+    lics.forEach(l=> row({ y:l.year, m:l.month, text:l.name||'' }));
+    for (let i=lics.length;i<3;i++) row(null);
+
+    /* --- 지원동기 / 희망사항 (박스 + 자동개행) --- */
+    const boxText = (label, body, fallback)=>{
+      y += 2; sect(label);
+      const inner = (body||'').trim() || fallback;
+      const lines = wrap(inner, 4, R - X1 - 8);
+      const needH = Math.max(10, lines.length * 5.6 + 4);   /* v2.30: 상한 폐지 — 문장이 절대 잘리지 않게 박스를 내용만큼 키움 */
+      line(X1,y,R,y,.3); line(X1,y,X1,y+needH); line(R,y,R,y+needH); line(X1,y+needH,R,y+needH,.3);
+      lines.forEach((ln,i)=> text(ln, X1+4, y + 4 + 2.8 + i*5.6, 4));
+      y += needH;
+    };
+    /* v2.32: DOM 미리보기와 동일하게 표시 플래그 적용 — PNG에서도 OFF 섹션 제외 */
+    if (s.settings.showMot !== false) boxText('志望の動機', s.motivation, '');
+    if (s.settings.showReq !== false) boxText('本人希望欄', s.requests, '貴社の規定に従います。');
+    return y;
   };
-  const blankTotal = Math.max(2, 11 - (eduR.length + workR.length));
-  sect('学　歴'); eduR.forEach(r=>row(r));
-  sect('職　歴'); workR.forEach(r=>row(r));
-  for (let i=0;i<blankTotal;i++) row(null);
-  row({ y:0, m:0, text:'以上' }, true);
 
-  /* --- 자격 블록 --- */
-  y += 2; sect('免許・資格');
-  const lics = s.licenses.filter(l=> l.year || l.name.trim()).slice(0,4);
-  lics.forEach(l=> row({ y:l.year, m:l.month, text:l.name||'' }));
-  for (let i=lics.length;i<3;i++) row(null);
-
-  /* --- 지원동기 / 희망사항 (박스 + 자동개행) --- */
-  const boxText = (label, body, fallback, maxH)=>{
-    y += 2; sect(label);
-    const inner = (body||'').trim() || fallback;
-    const lines = wrap(inner, 4, R - X1 - 8);
-    const needH = Math.min(maxH, Math.max(10, lines.length * 5.6 + 4));
-    line(X1,y,R,y,.3); line(X1,y,X1,y+needH); line(R,y,R,y+needH); line(X1,y+needH,R,y+needH,.3);
-    lines.slice(0, Math.floor((needH-4)/5.6)).forEach((ln,i)=> text(ln, X1+4, y + 4 + 2.8 + i*5.6, 4));
-    y += needH;
-  };
-  boxText('志望の動機', s.motivation, '', 34);
-  boxText('本人希望欄', s.requests, '貴社の規定に従います。', 16);
-
-  return new Promise(res=> cv.toBlob(res, 'image/png'));
+  /* ① 측정 패스(1×1 캔버스로 높이만 계산) ② 높이 확정 후 본 패스 */
+  const probe = document.createElement('canvas');
+  const yEnd = drawAll(probe.getContext('2d'));
+  const overflow = yEnd > 297;
+  if (overflow){ cv.height = Math.ceil((yEnd + 4) * K); }   // A4 초과 시 세로 연장 — 내용 100% 보존
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  drawAll(ctx);
+  return new Promise(res=> cv.toBlob(b=> res({ blob:b, overflow }), 'image/png'));
 }
 
 /* ================================================================

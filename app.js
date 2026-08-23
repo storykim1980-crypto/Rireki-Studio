@@ -499,8 +499,17 @@ function renderWorkList(){
     eY.addEventListener('change',()=> store.update(st=>{ st.workHistory[idx].endY = +eY.value||null; },{render:'light'}));
     eM.addEventListener('change',()=> store.update(st=>{ st.workHistory[idx].endM = +eM.value||null; },{render:'light'}));
     cb.addEventListener('change',()=>{
-      store.update(st=>{ const w=st.workHistory[idx]; w.endY = cb.checked?null:(+eY.value||null); w.endM = cb.checked?null:(+eM.value||null); },{render:false});
-      renderDynamic();                     // 체크 = 구조 변경(選택框 비활성) → 리스트 재구성
+      store.update(st=>{ const w=st.workHistory[idx];
+        if (cb.checked){ w.endY = null; w.endM = null; }
+        else {
+          /* v2.29 치명 수정: 해제 시 퇴사연월이 미선택(placeholder 값 '')이면 endY=null이 유지되어
+             재렌더에서 다시 '재직'으로 되돌아가 체크를 영구히 해제할 수 없던 데드락.
+             입사년(없으면 올해)을 기본 퇴사년으로 채워 해제 상태가 성립되도록 한다 */
+          w.endY = +eY.value || w.startY || new Date().getFullYear();
+          w.endM = +eM.value || null;
+        }
+      },{render:false});
+      renderDynamic();                     // 체크 = 구조 변경(선택框 비활성) → 리스트 재구성
     });
     txt.addEventListener('input',()=> store.update(st=>{ st.workHistory[idx].company = txt.value; },{render:'light'}));
     list.append(h('div',{class:'crud-item'},
@@ -551,19 +560,47 @@ function crudTools(kind, idx, len){
     h('button',{ type:'button', class:'btn small danger', attrs:{'aria-label':'削除'}, on:{click:del} }, ic('i-trash'))
   );
 }
-/* --- 직무 상세 (職務経歴書 탭) --- */
+/* --- 직무 상세 (職務経歴書 탭) — v2.28: 읽기 전용에서 '이 화면에서 바로 편집'으로 격상.
+       회사명/入退社 연월/재직 체크/이동·삭제까지 이 탭에서 전부 가능 (履歴書 탭과同一 store) --- */
 function renderWorkDetail(){
   const list = $('workDetailList'); list.replaceChildren();
   const items = store.get().workHistory;
-  if (!items.length){ list.append(h('div',{class:'empty-note',text:'まず「履歴書」タブで職歴を追加してください。'})); return; }
+  if (!items.length){ list.append(h('div',{class:'empty-note',text:'まだ職歴がありません。上の「＋ 追加」から登録してください（履歴書タブと同期されます）。'})); return; }
   items.forEach((item, idx)=>{
-    const period = fmtYM(item.startY,item.startM) + (item.startM? item.startM+'月':'') + '〜' +
-      (item.endY ? fmtYM(item.endY,item.endM)+(item.endM?item.endM+'月':'') : '現在');
+    /* 연월 선택 (履歴書 탭의 職歴 행과 동일한 바인딩 규칙) */
+    const sY=h('select',{attrs:{'aria-label':'入社年'}}), sM=h('select',{attrs:{'aria-label':'入社月'}});
+    const eY=h('select',{attrs:{'aria-label':'退社年'}}), eM=h('select',{attrs:{'aria-label':'退社月'}});
+    yearOptions(sY,item.startY); monthOptions(sM,item.startM); yearOptions(eY,item.endY); monthOptions(eM,item.endM);
+    const isCurrent = item.endY == null;
+    eY.disabled = isCurrent; eM.disabled = isCurrent;
+    const cb = h('input',{ type:'checkbox' }); cb.checked = isCurrent;
+    const cbWrap = h('label',{class:'check-inline'}, cb, '現在に至る');
+    const comp = h('input',{ type:'text', value:item.company, placeholder:'例: ○○株式会社', attrs:{'aria-label':'会社名'} });
+    sY.addEventListener('change',()=> store.update(st=>{ st.workHistory[idx].startY = +sY.value||null; },{render:'light'}));
+    sM.addEventListener('change',()=> store.update(st=>{ st.workHistory[idx].startM = +sM.value||null; },{render:'light'}));
+    eY.addEventListener('change',()=> store.update(st=>{ st.workHistory[idx].endY = +eY.value||null; },{render:'light'}));
+    eM.addEventListener('change',()=> store.update(st=>{ st.workHistory[idx].endM = +eM.value||null; },{render:'light'}));
+    cb.addEventListener('change',()=>{
+      store.update(st=>{ const w=st.workHistory[idx];
+        if (cb.checked){ w.endY = null; w.endM = null; }
+        else {
+          /* v2.29 치명 수정: 해제 시 퇴사연월이 미선택(placeholder 값 '')이면 endY=null이 유지되어
+             재렌더에서 다시 '재직'으로 되돌아가 체크를 영구히 해제할 수 없던 데드락.
+             입사년(없으면 올해)을 기본 퇴사년으로 채워 해제 상태가 성립되도록 한다 */
+          w.endY = +eY.value || w.startY || new Date().getFullYear();
+          w.endM = +eM.value || null;
+        }
+      },{render:false});
+      renderDynamic();                     // 체크 = 구조 변경(선택框 비활성) → 리스트 재구성
+    });
+    comp.addEventListener('input',()=> store.update(st=>{ st.workHistory[idx].company = comp.value; },{render:'light'}));
+    /* 업무 상세 */
     const ta = h('textarea',{ rows:4, placeholder:'担当業務・実績・工夫した点などを具体的に', attrs:{'aria-label':'業務内容'} });
     ta.value = item.role || '';
     ta.addEventListener('input',()=> store.update(st=>{ st.workHistory[idx].role = ta.value; },{render:'light'}));
     list.append(h('div',{class:'crud-item'},
-      h('div',{class:'ex-head'}, h('strong',{text:item.company||('会社 '+(idx+1))}), h('span',{class:'ex-cat',text:period})),
+      h('div',{class:'crud-row work'}, sY, sM, eY, eM, comp),
+      h('div',{class:'crud-bottom'}, cbWrap, crudTools('workHistory', idx, items.length)),
       ta
     ));
   });
@@ -630,7 +667,10 @@ function renderDashboard(){
   const wl = $('warnList'); wl.replaceChildren();
   const warns = computeWarnings();
   if (!warns.length) wl.append(h('li',{class:'ok-item',text:'必須項目はすべて入力されています'}));
-  else warns.slice(0,4).forEach(w => wl.append(h('li',{text:w})));   // 최대 4건 표시
+  else {
+    warns.slice(0,4).forEach(w => wl.append(h('li',{text:w})));       // 최대 4건 + 나머지 건수 안내 (v2.29)
+    if (warns.length > 4) wl.append(h('li',{class:'ok-item', text:'ほか' + (warns.length - 4) + '件の指摘があります'}));
+  }
 }
 
 /* ================================================================
@@ -642,18 +682,26 @@ function historyRows(){
   for (const e of s.education){
     if (!e.year) continue;
     const ym = e.year*12 + (e.month||0);
-    rows.push({ y:e.year, m:e.month, key:ym, text:(e.school||'') + (e.school ? ' ' : '') + EDU_TYPES[e.type] });
+    const school = (e.school||'').replace(/[\s　]*(入学|卒業|中退)$/u, '');   /* 卒業 이중 표기 방지 (v2.27) */
+    rows.push({ y:e.year, m:e.month, key:ym, text:school + (school ? ' ' : '') + EDU_TYPES[e.type] });
   }
+  /* 회사명/학교명 끝에 사용자가 入社·退社·卒業 등을 직접 적은 경우 자동 접미사와의 이중 표기를 정리 (v2.27)
+     예: 「株式会社○○ 入社」라고 입력하면 「…入社 入社」가 되던 것 방지 */
+  const stripEnd = (t, re) => (t||'').replace(re, '');
+  const RE_WORK_SUFFIX = /[\s　]*(入社|退社|入|退)$/u;
+  let hasCurrent = false;
   for (const w of s.workHistory){
     if (!w.startY) continue;
-    const comp = w.company || '';
+    const comp = stripEnd(w.company, RE_WORK_SUFFIX);
     rows.push({ y:w.startY, m:w.startM, key:w.startY*12+(w.startM||0), text:comp + (comp?' ':'') + '入社' });
     if (w.endY){
       rows.push({ y:w.endY, m:w.endM, key:w.endY*12+(w.endM||0)+0.5, text:comp + (comp?' ':'') + '退社' });
     } else {
-      rows.push({ y:new Date().getFullYear(), m:new Date().getMonth()+1, key:99999, text:'現在に至る', isNow:true });
+      hasCurrent = true;   /* 「現在に至る」은 재직 행이 몇 개든 맨 마지막에 '단 1회만' 출력 — JIS 표준 (v2.27)
+                              종전: 재직-checked 행마다 1행씩push되어 現在に至る가 N회 중복되던 버그 */
     }
   }
+  if (hasCurrent) rows.push({ y:new Date().getFullYear(), m:new Date().getMonth()+1, key:99999, text:'現在に至る', isNow:true });
   rows.sort((a,b)=> a.key - b.key);
   return rows;
 }
@@ -1338,10 +1386,15 @@ function bindEditor(){
   bindBrushPainting();
   /* 리셋 */
   $('btnPhotoReset').addEventListener('click', ()=>{
+    /* v2.29: 「やり直し」가 보정만 초기화하던 것 → 라벨 기대에 맞게 '완전 초기화'(사진 선택 단계로 복귀) */
     photoS.preset='standard'; photoS.tol=45; photoS.bri=100; photoS.con=100; photoS.sat=100;
     $('rngBri').value=100; $('rngCon').value=100; $('rngSat').value=100; $('rngTol').value=45;
-    if (photoS.cropped){ buildMask(); composite(); }
-    toast('補正をリセットしました');
+    photoS.src=null; photoS.cropped=null; photoS.result=null; photoS.mask=null;
+    photoS.zoom=1; photoS.ox=0; photoS.oy=0; $('rngZoom').value=100;
+    $('cropStage').classList.add('hidden'); $('editPanel').classList.add('hidden');
+    const fi = $('fileInput'); if (fi) fi.value='';
+    setStep(1);
+    toast('最初からやり直します。写真を選んでください');
   });
   /* 저장/삽입/시트 */
   $('btnSavePng').addEventListener('click', savePhotoPng);
@@ -2286,6 +2339,8 @@ function bindTabs(){
     btns.forEach(x=>{ x.classList.remove('active'); x.setAttribute('aria-selected','false'); });
     b.classList.add('active'); b.setAttribute('aria-selected','true');
     document.querySelectorAll('.tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.panel === b.dataset.tab));
+    /* v2.28: 다른 탭에서 수정된 職歴 등을 전환 즉시 반영 (양쪽 탭이 같은 store를 편집하므로 재구성으로 동기화) */
+    try{ renderDynamic(); }catch(e){ console.warn(e); }
     /* 숨김 상태에서 폭 0이었던 미리보기 재피팅 */
     fitA4($('a4Preview'),$('pvFit1')); fitA4($('a4Preview2'),$('pvFit2')); fitA4($('a4PreviewT'),$('pvFit3')); fitA4($('a4PreviewS'),$('pvFit4'));
     /* v2.20: 탭 전환 즉시 그 패널 맨 위로 스크롤 (모바일: 히어로가 패널을 화면 밖으로 밀어내는 문제 해소) */
@@ -2674,6 +2729,11 @@ function init(){
     $('btnAddWork').addEventListener('click', ()=>{
       store.update(st=>{ st.workHistory.push({ id:uuid(), startY:null, startM:null, endY:null, endM:null, company:'', role:'' }); },{render:false});
       renderDynamic();
+    });
+    $('btnAddWork2').addEventListener('click', ()=>{   /* 職務経歴書 탭의 追加 버튼 (v2.28) */
+      store.update(st=>{ st.workHistory.push({ id:uuid(), startY:null, startM:null, endY:null, endM:null, company:'', role:'' }); },{render:false});
+      renderDynamic();
+      toast('職歴を追加しました。このまま入力できます');
     });
     $('btnAddLic').addEventListener('click', ()=>{
       store.update(st=>{ st.licenses.push({ id:uuid(), year:null, month:null, name:'' }); },{render:false});

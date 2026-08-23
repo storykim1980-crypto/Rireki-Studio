@@ -23,7 +23,7 @@
   <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=2.26">
+  <link rel="stylesheet" href="style.css?v=2.29">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication",
    "name":"履歴スタジオ","alternateName":"Rireki Studio",
@@ -160,12 +160,6 @@
         <span class="hero-chip c2"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>A4ぴったり印刷</span>
         <span class="hero-chip c3"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>和暦 自動変換</span>
       </div>
-    </div>
-    <div class="hero-stats" aria-label="サービス実績の数字">
-      <div class="stein"><b>12</b><span>すべて無料のツール</span></div>
-      <div class="stein"><b>20</b><span>書き方ガイド記事</span></div>
-      <div class="stein"><b>0</b><span>外部送信 — 完全ローカル</span></div>
-      <div class="stein"><b>6</b><span>対応書類</span></div>
     </div>
   </section>
 
@@ -309,7 +303,7 @@
               <button class="btn small primary" id="btnAddWork" type="button">＋ 追加</button>
             </div>
             <div class="crud-list" id="workList"></div>
-            <p class="hint">在職中は「現在に至る」にチェック。3か月以上の空白期間は自動で警告します。</p>
+            <p class="hint">会社名・学校名に「入社」「退社」「卒業」は入れないでください（印刷時に自動で付きます）。在職中は「現在に至る」にチェック（最後に1行だけ印刷されます）。3か月以上の空白期間は自動で警告します。</p>
           </section>
 
           <!-- 免許・資格 -->
@@ -362,8 +356,11 @@
             <p class="hint"><span id="sumCount">0</span>字</p>
           </section>
           <section class="card">
-            <h2 class="card-title">職務経歴（詳細）</h2>
-            <p class="hint">「職歴」タブで入力した内容が反映されます。会社ごとの業務内容・実績は下の各行に追記してください。</p>
+            <div class="card-head">
+              <h2 class="card-title">職務経歴（詳細）</h2>
+              <button class="btn small primary" id="btnAddWork2" type="button">＋ 追加</button>
+            </div>
+            <p class="hint">会社名・在籍期間は<b>この画面でそのまま追加・修正</b>できます（「履歴書」タブの職歴と自動で同期されます）。会社ごとの業務内容・実績は下の各行に記入してください。「入社」「退社」は印刷時に自動で付きます。</p>
             <div class="crud-list" id="workDetailList"></div>
           </section>
           <section class="card" aria-labelledby="h-pr">
@@ -812,6 +809,6 @@
 <!-- 인쇄 전용 루트 (화면에서는 숨김) -->
 <div id="printRoot" aria-hidden="true"></div>
 
-<script src="app.js?v=2.26"></script>
+<script src="app.js?v=2.29"></script>
 </body>
 </html>

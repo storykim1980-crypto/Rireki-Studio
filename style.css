@@ -802,30 +802,11 @@ dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
 @media (max-width:359px){ .hp-cap em{ display:none; } }
 
 /* ================================================================
-   v2.35: 証明写真 스튜디오 프로모 밴드 (히어로 직하) — 차별화 기능 강조
-   브랜드 그라디언트로 히어로와 시각적 연속. v2.37: 텍스트 전용(문장 중심) 섹션으로 재설계
+   v2.40: 히어로 証明写真 노트 — 프로모 밴드 삭제에 따라 기능 소개를 히어로 컴팩트 1줄로 흡수
 ================================================================ */
-.photo-promo{ position:relative; color:#fff;
-  background:
-    radial-gradient(720px 380px at 50% -10%, rgba(242,185,13,.14), transparent 60%),
-    linear-gradient(160deg,#1e3a8a 0%, #2447c0 52%, #1b2f6e 100%);
-  padding:clamp(2.4rem,4.5vw,3.6rem) 1.2rem; border-top:1px solid rgba(255,255,255,.08); }
-/* v2.37: 텍스트 전용 섹션 — 중앙 정렬 타이포그래피 (일러스트 데모 삭제) */
-.pp-inner{ max-width:780px; margin:0 auto; text-align:center; }
-.pp-badge{ display:inline-flex; align-items:center; gap:.4rem; font-size:.74rem; font-weight:800; letter-spacing:.02em;
-  color:#ffe9a8; background:rgba(246,201,69,.14); border:1px solid rgba(246,201,69,.38);
-  border-radius:999px; padding:.34rem .8rem; }
-.pp-badge .ic{ width:14px; height:14px; }
-.pp-copy h2{ margin:1rem 0 .85rem; font-size:clamp(1.5rem,2.8vw,2.15rem); font-weight:900; line-height:1.45; letter-spacing:-.01em; }
-.pp-copy h2 .hl{ color:#ffd84d; }
-.pp-sub{ margin:0 auto; font-size:.92rem; line-height:2; color:rgba(255,255,255,.86); max-width:37em; }
-.pp-feats{ display:flex; flex-wrap:wrap; justify-content:center; gap:.45rem .55rem; margin:1.2rem 0 1.45rem; padding:0; list-style:none; }
-.pp-feats li{ display:inline-flex; align-items:center; font-size:.78rem; font-weight:700; letter-spacing:.015em;
-  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
-  padding:.42rem .8rem; border-radius:999px; }
-.pp-cta{ display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; }
-.pp-guide{ font-size:.82rem; font-weight:700; color:#cfe0ff; text-decoration:underline; text-underline-offset:3px; }
-.pp-guide:hover{ color:#fff; }
-/* 모바일: 본문 데스크탑용 강제 줄바꿈은 자연 랩으로 전환.
-   (h2의 의도적 2단 분할은 유지 — 자연 랩 시 「証明写真」 단어가 줄 중간에서 잘리는 현상 방지) */
-@media (max-width:767px){ .pp-sub .br-w{ display:none; } }
+.hero-photo-note{ display:flex; align-items:center; gap:.45rem; flex-wrap:wrap;
+  margin:.7rem 0 0; font-size:.8rem; font-weight:600; line-height:1.7; color:rgba(255,255,255,.8); }
+.hero-photo-note .ic{ width:14px; height:14px; color:#ffd84d; flex:none; }
+.hp-link{ background:none; border:0; padding:0; margin:0; cursor:pointer; font:inherit; font-weight:800;
+  color:#ffd84d; text-decoration:underline; text-underline-offset:3px; }
+.hp-link:hover,.hp-link:focus-visible{ color:#fff; }

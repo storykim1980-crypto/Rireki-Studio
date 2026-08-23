@@ -18,12 +18,15 @@
   <meta property="og:description" content="フォーム入力だけでJIS規格の履歴書。自撮り→証明写真変換。退職届の作成までワンストップ。和暦自動変換。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.rireki-studio.com/">
-  <meta property="og:image" content="assets/ogp.png">
+  <!-- v2.39: canonical 자기참조 추가 — `/`과 `/index.html`이 동일 내용 200으로 열리는 환경(GitHub Pages)에서
+       検索評価 분산 방지 (하위 23페이지와 정책 통일) -->
+  <link rel="canonical" href="https://www.rireki-studio.com/">
+  <meta property="og:image" content="https://www.rireki-studio.com/assets/ogp.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=2.38">
+  <link rel="stylesheet" href="style.css?v=2.40">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication",
    "name":"履歴スタジオ","alternateName":"Rireki Studio",
@@ -121,6 +124,8 @@
           <span><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>会員登録ナシ</span>
           <span><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>外部送信ゼロ</span>
         </p>
+        <!-- v2.40: 証明写真 프로모 밴드 삭제 — 가치 제안은 히어로 내 컴팩트 1줄로 흡수 (사용자 지시: 레이아웃 확대 금지) -->
+        <p class="hero-photo-note"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>自撮り1枚が、背景自動除去で縦4×横3cmの「証明写真」に。<button type="button" class="hp-link" id="hpPhotoGo">つくってみる →</button></p>
         <ol class="hero-steps">
           <li><span class="hs-num">1</span><span class="hs-txt"><strong>写真をつくる</strong><small>自撮りでOK</small></span></li>
           <li><span class="hs-num">2</span><span class="hs-txt"><strong>フォームに入力</strong><small>和暦は自動変換</small></span></li>
@@ -163,28 +168,7 @@
     </div>
   </section>
 
-  <!-- v2.37: 証明写真 프로모를 '텍스트 중심'으로 재설계 (사용자 지적: 일러스트 데모가 조잡하고 히어로에 이미지가 너무 많다).
-       일러스트·비교 슬라이더 전량 삭제 — 가치는 자연스러운 문장 흐름으로 전달하고, 첫 화면의 비주얼은 히어로 서식 목업 1개로 통일.
-       외부 이미지 0·외부 폰트 0 (오프라인 정책 유지) -->
-  <section class="photo-promo" id="photoPromo" aria-labelledby="pp-title">
-    <div class="pp-inner">
-      <div class="pp-copy">
-        <span class="pp-badge"><svg class="ic" aria-hidden="true"><use href="#i-aperture"/></svg>イチ推し機能 — 履歴スタジオだけ</span>
-        <h2 id="pp-title">スマホの自撮りが、<br><span class="hl">1分で「証明写真」</span>に。</h2>
-        <p class="pp-sub">部屋で撮った何気ない一枚を選ぶだけ。面倒な背景は自動でやさしく取り除き、明るさや色合いは指先のスライダーひとつで自然に整います。<br class="br-w">仕上がりは履歴書の写真欄ぴったりの縦4cm×横3cm。写真スタジオに行く時間も費用も、もう必要ありません。</p>
-        <ul class="pp-feats">
-          <li>背景 自動除去</li>
-          <li>明るさ・彩度 スライダー</li>
-          <li>はみ出し 仕上げブラシ</li>
-          <li>縦4×横3cm 自動裁断</li>
-        </ul>
-        <div class="pp-cta">
-          <button class="btn hero-btn" id="ppGo" type="button"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>証明写真を今すぐつくる</button>
-          <a class="pp-guide" href="guide/smartphone-photo.html">スマホ1台で撮るコツ →</a>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- v2.40: 証明写真 프로모 밴드 전량 삭제 (사용자 지시) — 가치 문장은 히어로의 .hero-photo-note 1줄로 흡수 -->
 
   <!-- ===== 탭 낫캐게이션 (모바일에서는 하단 고정) ===== -->
   <nav class="tabbar" id="tool" role="tablist" aria-label="機能タブ">
@@ -856,6 +840,6 @@
 <!-- 인쇄 전용 루트 (화면에서는 숨김) -->
 <div id="printRoot" aria-hidden="true"></div>
 
-<script src="app.js?v=2.38"></script>
+<script src="app.js?v=2.40"></script>
 </body>
 </html>

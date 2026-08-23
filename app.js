@@ -2576,10 +2576,9 @@ function bindSettings(){
 }
 function openDlg(d){ try{ d.showModal(); }catch(e){ d.setAttribute('open',''); } }
 function closeDlg(d){ try{ d.close(); }catch(e){ d.removeAttribute('open'); } }
-/* v2.37: 히어로 証明写真 프로모 — 텍스트 전용 섹션으로 간소화 (일러스트 제거)
-   CTA 클릭 시 写真탭으로 이동만 담당 */
+/* v2.40: 히어로 証明写真 노트 링크 → 写真탭 이동 (프로모 밴드 삭제에 따른 간소화) */
 function bindPhotoPromo(){
-  const go = $('ppGo');
+  const go = $('hpPhotoGo');
   if (go) go.addEventListener('click', ()=>{
     const b = document.querySelector('.tab-btn[data-tab="photo"]');
     if (b) b.click();
@@ -3007,7 +3006,7 @@ function init(){
     safe('fill-profile', fillProfileForm);
     safe('taishoku', ()=>{ bindTaishoku(); fillTaishokuForm(); });
     safe('sofu', ()=>{ bindSofu(); fillSofuForm(); });
-    safe('photo-promo', bindPhotoPromo);   /* v2.35: 히어로 프로모 (CTA→写真탭, Before/After 드래그) */
+    safe('photo-promo', bindPhotoPromo);   /* v2.40: 히어로 写真 노트 링크 (→写真탭) */
     renderDynamic();
     applyTheme();
     setStep(1);

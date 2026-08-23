@@ -491,6 +491,12 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
 .r-kana-val{ font-size:3.3mm; letter-spacing:.6mm; color:#111; padding-left:.6mm; }   /* 패딩 보정 = letter-spacing (시각적 정중앙) */
 .r-name{ font-size:7mm; font-weight:700; letter-spacing:1.5mm; display:block; margin-top:.5mm;
   padding-left:1.5mm; text-align:center; }   /* v2.36: 중앙 정렬 + letter-spacing 뒷여백만큼 패딩 보정해 시각적 정중앙 */
+/* v2.38: 氏名 per-part — 姓かなは姓の真上、名かなは名の真上 (PC 履歴書 빌더 관례).
+   각 유닛 폭은 카/나·한자 중 넓은 쪽에 자동 맞춤(inline-flex), 긴 가나가 칸 전체로 퍼지지 않음 */
+.r-npairs{ display:flex; justify-content:center; align-items:flex-start; gap:3mm; margin-top:.4mm; }
+.r-npair{ display:inline-flex; flex-direction:column; align-items:center; }
+.r-np-k{ font-size:3.3mm; letter-spacing:.6mm; padding-left:.6mm; color:#111; margin-bottom:.7mm; }
+.r-np-n{ font-size:7mm; font-weight:700; letter-spacing:1.5mm; padding-left:1.5mm; line-height:1.15; }
 .r-sect{ background:#f0f0f0; text-align:center; font-weight:700; letter-spacing:4mm; padding:.8mm 0;   /* v2.30: 압축 */
   border-bottom:.2mm solid #555; border-right:.2mm solid #555; grid-column:1 / -1; }
 .a4.modern .r-sect{ background:#e9eefc; color:#1e3a8a; letter-spacing:2mm; }
@@ -797,52 +803,29 @@ dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
 
 /* ================================================================
    v2.35: 証明写真 스튜디오 프로모 밴드 (히어로 직하) — 차별화 기능 강조
-   브랜드 그라디언트로 히어로와 시각적 연속. Before/After 드래그 비교 데모 포함
+   브랜드 그라디언트로 히어로와 시각적 연속. v2.37: 텍스트 전용(문장 중심) 섹션으로 재설계
 ================================================================ */
 .photo-promo{ position:relative; color:#fff;
   background:
-    radial-gradient(720px 380px at 8% -10%, rgba(242,185,13,.16), transparent 60%),
+    radial-gradient(720px 380px at 50% -10%, rgba(242,185,13,.14), transparent 60%),
     linear-gradient(160deg,#1e3a8a 0%, #2447c0 52%, #1b2f6e 100%);
-  padding:clamp(2.1rem,4vw,3.2rem) 1.2rem; border-top:1px solid rgba(255,255,255,.08); }
-.pp-inner{ max-width:1160px; margin:0 auto; display:grid; grid-template-columns:1.05fr .95fr;
-  gap:clamp(1.4rem,3.2vw,3rem); align-items:center; }
+  padding:clamp(2.4rem,4.5vw,3.6rem) 1.2rem; border-top:1px solid rgba(255,255,255,.08); }
+/* v2.37: 텍스트 전용 섹션 — 중앙 정렬 타이포그래피 (일러스트 데모 삭제) */
+.pp-inner{ max-width:780px; margin:0 auto; text-align:center; }
 .pp-badge{ display:inline-flex; align-items:center; gap:.4rem; font-size:.74rem; font-weight:800; letter-spacing:.02em;
   color:#ffe9a8; background:rgba(246,201,69,.14); border:1px solid rgba(246,201,69,.38);
   border-radius:999px; padding:.34rem .8rem; }
 .pp-badge .ic{ width:14px; height:14px; }
-.pp-copy h2{ margin:.85rem 0 .6rem; font-size:clamp(1.45rem,2.6vw,2.1rem); font-weight:900; line-height:1.4; letter-spacing:-.01em; }
+.pp-copy h2{ margin:1rem 0 .85rem; font-size:clamp(1.5rem,2.8vw,2.15rem); font-weight:900; line-height:1.45; letter-spacing:-.01em; }
 .pp-copy h2 .hl{ color:#ffd84d; }
-.pp-sub{ font-size:.92rem; line-height:1.95; color:rgba(255,255,255,.84); max-width:34em; }
-.pp-feats{ display:flex; flex-wrap:wrap; gap:.45rem .55rem; margin:1.05rem 0 1.25rem; padding:0; list-style:none; }
-.pp-feats li{ display:inline-flex; align-items:center; gap:.38rem; font-size:.78rem; font-weight:700;
-  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
-  padding:.4rem .72rem; border-radius:999px; }
-.pp-feats .ic{ width:15px; height:15px; }
-.pp-cta{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+.pp-sub{ margin:0 auto; font-size:.92rem; line-height:2; color:rgba(255,255,255,.86); max-width:37em; }
+.pp-feats{ display:flex; flex-wrap:wrap; justify-content:center; gap:.45rem .55rem; margin:1.2rem 0 1.45rem; padding:0; list-style:none; }
+.pp-feats li{ display:inline-flex; align-items:center; font-size:.78rem; font-weight:700; letter-spacing:.015em;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+  padding:.42rem .8rem; border-radius:999px; }
+.pp-cta{ display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; }
 .pp-guide{ font-size:.82rem; font-weight:700; color:#cfe0ff; text-decoration:underline; text-underline-offset:3px; }
 .pp-guide:hover{ color:#fff; }
-
-/* Before/After 비교: --ba 변수 = 분할선 위치(%). JS(pointer drag / 방향키)가 갱신 */
-.pp-demo{ justify-self:center; width:min(100%, 400px); }
-.pp-ba{ --ba:50%; position:relative; aspect-ratio:5/6; border-radius:18px; overflow:hidden;
-  box-shadow:0 24px 60px rgba(5,12,40,.45); cursor:ew-resize; touch-action:none;
-  user-select:none; -webkit-user-select:none; }
-.pp-ba:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
-.pp-ba svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-.pp-after{ clip-path:inset(0 0 0 var(--ba)); }            /* 분할선 왼쪽은 BEFORE, 오른쪽은 AFTER */
-.pp-divider{ position:absolute; top:0; bottom:0; left:var(--ba); width:3px; transform:translateX(-50%);
-  background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.18); pointer-events:none; }
-.pp-handle{ position:absolute; top:50%; left:var(--ba); transform:translate(-50%,-50%);
-  width:44px; height:44px; border-radius:50%; background:#fff;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 6px 18px rgba(0,0,0,.32); pointer-events:none; }
-/* 핸들 화살표: 글리프(◂▸) 폰트 미지원 환경에서 깨지는 것 대신 순수 CSS 삼각형 */
-.pp-handle::before,.pp-handle::after{ content:""; width:0; height:0; border-style:solid; }
-.pp-handle::before{ border-width:5px 7px 5px 0; border-color:transparent #1e3a8a transparent transparent; margin-right:4px; }
-.pp-handle::after{ border-width:5px 0 5px 7px; border-color:transparent transparent transparent #1e3a8a; margin-left:4px; }
-.pp-cap{ text-align:center; font-size:.75rem; font-weight:600; color:rgba(255,255,255,.74); margin:.7rem 0 0; }
-
-@media (max-width:860px){
-  .pp-inner{ grid-template-columns:1fr; }
-  .pp-demo{ width:min(100%,330px); }
-}
+/* 모바일: 본문 데스크탑용 강제 줄바꿈은 자연 랩으로 전환.
+   (h2의 의도적 2단 분할은 유지 — 자연 랩 시 「証明写真」 단어가 줄 중간에서 잘리는 현상 방지) */
+@media (max-width:767px){ .pp-sub .br-w{ display:none; } }

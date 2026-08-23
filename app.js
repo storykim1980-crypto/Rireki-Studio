@@ -752,6 +752,15 @@ function historyRows(){
   return rows;
 }
 /* --- 履歴書 미리보기 DOM 구성 --- */
+/* v2.38: 氏名을 성씨 단위로 분할 — 「姓かなは姓の真上、名かなは名の真上」배치용 (PC 履歴書 빌더 관례).
+   성씨·명 각 파트의 // 가나를 해당 한자 파트의 수평 중심에 맞춘다. 양쪽 모두 같은 개수(2개 이상)로
+   나뉘는 경우에만 per-part 레이아웃, 아니면 null 폐백(종전 전폭 중앙 정렬) */
+function splitNameParts(nm, kn){
+  const n = String(nm||'').trim().split(/[\s　]+/).filter(Boolean);
+  const k = String(kn||'').trim().split(/[\s　]+/).filter(Boolean);
+  if (n.length >= 2 && n.length === k.length) return n.map((t,i)=>({ n:t, k:k[i] }));
+  return null;
+}
 function buildRirekiA4(){
   const s = store.get(); const p = s.profile;
   const tpl = s.settings.template === 'modern' ? 'a4 modern' : 'a4';
@@ -765,15 +774,27 @@ function buildRirekiA4(){
   if (p.photoDataUrl){ photoBox.append(h('img',{ src:p.photoDataUrl, alt:'証明写真' })); }
   else photoBox.append(h('span',{text:'写真を貼る位置\n（縦4cm×横3cm）'}), );
 
-  const nameRow = h('div',{class:'r-row name', style:'grid-template-columns:1fr;flex:1'},
-    /* v2.36: 칵나(중앙) 아래에 이름(좌측)이 어긋나 있던 배치 수정 — 이름도 중앙 정렬해
-       「ふりがな → 氏名」 세로축을 공식 양식처럼 일치시킴 */
-    h('div',{class:'c', style:'flex-direction:column;align-items:center;justify-content:center;gap:.8mm'},
-      h('div',{class:'r-kana-line'},
-        h('span',{class:'r-kana-label', text:'ふりがな'}),
+  /* v2.38: 氏名 영역 재설계 — 분할 가능한 姓/名이면 각 카운트의 카/나를 한자 파트의 수평 중심에
+     배치(姓かなは姓の真上、名かなは名の真上). 종전 '칸 전체 중앙에 가나 1줄' 방식은 긴 가나가
+     이름보다 크게 퍼져 어색해 보인다는 사용자 지적 반영. 라벨은 양식 관례대로 칸 좌상단 소형. */
+  const nmParts = splitNameParts(p.nameKanji, p.nameKana);
+  const nameCell = h('div',{class:'c', style:'flex-direction:column;align-items:center;justify-content:center;position:relative'});
+  nameCell.append(h('span',{class:'r-kana-label', style:'top:.9mm;transform:none;left:.6mm', text:'ふりがな'}));
+  if (nmParts){
+    const grp = h('div',{class:'r-npairs'});
+    for (const pt of nmParts){
+      grp.append(h('span',{class:'r-npair'},
+        h('span',{class:'r-np-k', text:pt.k}),
+        h('span',{class:'r-np-n', text:pt.n})));
+    }
+    nameCell.append(grp);
+  } else {
+    nameCell.append(
+      h('div',{class:'r-kana-line', style:'margin-top:1.2mm'},
         h('span',{class:'r-kana-val', text:p.nameKana||''})),
-      h('span',{class:'r-name', text:p.nameKanji || '氏　　名'})
-    ));
+      h('span',{class:'r-name', text:p.nameKanji || '氏　　名'}));
+  }
+  const nameRow = h('div',{class:'r-row name', style:'grid-template-columns:1fr;flex:1'}, nameCell);
   const birthText = (()=>{
     if (!p.birthDate) return '生年月日';
     const [y,m,d] = p.birthDate.split('-').map(Number);
@@ -1086,6 +1107,27 @@ async function renderResumePNG(){
     const idRows = [ {h:7, label:'ふりがな', val:(p.nameKana||'')},
                      {h:14, label:'', val:(p.nameKanji||'氏　　名'), big:true},
                      {h:9, label:'', val:'sex', split:124} ];
+    /* v2.38: 氏名 per-part 레이아웃 — 姓かなは姓の真上、名かなは名の真上 (DOM과 동일 관례).
+       각 유닛 폭 = 카/나·한자 중 넓은 쪽, 그룹 전체는 신원 칸((X1+X2)/2 중심)에 중앙 정렬 */
+    const nmParts2 = splitNameParts(p.nameKanji, p.nameKana);
+    let npLayout = null;
+    if (nmParts2){
+      npLayout = [];
+      let total = 0;
+      for (const pt of nmParts2){
+        fset(3.3,false); ctx.textAlign='left';
+        let kW;
+        try{ ctx.letterSpacing = (0.6*K)+'px'; kW = ctx.measureText(pt.k).width; ctx.letterSpacing='0px'; }
+        catch(e){ kW = ctx.measureText(pt.k).width; }
+        fset(7,true);
+        const nW = ctx.measureText(pt.n).width;
+        const colW = Math.max(kW, nW);
+        npLayout.push({ k:pt.k, n:pt.n, colW }); total += colW;
+      }
+      const GAP = 3*K; total += GAP*(nmParts2.length-1);
+      let x = ((X1+X2)*K - total)/2;
+      for (const col of npLayout){ col.cx = x + col.colW/2; x += col.colW + GAP; }
+    }
     line(X1,y,X2,y);
     let birthLine = '生年月日';
     if (p.birthDate){
@@ -1093,7 +1135,14 @@ async function renderResumePNG(){
       birthLine = '生年月日　' + fmtYM(by,bm) + bm + '月' + bdy + '日生（満' + computeAge(by,bm,bdy) + '歳）';
     }
     for (const r of idRows){
-      if (r.big){ text(r.val, (X1+X2)/2, y + r.h/2, 7, 'center', true); }   /* v2.36: 이름 중앙 정렬 (ふりがな와 세로축 일치) */
+      if (r.big){
+        if (npLayout){                                   /* v2.38: 파트별 한자를 유닛 중심에 */
+          fset(7,true); ctx.fillStyle='#111111'; ctx.textAlign='center';
+          for (const col of npLayout) ctx.fillText(col.n, col.cx, (y + r.h/2)*K);
+        } else {
+          text(r.val, (X1+X2)/2, y + r.h/2, 7, 'center', true);   /* v2.36: 이름 중앙 정렬 (ふりがな와 세로축 일치) */
+        }
+      }
       else if (r.val === 'sex'){
         text(birthLine, X1+3, y + r.h/2, 4.2);
         text(p.gender ? '性別　' + p.gender : '性別', r.split+3, y + r.h/2, 4.2);
@@ -1102,7 +1151,14 @@ async function renderResumePNG(){
         /* v2.33: DOM과 동일하게 라벨(左소형)+칵나(칸 전체 중앙) 분리 배치 */
         fset(2.2,false); ctx.fillStyle='#444444'; ctx.textAlign='left';
         ctx.fillText(r.label, (X1+2.4)*K, (y + r.h/2)*K);
-        if (r.val){
+        if (r.val && npLayout){                          /* v2.38: 파트별 카/나를 유닛 중심에 */
+          fset(3.3,false); ctx.fillStyle='#111111'; ctx.textAlign='center';
+          try{
+            ctx.letterSpacing = (0.6*K)+'px';
+            for (const col of npLayout) ctx.fillText(col.k, col.cx, (y + r.h/2)*K);
+            ctx.letterSpacing = '0px';
+          }catch(e){ for (const col of npLayout) ctx.fillText(col.k, col.cx, (y + r.h/2)*K); }
+        } else if (r.val){
           fset(3.3,false); ctx.fillStyle='#111111'; ctx.textAlign='center';
           try{ ctx.letterSpacing = (0.6*K)+'px'; ctx.fillText(r.val, ((X1+X2)/2)*K, (y + r.h/2)*K); ctx.letterSpacing = '0px'; }
           catch(e){ ctx.fillText(r.val, ((X1+X2)/2)*K, (y + r.h/2)*K); }   // letterSpacing 미지원 방어
@@ -2520,42 +2576,13 @@ function bindSettings(){
 }
 function openDlg(d){ try{ d.showModal(); }catch(e){ d.setAttribute('open',''); } }
 function closeDlg(d){ try{ d.close(); }catch(e){ d.removeAttribute('open'); } }
-/* v2.35: 히어로 証明写真 프로모 — CTA로 写真탭 이동 + Before/After 드래그 비교
-   (pointer 이벤트 + 방향키 접근성. 실패핏이든 정적 이미지로 자연 소멸하도록 전부 try 방어) */
+/* v2.37: 히어로 証明写真 프로모 — 텍스트 전용 섹션으로 간소화 (일러스트 제거)
+   CTA 클릭 시 写真탭으로 이동만 담당 */
 function bindPhotoPromo(){
-  const ba = $('ppBa');
   const go = $('ppGo');
   if (go) go.addEventListener('click', ()=>{
     const b = document.querySelector('.tab-btn[data-tab="photo"]');
     if (b) b.click();
-  });
-  if (!ba) return;
-  const clamp = (v)=> Math.max(4, Math.min(96, v));
-  const setPct = (pc)=>{
-    pc = clamp(pc);
-    ba.style.setProperty('--ba', pc + '%');
-    ba.setAttribute('aria-valuenow', String(Math.round(pc)));
-  };
-  let dragging = false;
-  ba.addEventListener('pointerdown', (e)=>{
-    dragging = true;
-    try{ ba.setPointerCapture(e.pointerId); }catch(_){}
-    const r = ba.getBoundingClientRect();
-    if (r.width > 0) setPct((e.clientX - r.left) / r.width * 100);
-  });
-  ba.addEventListener('pointermove', (e)=>{
-    if (!dragging) return;
-    const r = ba.getBoundingClientRect();
-    if (r.width > 0) setPct((e.clientX - r.left) / r.width * 100);
-  });
-  const stop = ()=>{ dragging = false; };
-  ba.addEventListener('pointerup', stop);
-  ba.addEventListener('pointercancel', stop);
-  ba.addEventListener('keydown', (e)=>{
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    e.preventDefault();
-    const cur = parseFloat(ba.getAttribute('aria-valuenow') || '50');
-    setPct(cur + (e.key === 'ArrowLeft' ? -6 : 6));
   });
 }
 function bindTabs(){

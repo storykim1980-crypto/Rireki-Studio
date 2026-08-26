@@ -342,7 +342,8 @@ function toast(msg, type){
    - 정적 input: 초기 1회 바인딩(재렌더 X → 포커스 유지)
 ================================================================ */
 const PROFILE_FIELDS = ['nameKanji','nameKana','birthDate','gender','postal','address','addressKana','phone','email'];
-const FIELD_IDS = { nameKanji:'p_nameKanji', nameKana:'p_nameKana', birthDate:'p_birth', gender:'p_gender',
+/* v2.44: birthDate는 年/月/日 3연 커스텀 셀렉트(buildYmdPicker)가 전담 — 단일 DOM id가 없어 FIELD_IDS에서 제외 */
+const FIELD_IDS = { nameKanji:'p_nameKanji', nameKana:'p_nameKana', gender:'p_gender',
                     postal:'p_postal', address:'p_address', addressKana:'p_addressKana', phone:'p_phone', email:'p_email' };
 
 function validateField(key, value){
@@ -354,8 +355,8 @@ function validateField(key, value){
     case 'addressKana': return (value && !RX.kanaLoose.test(value)) ? 'ひらがなで入力してください' : '';
     case 'phone':
       if (!value.trim()) return '電話番号は必須です';
-      return RX.phone.test(value) ? '' : '090-1234-5678 の形式で入力してください';
-    case 'postal': return (value && !RX.postal.test(value)) ? '123-4567 の形式で入力してください' : '';
+      return RX.phone.test(value) ? '' : '090-1234-5678の形式で入力してください';
+    case 'postal': return (value && !RX.postal.test(value)) ? '123-4567の形式で入力してください' : '';
     case 'email':  return (value && !RX.email.test(value)) ? 'メール形式が正しくありません' : '';
   }
   return '';
@@ -365,7 +366,69 @@ function showFieldError(key, msg){
   const errEl = $(map[key]); if (errEl) errEl.textContent = msg;
   const input = $(FIELD_IDS[key]); if (input) input.classList.toggle('invalid', !!msg);
 }
+/* ================================================================
+   年/月/日 3연 셀렉트 날짜 피커 (type="date" 대체, v2.44)
+   - 네이티브 <input type="date">는 페이지 lang이 아니라 "브라우저 UI 언어"로 렌더링돼
+     한국어/영어 브라우저에서 「연도-월-일」 등 비일본어가 표시 → 完全日本語UI 약속 파괴.
+     이 커스텀 셀렉트는 어떤 브라우저 언어에서도 항상 일본어(和暦 병기)로 표시된다.
+   - 연도 옵션은 和暦 병기 (연호 기준으로 생년을 찾는 일본 사용자 입력 습관 대응)
+   - 일 수는 윤년까지 반영해 年/月 선택에 연동 재구성
+   - 저장 형식은 기존과 동일한 ISO(YYYY-MM-DD) → 백업/복원 호환 유지
+================================================================ */
+const YMD_PICKERS = {};
+function buildYmdPicker(prefix, opt){
+  try{
+    const ySel = $(prefix+'Y'), mSel = $(prefix+'M'), dSel = $(prefix+'D');
+    if (!ySel || !mSel || !dSel) return;
+    const mk = (txt, val)=>{ const o = document.createElement('option'); o.value = val; o.textContent = txt; return o; };
+    /* 연도 옵션: desc=true면 최신 연도가 위 (生年月日는 최근 연도 접근이 잦아 내림차순) */
+    ySel.appendChild(mk('年', '')); mSel.appendChild(mk('月', '')); dSel.appendChild(mk('日', ''));
+    const yFirst = opt.desc ? opt.yMax : opt.yMin, yLast = opt.desc ? opt.yMin : opt.yMax, step = opt.desc ? -1 : 1;
+    for (let y = yFirst; opt.desc ? y >= yLast : y <= yLast; y += step){
+      ySel.appendChild(mk(y + '年（' + toWareki(y, 7, 1) + '）', String(y)));  // 연호 전환 해는 7/1 기준 연호 병기
+    }
+    for (let m = 1; m <= 12; m++) mSel.appendChild(mk(m + '月', String(m)));
+    const pad2 = (n)=> String(n).padStart(2, '0');
+    function rebuildDays(keep){
+      const y = Number(ySel.value), m = Number(mSel.value);
+      const maxD = (ySel.value && mSel.value) ? new Date(y, m, 0).getDate() : 31;
+      const cur = keep ? Number(dSel.value) : 0;
+      while (dSel.firstChild) dSel.removeChild(dSel.firstChild);
+      dSel.appendChild(mk('日', ''));
+      for (let d = 1; d <= maxD; d++) dSel.appendChild(mk(d + '日', String(d)));
+      dSel.value = (cur && cur <= maxD) ? String(cur) : '';   // 31일 → 2월 변경처럼 존재하지 않는 날은 명시적 재선택 유도
+    }
+    const iso = ()=> (ySel.value && mSel.value && dSel.value) ? ySel.value + '-' + pad2(mSel.value) + '-' + pad2(dSel.value) : '';
+    const onChange = ()=>{ if (opt.onPick) opt.onPick(iso()); };
+    ySel.addEventListener('change', ()=>{ rebuildDays(true); onChange(); });
+    mSel.addEventListener('change', ()=>{ rebuildDays(true); onChange(); });
+    dSel.addEventListener('change', onChange);
+    rebuildDays(false);
+    YMD_PICKERS[prefix] = {
+      set(v){
+        const mt = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+        ySel.value = mt ? mt[1] : '';
+        mSel.value = mt ? String(Number(mt[2])) : '';
+        rebuildDays(false);
+        if (mt){ const dd = String(Number(mt[3])); if (dSel.querySelector('option[value="' + dd + '"]')) dSel.value = dd; else dSel.value = ''; }
+        else dSel.value = '';
+      }
+    };
+  }catch(e){ console.error('[ymd:' + prefix + ']', e); }
+}
+/* 백업 복원/全削除 후 모든 정적 폼을 store 값으로 재주입
+   (v2.44: 종전에는 profile 폼만 재주입돼 退職届・送付状 폼이 구값으로 남는 불일치가 있었음 — 이번에 함께 해소) */
+function fillAllForms(){
+  try{ fillProfileForm(); }catch(e){ console.error(e); }
+  try{ fillTaishokuForm(); }catch(e){ console.error(e); }
+  try{ fillSofuForm(); }catch(e){ console.error(e); }
+}
 function bindProfileForm(){
+  /* v2.44: 生年月日 커스텀 피커 (구 type="date"와 동일 범위 1930〜2015년 유지) */
+  buildYmdPicker('p_birth', { yMin:1930, yMax:2015, desc:true, onPick:(iso)=>{
+    store.update(st=>{ st.profile.birthDate = iso; }, { render:'light' });
+    updateWarekiHint();
+  }});
   for (const key of PROFILE_FIELDS){
     const el = $(FIELD_IDS[key]);
     if (!el) continue;
@@ -425,9 +488,10 @@ function computeAge(y, m, d){
   if (t.getMonth() + 1 < m || (t.getMonth() + 1 === m && t.getDate() < d)) a--;
   return a;
 }
-/* 생년월일 → 和暦 힌트 표시 */
+/* 생년월일 → 和暦 힌트 표시 (v2.44: 단일 date input 폐지 → store 기준으로 읽음) */
 function updateWarekiHint(){
-  const v = $('p_birth').value; const hint = $('warekiHint');
+  const v = store.get().profile.birthDate; const hint = $('warekiHint');
+  if (!hint) return;
   if (!v){ hint.textContent = ''; return; }
   const [y,m,d] = v.split('-').map(Number);
   hint.textContent = '和暦: ' + toWareki(y,m,d) + m + '月' + d + '日生まれ（満' + computeAge(y,m,d) + '歳）';
@@ -436,6 +500,7 @@ function updateWarekiHint(){
 function fillProfileForm(){
   const p = store.get().profile;
   for (const key of PROFILE_FIELDS){ const el = $(FIELD_IDS[key]); if (el) el.value = p[key] || ''; }
+  const birthPk = YMD_PICKERS['p_birth']; if (birthPk) birthPk.set(p.birthDate || '');   // v2.44: 生年月日 3연 셀렉트 주입
   showOnlyValidErrors();
   updateWarekiHint();
   $('ta_motivation').value = store.get().motivation;
@@ -1606,7 +1671,9 @@ function bindEditor(){
   $('rngSat').addEventListener('input', e=>{ photoS.sat=+e.target.value; rerun(); });
   $('rngTol').addEventListener('change', e=>{       // 제거 강도 = 마스크 재생성(브러시 초기화)
     photoS.tol=+e.target.value;
-    if (photoS.cropped){ buildMask(); composite(); toast('ブラシの修正がリセットされました','warn'); }
+    /* v2.43: 「브러시만 초기화」가 아니라 '지금 무슨 일이 일어났는지'가 먼저 오도록 문구 개선
+       (슬라이더만 조작했는데 브러시 경고가 먼저 보여 사용자가 혼란스럽다는 사용감 피드백) */
+    if (photoS.cropped){ buildMask(); composite(); toast('背景除去の強さを変更しました（ブラシの手修正はリセットされます）','warn'); }
   });
   document.querySelectorAll('input[name="bgSel"]').forEach(r=> r.addEventListener('change', composite));
   /* 비교 버튼 (길게 눌러 원본 보기) */
@@ -2510,7 +2577,7 @@ function bindImport(){
           console.warn('schema mismatch'); toast('このアプリのバックアップファイルではありません', 'error'); return;
         }
         store.replace(sanitizeState(parsed));          // 스키마 정제 후 교체
-        fillProfileForm();
+        fillAllForms();                                 // v2.44: 退職届・送付状 폼까지 전부 재주입 (구값 잔존 불일치 해소)
         toast('バックアップを復元しました');
       }catch(e){ console.error(e); toast('読み込みに失敗しました', 'error'); }
     };
@@ -2525,7 +2592,7 @@ function bindDataButtons(){
   $('btnResetAll').addEventListener('click', ()=>{
     if (!confirm('すべての入力データを削除しますか？この操作は元に戻せません。')) return;
     store.replace(defaultState());
-    fillProfileForm();
+    fillAllForms();                                 // v2.44: 退職届・送付状 폼까지 전부 재주입 (구값 잔존 불일치 해소)
     toast('全データを削除しました', 'warn');
   });
 }
@@ -2688,14 +2755,21 @@ function renderPreview3(){
   fitA4(fresh, $('pvFit3'));
 }
 /* --- 탭5 폼 바인딩 --- */
-const TQ_FIELDS = { company:'tq_company', president:'tq_president', dept:'tq_dept', leaveDate:'tq_leave', reason:'tq_reason' };
+/* v2.44: leaveDate는 年/月/日 3연 셀렉트(buildYmdPicker)가 전담 — 단일 input 없음 */
+const TQ_FIELDS = { company:'tq_company', president:'tq_president', dept:'tq_dept', reason:'tq_reason' };
 function fillTaishokuForm(){
   const t = store.get().taishoku;
   for (const [key, id] of Object.entries(TQ_FIELDS)){ const el = $(id); if (el) el.value = t[key] || ''; }
+  const pk = YMD_PICKERS['tq_leave']; if (pk) pk.set(t.leaveDate || '');   // v2.44: 退職希望日 3연 셀렉트 주입
   const r = document.querySelector('input[name="tq_type"][value="' + t.docType + '"]');
   if (r) r.checked = true;
 }
 function bindTaishoku(){
+  /* v2.44: 退職希望日 커스텀 피커 — 범위는 금년-1〜+2년 (직전 연도 소급 정리 ~ 장기 예정까지 커버) */
+  const nowY = new Date().getFullYear();
+  buildYmdPicker('tq_leave', { yMin: nowY-1, yMax: nowY+2, desc:false, onPick:(iso)=>{
+    store.update(st=>{ st.taishoku.leaveDate = iso; }, { render:'light' });
+  }});
   for (const [key, id] of Object.entries(TQ_FIELDS)){
     $(id).addEventListener('input', (e)=> store.update(st=>{ st.taishoku[key] = e.target.value; },{render:'light'}));
   }
@@ -2974,7 +3048,7 @@ function init(){
        일본 학제: 4月1日 시점 満6歳 입학 → 早生まれ(1/1〜4/1생)는 입학年度 +6, 그 외 +7 */
     $('btnAutoEdu').addEventListener('click', ()=>{
       const bd = store.get().profile.birthDate;
-      if (!bd){ toast('先に「基本情報」で生年月日を入力してください', 'warn'); $('p_birth').focus(); return; }
+      if (!bd){ toast('先に「基本情報」で生年月日を入力してください', 'warn'); const by = $('p_birthY'); if (by) by.focus(); return; }  // v2.44: 生年月日은 3연 셀렉트 → 연도 셀렉트로 포커스
       const [by,bm,bday] = bd.split('-').map(Number);
       const hayami = (bm < 4) || (bm === 4 && bday === 1);
       const base = by + (hayami ? 6 : 7);                    // 小学校入学年度(4月)

@@ -26,15 +26,34 @@
   <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=2.42">
+  <link rel="stylesheet" href="style.css?v=2.44">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication",
    "name":"履歴スタジオ","alternateName":"Rireki Studio",
    "url":"https://www.rireki-studio.com/",
    "applicationCategory":"BusinessApplication","operatingSystem":"Any",
+   "browserRequirements":"Requires JavaScript",
+   "featureList":["JIS標準の履歴書作成（和暦自動変換・A4印刷・PNG出力）","職務経歴書の作成","退職届・退職願の作成","送付状（添え状）の作成","自撮り写真を証明写真（縦4cm×横3cm）に変換","志望動機の例文ライブラリ","模擬面接・想定質問の生成","手取りシミュレーション"],
    "description":"履歴書・職務経歴書・送付状・退職届の作成と証明写真変換ができる無料ツール。和暦自動変換・A4印刷対応。登録不要。",
    "offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},
    "inLanguage":"ja"}
+  </script>
+  <!-- v2.43: FAQPage 구조화데이터 — 본문 하단의 가시 FAQ와 문장 단위로 완전 일치 (Google 가이드라인 준수).
+       리치 결과 노출로 CTR 향상 기대. 답변 수정 시 반드시 양쪽을 함께 고칠 것 -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage",
+   "mainEntity":[
+    {"@type":"Question","name":"履歴スタジオは無料で使えますか？",
+     "acceptedAnswer":{"@type":"Answer","text":"はい。履歴書・職務経歴書・証明写真・退職届など、全機能を完全無料でご利用いただけます。会員登録や課金は一切ありません。"}},
+    {"@type":"Question","name":"入力した個人情報はどこに保存されますか？",
+     "acceptedAnswer":{"@type":"Answer","text":"すべてお使いのブラウザ内（端末のストレージ）にのみ保存され、外部サーバーへの送信は一切ありません。住所・電話番号・顔写真の取り扱いも安心です。"}},
+    {"@type":"Question","name":"スマホだけで履歴書は作れますか？",
+     "acceptedAnswer":{"@type":"Answer","text":"はい。作成した履歴書はその場でPNG画像として保存でき、コンビニのネットプリントなどでA4印刷も可能です。パソコンがなくても完成します。"}},
+    {"@type":"Question","name":"証明写真はどのサイズで仕上がりますか？",
+     "acceptedAnswer":{"@type":"Answer","text":"履歴書標準規格の縦4cm×横3cmです。背景の自動除去・明るさ補正もブラウザ内で完結します（パスポート等、公的機関への提出用ではありません）。"}},
+    {"@type":"Question","name":"退職届と退職願の違いは何ですか？",
+     "acceptedAnswer":{"@type":"Answer","text":"退職届は会社の承認が不要な届け出、退職願は会社の承認が必要な願い出です。両方の書式に対応しており、氏名・日付は自動で入ります。"}}
+   ]}
   </script>
   <noscript><p style="padding:1rem">このツールはJavaScriptで動作します。ブラウザのJavaScriptを有効にしてください。履歴書の書き方・証明写真サイズのガイドは/guide/でご覧いただけます。</p></noscript>
 </head>
@@ -248,8 +267,12 @@
             </div>
             <div class="grid2">
               <div class="field">
-                <label for="p_birth">生年月日 <span class="req">必須</span></label>
-                <input type="date" id="p_birth" min="1930-01-01" max="2015-12-31">
+                <label for="p_birthY">生年月日 <span class="req">必須</span></label>
+                <div class="dpd" role="group" aria-label="生年月日">
+                  <select id="p_birthY" class="dpd-y" aria-label="年"></select>
+                  <select id="p_birthM" class="dpd-m" aria-label="月"></select>
+                  <select id="p_birthD" class="dpd-d" aria-label="日"></select>
+                </div>
                 <p class="hint" id="warekiHint"></p>
               </div>
               <div class="field">
@@ -310,7 +333,7 @@
               <button class="btn small primary" id="btnAddWork" type="button">＋ 追加</button>
             </div>
             <div class="crud-list" id="workList"></div>
-            <p class="hint">会社名・学校名に「入社」「退社」「卒業」は入れないでください（印刷時に自動で付きます）。在職中は「現在に至る」にチェック（最後に1行だけ印刷されます）。3か月以上の空白期間は自動で警告します。</p>
+            <p class="hint">会社名に「入社」「退社」は入れないでください（印刷時に自動で付きます）。在職中は「現在に至る」にチェック（最後に1行だけ表示されます）。3か月以上の空白期間は自動で警告します。</p>
           </section>
 
           <!-- 免許・資格 -->
@@ -334,7 +357,7 @@
             <p class="off-note" id="motOffNote" hidden>現在OFFのため、この欄は印刷・画像に出力されません（入力内容は保持されます）</p>
             <textarea id="ta_motivation" rows="7" maxlength="800" placeholder="例文タブのテンプレートを参考に、企業への思いを具体的に。"></textarea>
             <div class="gauge"><div class="gauge-bar" id="motGauge"></div></div>
-            <p class="hint"><span id="motCount">0</span> / 400字（目安 300〜400字）　※Web応募など各欄が不要な場合は「印刷に含める」をOFFにできます</p>
+            <p class="hint">現在 <span id="motCount">0</span>字 ／ 目安300〜400字（上限800字）　※Web応募など各欄が不要な場合は「印刷に含める」をOFFにできます</p>
             <div class="card-head-flex" style="margin-top:1.2rem">
               <h2 class="card-title">本人希望欄</h2>
               <label class="sec-toggle" title="OFFにすると、この欄は履歴書の印刷・画像から除外されます（入力内容は保持されます）">
@@ -439,7 +462,8 @@
 
         <!-- 2) 크롭 스테이지 -->
         <div class="card crop-stage hidden" id="cropStage">
-          <h2 class="card-title">範囲を決める（3:4） ※ドラッグで移動・ホイール/スライダーで拡大</h2>
+          <h2 class="card-title">範囲を決める（3:4）</h2>
+          <p class="hint">ドラッグで位置を移動、ホイールまたはスライダーで拡大・縮小できます。</p>
           <canvas id="cvCrop" class="crop-canvas" width="450" height="600"></canvas>
           <div class="slider-row">
             <label for="rngZoom">ズーム</label>
@@ -507,7 +531,7 @@
         <p class="hint">書いた志望動機を7つの公開ルール（文字数・結論・根拠・具体性など）で即チェック。スコアと改善ポイントが10秒でわかります。</p>
         <div class="field">
           <label for="dgText">志望動機の文を貼り付けてください</label>
-          <textarea id="dgText" rows="6" maxlength="1200" placeholder="ここに志望動機を入力…（履歴書タブに入力済みなら「読み込む」で反映)"></textarea>
+          <textarea id="dgText" rows="6" maxlength="1200" placeholder="ここに志望動機を入力…（履歴書タブに入力済みなら「読み込む」で反映できます）"></textarea>
         </div>
         <div class="action-row">
           <button class="btn primary" id="btnDiag" type="button"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>診断する</button>
@@ -552,7 +576,13 @@
           <section class="card">
             <h2 class="card-title">退職希望日・理由</h2>
             <div class="frow2">
-              <div class="field"><label for="tq_leave">退職希望日</label><input id="tq_leave" type="date"></div>
+              <div class="field"><label for="tq_leaveY">退職希望日</label>
+                <div class="dpd" role="group" aria-label="退職希望日">
+                  <select id="tq_leaveY" class="dpd-y" aria-label="年"></select>
+                  <select id="tq_leaveM" class="dpd-m" aria-label="月"></select>
+                  <select id="tq_leaveD" class="dpd-d" aria-label="日"></select>
+                </div>
+              </div>
               <div class="field"><label for="tq_reason">退職理由（建前）</label>
                 <select id="tq_reason">
                   <option value="isshin">一身上の都合</option>
@@ -670,7 +700,7 @@
         <p class="hint">月給の額面から、社会保険・税金の概算を引いた「手取り」を即計算。内定の条件を考える目安に。</p>
         <div class="pay-grid">
           <div class="field">
-            <label for="payMonthly">月給（額面・万円単位も可）</label>
+            <label for="payMonthly">月給（額面・円）</label>
             <input type="number" id="payMonthly" inputmode="numeric" min="0" max="3000000" step="10000" placeholder="例: 220000">
           </div>
           <div class="field">
@@ -740,7 +770,7 @@
         <div id="phoneView" class="mail-view" aria-live="polite"></div>
       </div>
       <div class="card">
-        <h2 class="card-title">入社前に求められる書類 10</h2>
+        <h2 class="card-title">入社前に求められる代表的な書類</h2>
         <p class="hint">内定後に会社から請求される代表的な書類。指定は企業ごとに違うので「何が必要ですか」と一本確認するのが最短です（上の電話台本が使えます）。</p>
         <ul class="tip-list" id="docList"></ul>
         <div class="action-row">
@@ -759,6 +789,34 @@
     </section>
 
   </main>
+
+  <!-- v2.43: FAQ (SEO — 롱테일 질의 대응 + FAQPage 구조화데이터 연동. details/summary 순정 → JS 불필요.
+       답변의 앞부분 문장은 head의 FAQPage 데이터와 문장 단위로 일치 유지할 것) -->
+  <section class="faq-sec" aria-labelledby="faq-h">
+    <h2 id="faq-h">よくある質問</h2>
+    <details class="faq-item">
+      <summary>履歴スタジオは無料で使えますか？</summary>
+      <p>はい。履歴書・職務経歴書・証明写真・退職届など、全機能を完全無料でご利用いただけます。会員登録や課金は一切ありません。</p>
+    </details>
+    <details class="faq-item">
+      <summary>入力した個人情報はどこに保存されますか？</summary>
+      <p>すべてお使いのブラウザ内（端末のストレージ）にのみ保存され、外部サーバーへの送信は一切ありません。住所・電話番号・顔写真の取り扱いも安心です。</p>
+    </details>
+    <details class="faq-item">
+      <summary>スマホだけで履歴書は作れますか？</summary>
+      <p>はい。作成した履歴書はその場でPNG画像として保存でき、コンビニのネットプリントなどでA4印刷も可能です。パソコンがなくても完成します。</p>
+    </details>
+    <details class="faq-item">
+      <summary>証明写真はどのサイズで仕上がりますか？</summary>
+      <p>履歴書標準規格の縦4cm×横3cmです。背景の自動除去・明るさ補正もブラウザ内で完結します（パスポート等、公的機関への提出用ではありません）。</p>
+      <p class="faq-link"><a href="guide/shashin-size.html">証明写真サイズの詳しい解説ガイドへ</a></p>
+    </details>
+    <details class="faq-item">
+      <summary>退職届と退職願の違いは何ですか？</summary>
+      <p>退職届は会社の承認が不要な届け出、退職願は会社の承認が必要な願い出です。両方の書式に対応しており、氏名・日付は自動で入ります。</p>
+      <p class="faq-link"><a href="guide/taishoku.html">退職届・退職願の違いの解説ガイドへ</a></p>
+    </details>
+  </section>
 
   <!-- 푸터 -->
   <footer class="site-footer">
@@ -840,6 +898,6 @@
 <!-- 인쇄 전용 루트 (화면에서는 숨김) -->
 <div id="printRoot" aria-hidden="true"></div>
 
-<script src="app.js?v=2.42"></script>
+<script src="app.js?v=2.44"></script>
 </body>
 </html>

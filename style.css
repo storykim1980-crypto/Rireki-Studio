@@ -814,3 +814,32 @@ dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
 .hp-link{ background:none; border:0; padding:0; margin:0; cursor:pointer; font:inherit; font-weight:800;
   color:#ffd84d; text-decoration:underline; text-underline-offset:3px; }
 .hp-link:hover,.hp-link:focus-visible{ color:#fff; }
+
+/* ============================================================
+   FAQ 섹션 (v2.43 — SEO: 롱테일 질의·FAQPage 구조화데이터 연동)
+   기존 카드 디자인 토큰 재사용 — 다크/라이트 자동 대응, details 순정(JS 불요)
+============================================================ */
+.faq-sec{ max-width:880px; margin:2.4rem auto 0; padding:0 clamp(1rem,4vw,2rem); }
+.faq-sec h2{ font-size:1.15rem; font-weight:800; margin:0 0 .75rem; letter-spacing:.02em; }
+.faq-item{ background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  padding:0 1rem; margin-bottom:.55rem; box-shadow:var(--sh-1); }
+.faq-item summary{ cursor:pointer; min-height:52px; display:flex; align-items:center; gap:.6rem;
+  font-weight:800; font-size:.92rem; list-style:none; }
+.faq-item summary::-webkit-details-marker{ display:none; }
+.faq-item summary::before{ content:'Q'; flex:0 0 auto; display:inline-grid; place-items:center;
+  width:22px; height:22px; border-radius:7px; background:var(--accent-weak); color:var(--accent);
+  font-size:.8rem; font-weight:900; }
+.faq-item p{ margin:0 0 .9rem; padding-left:2rem; font-size:.85rem; color:var(--muted); line-height:1.9; }
+.faq-item .faq-link{ margin:-.35rem 0 .95rem; }
+.faq-item .faq-link a{ color:var(--accent); font-weight:700; text-underline-offset:2px; }
+
+/* ============================================================
+   年/月/日 3연 셀렉트 날짜 피커 (v2.44 — type="date" 대체)
+   네이티브 date input은 브라우저 UI 언어를 따라가 비일본어 표시될 수 있어 폐지.
+   연도는 항상 한 행 전체 + 月·日가 아래 행 — 「1990年（平成2年）」 和暦 병기 라벨이
+   좁은 grid2 칸(데스크톱 반幅)에서도 절대 잘리지 않도록 全 breakpoint 통일 (分岐 제거 = 회귀 여지 축소)
+============================================================ */
+.dpd{ display:flex; flex-wrap:wrap; gap:.5rem; }
+.dpd select{ width:auto; flex:1 1 0; min-width:0; padding-left:.55rem; padding-right:.4rem; }
+.dpd .dpd-y{ flex:1 1 100%; }
+.dpd .dpd-m,.dpd .dpd-d{ flex:1 1 0; }

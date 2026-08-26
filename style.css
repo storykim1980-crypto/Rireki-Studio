@@ -447,14 +447,18 @@ input.invalid,textarea.invalid{ border-color:var(--err); background:color-mix(in
   box-shadow:0 24px 60px rgba(8,15,50,.35), 0 4px 14px rgba(8,15,50,.2); border-radius:2px; flex:none; }
 .a4.tall{ height:auto; min-height:297mm; }
 /* 退職届/退職願 서식 (탭5) — 정통 일본식 레이아웃 */
-.a4 .tq-submit{ text-align:right; font-size:3.6mm; margin-bottom:6mm; }
-.a4 .tq-addr{ font-size:4mm; line-height:1.9; margin:2mm 0 10mm; }
-.a4 .tq-addr p{ margin:0; text-decoration:underline; text-underline-offset:1.2mm; text-decoration-thickness:.3mm; }
-.a4 .tq-title{ text-align:center; font-size:8.5mm; font-weight:700; letter-spacing:10mm; text-indent:10mm; margin:6mm 0 14mm; }
+/* v2.42: 退職届 표준 横書き 재정비 — 標題(最上部) → 提出日(右) → 宛名(左)‖署名(右) → 私儀 → 本文.
+   종전 宛名의 밑줄은 送付状 표제 관례와의 혼용으로 폐지 (大手テンプレート에서 宛名 밑줄 비표준),
+   서명란의 날짜 중복 표기도 폐지 */
+.a4 .tq-title{ text-align:center; font-size:8.5mm; font-weight:700; letter-spacing:10mm; text-indent:10mm; margin:8mm 0 16mm; }
+.a4 .tq-submit{ text-align:right; font-size:3.6mm; margin-bottom:16mm; }
+.a4 .tq-heads{ display:flex; justify-content:space-between; align-items:flex-end; gap:8mm; margin-bottom:28mm; }
+.a4 .tq-addr{ font-size:4mm; line-height:1.9; }
+.a4 .tq-addr p{ margin:0; }
+.a4 .tq-sign{ text-align:right; font-size:4.2mm; line-height:2; flex-shrink:0; }
+.a4 .tq-sign p{ margin:0; }
 .a4 .tq-hazime{ font-size:4mm; margin:0 0 3mm; }
 .a4 .tq-body{ font-size:4.4mm; line-height:2.15; text-indent:4.4mm; margin:0 0 5mm; }
-.a4 .tq-sign{ margin-top:20mm; text-align:right; font-size:4.2mm; line-height:2; }
-.a4 .tq-sign p{ margin:0; padding-right:8mm; }
 .a4.modern .tq-title{ letter-spacing:8mm; text-indent:8mm; }
 
 /* --- 탭6: 送付状 A4 레이아웃 (일본 비즈니스 문서 정통형) --- */

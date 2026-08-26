@@ -2630,36 +2630,53 @@ function renderLight(){
    10-B. 退職届 / 退職願 A4 빌더 (입사→퇴사→전직 라이프사이클 서류 도구)
    - 退職届: 会社の承認不要(届出) / 退職願: 承認制(願出) — 정통 서식 차이 반영
    - 氏名은 프로필에서 자동 계승, 提出日は本日自動
+   - v2.42: doda/Indeed/アクシ스 등 메이저 템플릿을 전수 조사해 표준 横書き 서식으로 재정비
+     ①본문 정형문 교체 — 종전 「退職いたしたく届け出ます」는 실재하지 않는 어색한 조어
+        → 届出는 사실 보고로 끝내는 「退職いたします」/
+           願出는 「退職いたしたく、ここにお願い申し上げます」(종전 「退職願いたく」는 문법 오류)
+     ②요소 순서를 표준으로: 標題(中央・最上部)→提出日(右)→宛名(左)‖署名(右)→私儀(→本文)
+        (종전은 宛名이 標題 위에 있고 날짜가 상단·서명란에 2회 중복 표기됐음)
+     ③딱딱한 「平素よりご指導ご鞭撻」 미문 → 자연스럽고 간결한 감사문으로
 ================================================================ */
 const TQ_REASONS = { isshin:'一身上の都合', katei:'家庭の事情', keiyaku:'契約期間の満了', kaisha:'会社の事情' };
+/* 本文 핵심문 — メ이저 템플릿 공통 표준형 (DOM/PNG 양쪽이 이 하나를 공유해 문구 불일치 재발 차단) */
+function tqCoreSentence(t, settings){
+  const reason = TQ_REASONS[t.reason] || TQ_REASONS.isshin;
+  let leaveTxt = '　　　　年　　月　　日';
+  if (t.leaveDate){ const [y,m,d] = t.leaveDate.split('-').map(Number);
+    leaveTxt = (settings.eraNotation==='wareki' ? toWareki(y,m,d) : y+'年') + m + '月' + d + '日'; }
+  return 'このたび、' + reason + 'により、勝手ながら' + leaveTxt + 'をもって' +
+    (t.docType === 'negai' ? '退職いたしたく、ここにお願い申し上げます。' : '退職いたします。');
+}
+/* 本文 후속문 — 인수인계 의지 + 감사 인사 (폭넓게 쓰이는 자연스러운 표현으로 딱딱함 해소, v2.42) */
+const TQ_TAIL = [
+  'なお、退職日までの間、業務の引継ぎ等に責任をもって対応してまいります。',
+  '在職中は大変お世話になり、誠にありがとうございました。'
+];
 function buildTaishokuA4(){
   const s = store.get(); const t = s.taishoku; const p = s.profile;
   const tpl = s.settings.template === 'modern' ? 'a4 tall modern' : 'a4 tall';
   const a4 = h('div',{ class: tpl });
   const now = new Date();
-  const dateStr = (y,m,d)=> (s.settings.eraNotation==='wareki' ? toWareki(y,m,d) : y+'年') + m + '月' + d + '日';
-  const submit = dateStr(now.getFullYear(), now.getMonth()+1, now.getDate());
-  let leaveTxt = '　　　　年　　月　　日';
-  if (t.leaveDate){ const [y,m,d] = t.leaveDate.split('-').map(Number); leaveTxt = dateStr(y,m,d); }
-  const reason = TQ_REASONS[t.reason] || TQ_REASONS.isshin;
+  const submit = (s.settings.eraNotation==='wareki' ? toWareki(now.getFullYear(), now.getMonth()+1, now.getDate()) : now.getFullYear()+'年')
+               + (now.getMonth()+1) + '月' + now.getDate() + '日';
   const isNegai = t.docType === 'negai';
-  const core = 'このたび、' + reason + 'により、勝手ながら' + leaveTxt + 'をもって' +
-    (isNegai ? '退職願いたくお願い申し上げます。' : '退職いたしたく届け出ます。');
 
-  a4.append(h('div',{class:'tq-submit', text:submit}));
-  a4.append(h('div',{class:'tq-addr'},
-    h('p',{text:(t.company || '株式会社　　　　　')}),
-    h('p',{text:'代表取締役社長　' + (t.president || '　　　　') + '　殿'})));
+  /* 표준 横書き 순서: 標題 → 提出日(우) → 宛名(좌)‖署名(우) → 私儀 → 本文 (v2.42) */
   a4.append(h('h1',{class:'tq-title', text: isNegai ? '退　職　願' : '退　職　届'}));
-  a4.append(h('p',{class:'tq-hazime', text:'私事'}));
-  a4.append(h('p',{class:'tq-body', text:core}));
-  a4.append(h('p',{class:'tq-body', text:'平素よりご指導ご鞭撻を賜りましたことに、心より御礼申し上げます。'}));
-  a4.append(h('p',{class:'tq-body', text:'なお、業務の引継ぎにつきましては、ご指示のもと責任をもって対応いたします。'}));
-  a4.append(h('div',{class:'tq-sign'},
-    h('p',{text:'　　　　　' + submit}),
-    h('p',{text:(t.dept || '　　　　　部') + '　　　　　　課'}),
-    h('p',{text:(p.nameKanji || '氏　　　　名') + '　　㊞'})
+  a4.append(h('div',{class:'tq-submit', text:submit}));
+  a4.append(h('div',{class:'tq-heads'},
+    h('div',{class:'tq-addr'},
+      h('p',{text:(t.company || '株式会社　　　　　')}),
+      h('p',{text:'代表取締役社長　' + (t.president || '　　　　') + '　殿'})),
+    /* 서명란은 所属+氏名(印)만 — 提出日는 상단에 1회만 (중복 폐지) */
+    h('div',{class:'tq-sign'},
+      h('p',{text:(t.dept || '　')}),
+      h('p',{text:(p.nameKanji || '氏　　　　名') + '　　㊞'}))
   ));
+  a4.append(h('p',{class:'tq-hazime', text:'私儀'}));
+  a4.append(h('p',{class:'tq-body', text:tqCoreSentence(t, s.settings)}));
+  TQ_TAIL.forEach(txt => a4.append(h('p',{class:'tq-body', text:txt})));
   return a4;
 }
 function renderPreview3(){
@@ -2841,32 +2858,30 @@ function todayJpDate(){
     ? toWareki(n.getFullYear(), n.getMonth() + 1, n.getDate())
     : n.getFullYear() + '年') + (n.getMonth() + 1) + '月' + n.getDate() + '日';
 }
-/* 退職届/退職願 PNG — DOM 빌더와 동일 논리를 라인 명세로 변환 */
+/* 退職届/退職願 PNG — DOM 빌더와 동일 표준 서식(標題→提出日→宛名‖署名→私儀→本文)을 라인 명세로 변환 (v2.42) */
 function buildTaishokuPngLines(){
   const s = store.get(); const t = s.taishoku; const p = s.profile;
-  const submit = todayJpDate();
-  let leaveTxt = '　　　　年　　月　　日';
-  if (t.leaveDate){ const [y,m,d] = t.leaveDate.split('-').map(Number);
-    leaveTxt = (s.settings.eraNotation==='wareki' ? toWareki(y,m,d) : y+'年') + m + '月' + d + '日'; }
-  const reason = TQ_REASONS[t.reason] || TQ_REASONS.isshin;
   const isNegai = t.docType === 'negai';
-  const core = 'このたび、' + reason + 'により、勝手ながら' + leaveTxt + 'をもって' +
-    (isNegai ? '退職願いたくお願い申し上げます。' : '退職いたしたく届け出ます。');
-  const B = [ '私事', core,
-    '平素よりご指導ご鞭撻を賜りましたことに、心より御礼申し上げます。',
-    'なお、業務の引継ぎにつきましては、ご指示のもと責任をもって対応いたします。' ];
   const L = [];
-  L.push({ t:submit, x:195, y:22, mm:3.6, align:'right' });
-  L.push({ t:(t.company || '株式会社　　　　　'), x:15, y:36, mm:4.2, underline:true });
-  L.push({ t:'代表取締役社長　' + (t.president || '　　　　') + '　殿', x:15, y:43, mm:4.2, underline:true });
-  L.push({ t:(isNegai ? '退　職　願' : '退　職　届'), x:105, y:56, mm:8.5, align:'center', bold:true });
-  B.forEach((txt, i)=>{
-    if (i === 0) L.push({ t:txt, x:15, y:70, mm:4 });
-    else L.push({ t:txt, x:15, y:76 + (i-1) * 18, mm:4.2, wrap:180, lh:9, indent:true });
-  });
-  L.push({ t:submit, x:172, y:158, mm:3.8, align:'right' });
-  L.push({ t:(t.dept || '　　　　　部') + '　　　　　　課', x:172, y:166, mm:3.8, align:'right' });
-  L.push({ t:(p.nameKanji || '氏　　　　名') + '　　㊞', x:172, y:174, mm:3.8, align:'right' });
+  L.push({ t:(isNegai ? '退　職　願' : '退　職　届'), x:105, y:34, mm:8.5, align:'center', bold:true });
+  L.push({ t:todayJpDate(), x:195, y:50, mm:3.6, align:'right' });
+  L.push({ t:(t.company || '株式会社　　　　　'), x:15, y:64, mm:4.2 });
+  L.push({ t:'代表取締役社長　' + (t.president || '　　　　') + '　殿', x:15, y:71, mm:4.2 });
+  /* 서명란(우): 所属+氏名만 — 提出日 중복 폐지 (v2.42) */
+  if (t.dept) L.push({ t:t.dept, x:195, y:64, mm:4, align:'right' });
+  L.push({ t:(p.nameKanji || '氏　　　　名') + '　　㊞', x:195, y:71, mm:4, align:'right' });
+  L.push({ t:'私儀', x:15, y:86, mm:4 });
+  /* 본문: 실측 개행(禁則) 누적으로 문장 간격 정확 유지 (送付状 빌더와 동일 기법) */
+  const K = 1240 / 210;
+  const mc = document.createElement('canvas').getContext('2d');
+  mc.font = (4.2 * K) + 'px ' + (s.settings.template === 'modern'
+    ? '"Hiragino Sans","Noto Sans JP","Noto Sans CJK JP","Yu Gothic",Meiryo,sans-serif'
+    : '"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP","MS Mincho",serif');
+  let y = 94;
+  for (const txt of [tqCoreSentence(t, s.settings)].concat(TQ_TAIL)){
+    L.push({ t:txt, x:15, y:y, mm:4.2, wrap:180, lh:9.5, indent:true });
+    y += wrapKinsokuCanvas(mc, txt, 180 * K).length * 9.5 + 6;
+  }
   return L;
 }
 async function downloadTaishokuPNG(){

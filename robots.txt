@@ -1,0 +1,5 @@
+# 履歴スタジオ robots.txt
+User-agent: *
+Allow: /
+
+Sitemap: https://www.rireki-studio.com/sitemap.xml

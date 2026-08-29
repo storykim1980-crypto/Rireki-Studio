@@ -24,6 +24,12 @@
    "isPartOf":{"@type":"WebSite","name":"履歴スタジオ","url":"https://www.rireki-studio.com/"},
    "about":{"@type":"Organization","name":"履歴スタジオ運営","url":"https://www.rireki-studio.com/"}}
   </script>
+  <!-- v2.45: パンくず構造化データ (ガイド記事と同一パターン) -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+   {"@type":"ListItem","position":1,"name":"ホーム","item":"https://www.rireki-studio.com/"},
+   {"@type":"ListItem","position":2,"name":"運営者情報","item":"https://www.rireki-studio.com/about.html"}]}
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -49,7 +55,7 @@
         <li>履歴書作成ツール（JIS規格準拠・和暦自動変換・A4印刷/PNG画像出力）</li>
         <li>職務経歴書作成ツール</li>
         <li>証明写真変換スタジオ（ブラウザ内完結の画像処理）</li>
-        <li>書き方ガイド記事（履歴書・証明写真・郵送マナーなど）</li>
+        <li><a href="guide/">書き方ガイド記事</a>（履歴書・証明写真・郵送マナーなど20本以上を公開中）</li>
       </ul>
 
       <h2>運営者情報</h2>
@@ -86,7 +92,8 @@
       <a href="terms.html">利用規約</a>
       <a href="privacy.html">プライバシーポリシー</a>
       <a href="contact.html">お問い合わせ</a>
-      <a href="offline/rireki-studio-offline.zip">オフライン版</a>
+      <a href="about.html">運営者情報</a>
+      <a href="offline/rireki-studio-offline.zip">オフライン版ダウンロード</a>
     </nav>
     <p class="foot-note">履歴スタジオ — データはブラウザ内にのみ保存されます</p>
   </footer>

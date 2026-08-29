@@ -13,6 +13,12 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css?v=1.0">
   <link rel="stylesheet" href="guide/guide.css?v=1.0">
+  <!-- v2.45: パンくず構造化データ (ガイド記事と同一パターン — 検索結果のURL部にパンくず表示) -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+   {"@type":"ListItem","position":1,"name":"ホーム","item":"https://www.rireki-studio.com/"},
+   {"@type":"ListItem","position":2,"name":"プライバシーポリシー","item":"https://www.rireki-studio.com/privacy.html"}]}
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -42,26 +48,39 @@
       </ul>
 
       <h2>2. Cookie（クッキー）について</h2>
-      <p>当サイトでは、広告配信のためにCookieを使用する場合があります。Cookieによりユーザーのブラウザを識別することはありますが、個人を特定する情報（氏名・住所等）を収集するものではありません。</p>
+      <p>Cookieとは、ウェブサイトがユーザーのブラウザを識別するための小さなデータです。当サイトでは、<strong>広告配信（後述）およびアクセス解析のために、Cookieを含むごく一般的な識別技術が利用される場合があります</strong>。Cookieで収集される情報に、氏名・住所・メールアドレス・電話番号など個人を特定する情報は含まれません。</p>
+      <p>ブラウザの設定でCookieの受け入れを拒否することもできますが、その場合、当サイトの一部機能（入力内容の保存など、ブラウザ内ストレージを利用する機能）が正しく動作しないことがあります。</p>
 
       <h2>3. 広告について（Google AdSense）</h2>
-      <p>当サイトでは、第三者配信の広告サービス「Google AdSense」の利用を予定しています。広告配信事業者は、ユーザーの興味に応じた広告を表示するため、Cookieを使用することがあります。</p>
+      <p>当サイトでは、第三者配信の広告サービス「<strong>Google AdSense（グーグルアドセンス）</strong>」を利用しています。</p>
       <ul>
-                <li>Googleによる広告でのCookieの使用を無効にするには、<a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google広告設定</a>からパーソナライズ広告を無効化できます</li>
-        <li>Google・第三者配信事業者によるパーソナライズ広告の無効化は、<a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">www.aboutads.info</a>からも行えます</li>
+        <li>Googleなどの第三者配信事業者は、ユーザーが当サイトや他のウェブサイトに過去にアクセスした際の情報に基づいて広告を配信するため、<strong>Cookie</strong>を使用しています。</li>
+        <li>Googleが広告Cookieを使用することにより、当サイトや他のサイトへのアクセス情報に基づき、<strong>Googleやそのパートナーが適切な広告をユーザーに表示</strong>できます。</li>
+        <li>また、第三者配信事業者や広告ネットワークが配信する広告が、当サイトに掲載される場合があります。</li>
+      </ul>
+      <p>パーソナライズ広告は、いつでも無効にできます。</p>
+      <ul>
+        <li>Googleによる広告でのCookieの使用を無効にするには、<a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google広告設定</a>からパーソナライズ広告を無効化できます</li>
+        <li>第三者配信事業者によるパーソナライズ広告で使用されるCookieは、<a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">www.aboutads.info</a>からも無効化できます</li>
         <li>Googleの広告における情報の取り扱いの詳細は「<a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">Google 広告 — ポリシーと規約</a>」をご確認ください</li>
       </ul>
 
-      <h2>4. アクセス解析について</h2>
+      <h2>4. アフィリエイトプログラムについて</h2>
+      <p>当サイトでは、A8.net等のアフィリエイトプログラムを利用しています。リンクを経由して商品・サービスのお申し込みがあった場合、運営者に報酬が支払われることがあります。広告・アフィリエイトの有無が、ガイド記事の内容やツールの機能に影響することはありません。</p>
+
+      <h2>5. アクセス解析について</h2>
       <p>当サイトでは、サービス改善のためアクセス解析ツール（例：Googleアナリティクス）を導入する場合があります。これらのツールはトラフィックデータの収集にCookieを使用しますが、データは匿名で収集され、個人を特定するものではありません。</p>
 
-      <h2>5. 免責事項</h2>
+      <h2>6. アクセスログについて</h2>
+      <p>当サイトは静的ホスティング上で提供されています。ホスティング事業者が、セキュリティ確保・不正アクセス防止の目的で、IPアドレス等のアクセスログを一定期間記録する場合があります。これらの記録は個人を特定する目的では利用されません。</p>
+
+      <h2>7. 免責事項</h2>
       <p>当サイトのツール・ガイド記事の内容は、作成時点での情報に基づいています。提供する情報の正確性には万全を期していますが、これらの情報の使用により生じた損害について、運営者は一切の責任を負いません。証明写真ツールが生成する画像は履歴書・プロフィール用途を想定しており、公的機関への提出可否は各機関の規則をご確認ください。</p>
 
-      <h2>6. プライバシーポリシーの変更</h2>
+      <h2>8. プライバシーポリシーの変更</h2>
       <p>本ポリシーの内容は、法令の変更やサービス内容の変更にともない、予告なく改定することがあります。改定後のポリシーは本ページに掲載されます。</p>
 
-      <h2>7. お問い合わせ</h2>
+      <h2>9. お問い合わせ</h2>
       <p>本ポリシーに関するお問い合わせは、<a href="contact.html">お問い合わせページ</a>よりお願いいたします。</p>
     </article>
   </main>
@@ -72,6 +91,7 @@
       <a href="privacy.html">プライバシーポリシー</a>
       <a href="contact.html">お問い合わせ</a>
       <a href="about.html">運営者情報</a>
+      <a href="offline/rireki-studio-offline.zip">オフライン版ダウンロード</a>
     </nav>
     <p class="foot-note">履歴スタジオ — データはブラウザ内にのみ保存されます</p>
   </footer>

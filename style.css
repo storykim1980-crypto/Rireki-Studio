@@ -843,3 +843,10 @@ dialog::backdrop{ background:rgba(4,8,24,.6); backdrop-filter:blur(4px); }
 .dpd select{ width:auto; flex:1 1 0; min-width:0; padding-left:.55rem; padding-right:.4rem; }
 .dpd .dpd-y{ flex:1 1 100%; }
 .dpd .dpd-m,.dpd .dpd-d{ flex:1 1 0; }
+
+/* ============================================================
+   FAQ "더 보기" 링크 (v2.47 — 홈 FAQ 요약 → faq.html 상설 페이지 유도)
+============================================================ */
+.faq-more{ text-align:center; margin:.4rem 0 0; }
+.faq-more a{ color:var(--accent); font-weight:800; font-size:.88rem; text-underline-offset:3px; }
+.faq-more a::after{ content:' →'; }

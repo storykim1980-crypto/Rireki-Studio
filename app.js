@@ -3088,9 +3088,7 @@ function init(){
     $('btnGuide').addEventListener('click', (e)=>{
       if (location.protocol === 'file:'){ e.preventDefault(); toast('ガイドはWeb公開版でご覧いただけます', 'warn'); }
     });
-    $('lnkOffline') && $('lnkOffline').addEventListener('click', (e)=>{
-      if (location.protocol === 'file:'){ e.preventDefault(); toast('今お使いのファイルがオフライン版です', 'warn'); }
-    });
+    /* v2.48: オフライン版(zip download) 폐지 — lnkOffline 바인딩 제거 (トラフィック만 소모·수익 기여 없음 판단) */
     /* 초기 렌더 */
     safe('fill-profile', fillProfileForm);
     safe('taishoku', ()=>{ bindTaishoku(); fillTaishokuForm(); });

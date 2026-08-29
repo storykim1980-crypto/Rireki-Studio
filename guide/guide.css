@@ -141,3 +141,14 @@
 .pc-copy .ic{ width:14px; height:14px; }
 /* 가이드 하단 푸터 여백 — 가이드 페이지는 고정 하단 탭바가 없으므로 표준 여백 (v2.18 여백 확장의 부작용 정정) */
 .guide-body .site-footer, body:not(:has(.tabbar)) .site-footer{ padding-bottom:2.4rem; }
+
+/* ============================================================
+   v2.50: 参考·出典 박스 + 法定文서 制定·改定日 (AdSense 심사 대비 E-E-A-T 가시화)
+   ※ .a-date(記事の公開/更新日)는 기존 .article .a-date 규칙(상단)을 사용 — 중복 정의 안 함
+============================================================ */
+.src-box{ margin-top:2rem; padding:.9rem 1rem; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+.src-box .src-title{ margin:0 0 .3rem; font-size:.82rem; font-weight:800; color:var(--muted); letter-spacing:.05em; }
+.src-box ul{ margin:0; padding-left:1.15rem; }
+.src-box li{ font-size:.82rem; line-height:1.9; color:var(--muted); }
+.src-box a{ color:var(--accent); text-underline-offset:2px; }
+.legal-date{ margin-top:2.2rem; font-size:.78rem; color:var(--muted); }

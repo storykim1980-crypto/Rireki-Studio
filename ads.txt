@@ -1,4 +1,0 @@
-# 履歴スタジオ ads.txt
-# Google AdSense 販売者宣言 (v2.46 활성화 — 게시자 ID ca-pub-3122957517118825 반영)
-# 형식: 도메인, 게시자ID, 관계, 인증기관ID  ※ 게시자 ID는 공개 식별자(visitors의 브라우저가 광고 요청에 사용)로 비밀정보가 아님
-google.com, pub-3122957517118825, DIRECT, f08c47fec0942fa0

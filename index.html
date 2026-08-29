@@ -26,7 +26,7 @@
   <link rel="icon" href="assets/favicon.svg?v=1.0" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=2.47">
+  <link rel="stylesheet" href="style.css?v=2.49">
   <!-- v2.46: Google AdSense サイト接続コード (심사 연결용 — 게시자 ID ca-pub-3122957517118825).
        ※ 이 ID는 방문자 브라우저가 광고를 요청하는 공개 식별자 — 모든 AdSense 사이트의 소스에 노출되는 것이 정상이며 비밀정보가 아님.
          승인 후 Auto 광고는 이 스크립트 하나로 전 페이지에 작동. 法関連 페이지에는 미삽입(広告 부적절 — 콘텐츠 페이지만 게재) -->
@@ -53,23 +53,9 @@
    "offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},
    "inLanguage":"ja"}
   </script>
-  <!-- v2.43: FAQPage 구조화데이터 — 본문 하단의 가시 FAQ와 문장 단위로 완전 일치 (Google 가이드라인 준수).
-       리치 결과 노출로 CTR 향상 기대. 답변 수정 시 반드시 양쪽을 함께 고칠 것 -->
-  <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"FAQPage",
-   "mainEntity":[
-    {"@type":"Question","name":"履歴スタジオは無料で使えますか？",
-     "acceptedAnswer":{"@type":"Answer","text":"はい。履歴書・職務経歴書・証明写真・退職届など、全機能を完全無料でご利用いただけます。会員登録や課金は一切ありません。"}},
-    {"@type":"Question","name":"入力した個人情報はどこに保存されますか？",
-     "acceptedAnswer":{"@type":"Answer","text":"すべてお使いのブラウザ内（端末のストレージ）にのみ保存され、外部サーバーへの送信は一切ありません。住所・電話番号・顔写真の取り扱いも安心です。"}},
-    {"@type":"Question","name":"スマホだけで履歴書は作れますか？",
-     "acceptedAnswer":{"@type":"Answer","text":"はい。作成した履歴書はその場でPNG画像として保存でき、コンビニのネットプリントなどでA4印刷も可能です。パソコンがなくても完成します。"}},
-    {"@type":"Question","name":"証明写真はどのサイズで仕上がりますか？",
-     "acceptedAnswer":{"@type":"Answer","text":"履歴書標準規格の縦4cm×横3cmです。背景の自動除去・明るさ補正もブラウザ内で完結します（パスポート等、公的機関への提出用ではありません）。"}},
-    {"@type":"Question","name":"退職届と退職願の違いは何ですか？",
-     "acceptedAnswer":{"@type":"Answer","text":"退職届は会社の承認が不要な届け出、退職願は会社の承認が必要な願い出です。両方の書式に対応しており、氏名・日付は自動で入ります。"}}
-   ]}
-  </script>
+  <!-- v2.49: 홈 FAQ 섹션 폐지 (사용자 지시 — 푸터의 faq.html 상설 페이지로 일원화).
+       FAQPage LD도 함께 제거: 구조화데이터는 가시 콘텐츠와 반드시 일치해야 함 (Google 가이드라인).
+       FAQPage LD는 전체 Q&A가 있는 faq.html에만 유지 -->
   <noscript><p style="padding:1rem">このツールはJavaScriptで動作します。ブラウザのJavaScriptを有効にしてください。履歴書の書き方・証明写真サイズのガイドは/guide/でご覧いただけます。</p></noscript>
 </head>
 <body>
@@ -805,34 +791,10 @@
 
   </main>
 
-  <!-- v2.43: FAQ (SEO — 롱테일 질의 대응 + FAQPage 구조화데이터 연동. details/summary 순정 → JS 불필요.
-       답변의 앞부분 문장은 head의 FAQPage 데이터와 문장 단위로 일치 유지할 것) -->
-  <section class="faq-sec" aria-labelledby="faq-h">
-    <h2 id="faq-h">よくある質問</h2>
-    <details class="faq-item">
-      <summary>履歴スタジオは無料で使えますか？</summary>
-      <p>はい。履歴書・職務経歴書・証明写真・退職届など、全機能を完全無料でご利用いただけます。会員登録や課金は一切ありません。</p>
-    </details>
-    <details class="faq-item">
-      <summary>入力した個人情報はどこに保存されますか？</summary>
-      <p>すべてお使いのブラウザ内（端末のストレージ）にのみ保存され、外部サーバーへの送信は一切ありません。住所・電話番号・顔写真の取り扱いも安心です。</p>
-    </details>
-    <details class="faq-item">
-      <summary>スマホだけで履歴書は作れますか？</summary>
-      <p>はい。作成した履歴書はその場でPNG画像として保存でき、コンビニのネットプリントなどでA4印刷も可能です。パソコンがなくても完成します。</p>
-    </details>
-    <details class="faq-item">
-      <summary>証明写真はどのサイズで仕上がりますか？</summary>
-      <p>履歴書標準規格の縦4cm×横3cmです。背景の自動除去・明るさ補正もブラウザ内で完結します（パスポート等、公的機関への提出用ではありません）。</p>
-      <p class="faq-link"><a href="guide/shashin-size.html">証明写真サイズの詳しい解説ガイドへ</a></p>
-    </details>
-    <details class="faq-item">
-      <summary>退職届と退職願の違いは何ですか？</summary>
-      <p>退職届は会社の承認が不要な届け出、退職願は会社の承認が必要な願い出です。両方の書式に対応しており、氏名・日付は自動で入ります。</p>
-      <p class="faq-link"><a href="guide/taishoku.html">退職届・退職願の違いの解説ガイドへ</a></p>
-    </details>
-    <p class="faq-more"><a href="faq.html">よくある質問をすべて見る（全10件）</a></p>   <!-- v2.47: FAQ 상설 페이지(faq.html)로의 낶부링크 -->
-  </section>
+  <!-- v2.49: 홈 FAQ 요약 섹션 폐지 (사용자 지시) — FAQ는 푸터 링크의 faq.html 상설 페이지로 일원화.
+       삭제 사유: (a) 全10件는 어차피 faq.html에서만 유지 → 홈 5件 요약은 중복 콘텐츠
+       (b) FAQPage 구조화데이터 중복 소지 제거 (리치 리ザルト는 faq.html이 전담)
+       (c) 홈 하단 여백 축소 → 툴 본연의 작업 화면이 체류 중심 -->
 
   <!-- 푸터 -->
   <footer class="site-footer">

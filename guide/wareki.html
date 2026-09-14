@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 和暦⇔西暦変換表 (롱테일 선점 기사 + 내장 변환 도구) -->
+<!-- 和暦⇔西暦変換表（ロングテール先取り記事 + 内蔵変換ツール） -->
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -28,12 +28,9 @@
    "mainEntityOfPage":"https://www.rireki-studio.com/guide/wareki.html"}
   </script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://www.rireki-studio.com/"}, {"@type": "ListItem", "position": 2, "name": "ガイド", "item": "https://www.rireki-studio.com/guide/"}, {"@type": "ListItem", "position": 3, "name": "和暦⇔西暦変換表｜令和・平成・昭和の年号早見表【計算ツール付き】", "item": "https://www.rireki-studio.com/guide/wareki.html"}]}</script>
-  <!-- v2.46: Google AdSense サイト接続コード (게시자 ID ca-pub-3122957517118825 — 공개 식별자, 비밀정보 아님) -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3122957517118825"
-     crossorigin="anonymous"></script>
 </head>
 <body>
-<!-- SVG 아이콘 스프라이트 (이모지 폰트 비의존) -->
+<!-- SVGアイコンスプライト（絵文字フォント非依存） -->
 <svg class="svg-sprite" aria-hidden="true" focusable="false"
      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <defs>
@@ -70,7 +67,7 @@
 
       <p>履歴書の記入で悩みがちなのが年号の変換です。「令和5年は西暦何年？」「平成生まれは何年？」という疑問は、この下の<strong>変換ツール</strong>で即座に解決します。</p>
 
-      <!-- ===== 内蔵 변환 도구 ===== -->
+      <!-- ===== 内蔵変換ツール ===== -->
       <section class="wareki-tool" aria-label="和暦西暦変換ツール">
         <h2><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg>和暦⇔西暦 変換ツール</h2>
         <div class="wk-row">
@@ -139,7 +136,7 @@
         <a class="share-btn" href="https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Fwww.rireki-studio.com%2Fguide%2Fwareki.html" target="_blank" rel="noopener">LINEで送る</a>
       </div>
 
-      <!-- AdSense 인아티클 슬롯 (승인 후 활성화) -->
+      <!-- AdSense インアーティクルスロット（承認後に有効化） -->
       <div class="ad-slot" data-ad-on="0" aria-hidden="true"></div>
     </article>
   </main>
@@ -156,7 +153,7 @@
   </footer>
 
   <script>
-  /* ===== 和暦⇔西暦 変換ツール (이 페이지 전용 자체 완결 스크립트 / innerHTML 미사용) ===== */
+  /* ===== 和暦⇔西暦 変換ツール（このページ専用・自己完結スクリプト / innerHTML不使用） ===== */
   (function(){
     'use strict';
     var ERAS = [
@@ -188,7 +185,7 @@
     ['wkYear','wkMonth'].forEach(function(id){
       document.getElementById(id).addEventListener('keydown', function(e){ if (e.key === 'Enter') convert(); });
     });
-    /* 早見表 생성 (1989〜2036) — DOM은 createElement/textContent만 사용 */
+    /* 早見表生成 (1989〜2036) — DOMは createElement/textContent のみ使用 */
     var wrap = document.getElementById('wkTable');
     var note = document.getElementById('wkTableNote');
     var table = document.createElement('table'); table.className = 'a-table';

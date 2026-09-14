@@ -1,44 +1,44 @@
 'use strict';
 /* ============================================================
   履歴スタジオ — app.js
-  [섹션 지도]
-   01. 상수·검증규칙·콘텐츠 데이터 (예문 15건/팁/프리셋)
-   02. 和暦(연호) 변환 엔진
-   03. 상태 Store (localStorage 로드/저장/교체)
-   04. DOM 유틸 (innerHTML 금지: createElement+textContent 전용)
-   05. 토스트 시스템
-   06. 기본정보 폼 바인딩 + 입력 검증
-   07. CRUD 리스트 (학력/직력/자격 + 직무상세)
-   08. 경고 시스템 (필수 미입력/공백기간 감지)
-   09. 대시보드 (완성도 도넛/섹션바)
-   10. A4 미리보기 렌더러 + 화면 스케일 맞춤
-   11. 인쇄 출력
-   12. 写真スタジ오 (업로드→크롭→배경제거→보정→저장)
-   13. 예문 라이브러리 (검색/카테고리/복사)
-   14. Export/Import/전체삭제
-   15. 설정(테마/연호/템플릿) + 탭 전환
-   16. 초기화 init + 글로벌 에러 핸들러
+  [セクションマップ]
+   01. 定数・検証ルール・コンテンツデータ（例文15件/ヒント/プリセット）
+   02. 和暦（元号）変換エンジン
+   03. 状態 Store（localStorage ロード/保存/置換）
+   04. DOMユーティリティ（innerHTML禁止: createElement+textContent 専用）
+   05. トーストシステム
+   06. 基本情報フォームバインド + 入力検証
+   07. CRUDリスト（学歴/職歴/資格 + 職務詳細）
+   08. 警告システム（必須未入力/空白期間の検出）
+   09. ダッシュボード（完成度ドーナツ/セクションバー）
+   10. A4プレビューレンダラー + 画面スケールフィット
+   11. 印刷出力
+   12. 写真スタジオ（アップロード→クロップ→背景除去→補正→保存）
+   13. 例文ライブラリ（検索/カテゴリ/コピー）
+   14. Export/Import/全削除
+   15. 設定（テーマ/元号/テンプレート）+ タブ切替
+   16. 初期化 init + グローバルエラーハンドラ
 ============================================================ */
 
 /* ================================================================
-   01. 상수·검증 규칙·데이터
+   01. 定数・検証ルール・データ
 ================================================================ */
-const LS_KEY = 'rirekiStudio.v1';          // 저장 키(버전 태그)
-const SAVE_DELAY = 400;                    // 자동저장 디바운스(ms)
-const YEAR_MIN = 1955;                     // 연도 선택 하한
-const PHOTO_MAX_BYTES = 15 * 1024 * 1024;  // 사진 업로드 상한 15MB
-const PHOTO_STORE_LIMIT = 320 * 1024;      // localStorage 저장용 사진 상한
+const LS_KEY = 'rirekiStudio.v1';          // 保存キー（バージョンタグ）
+const SAVE_DELAY = 400;                    // 自動保存デバウンス(ms)
+const YEAR_MIN = 1955;                     // 年選択の下限
+const PHOTO_MAX_BYTES = 15 * 1024 * 1024;  // 写真アップロード上限 15MB
+const PHOTO_STORE_LIMIT = 320 * 1024;      // localStorage 保存用写真上限
 
-/* 입력 검증 정규식 (§6 스키마와 동일) */
+/* 入力検証の正規表現（§6 スキーマと同一） */
 const RX = {
-  kana:   /^[ぁ-ん゛゜ー\s　]+$/,                    // 히라가나 강제
-  kanaLoose:/^[ぁ-ん゛゜ー\s　]*$/,                  // 빈값 허용형
-  phone:  /^0\d{1,4}-\d{1,4}-\d{4}$/,              // 일본 전화번호
+  kana:   /^[ぁ-ん゛゜ー\s　]+$/,                    // ひらがな強制
+  kanaLoose:/^[ぁ-ん゛゜ー\s　]*$/,                  // 空値許容型
+  phone:  /^0\d{1,4}-\d{1,4}-\d{4}$/,              // 日本の電話番号
   postal: /^\d{3}-\d{4}$/,                         // 〒123-4567
   email:  /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 };
 
-/* 사진 보정 프리셋 (참고사이트 6종 → 클라이언트 파라미터 매핑) */
+/* 写真補正プリセット（参考サイト6種 → クライアントパラメータにマッピング） */
 const PRESETS = {
   standard: { ico:'i-file',     name:'履歴書 標準',   bri:100, con:105, sat:100, sharp:false, auto:false, vig:false, sepia:0 },
   studio:   { ico:'i-aperture', name:'スタジオ',      bri:105, con:120, sat:100, sharp:false, auto:false, vig:true,  sepia:0 },
@@ -48,7 +48,7 @@ const PRESETS = {
   business: { ico:'i-case',     name:'ビジネストーン', bri:100, con:112, sat:85,  sharp:false, auto:false, vig:false, sepia:0 }
 };
 
-/* 예문 라이브러리: 5 직종 × 3건 (志望動機) */
+/* 例文ライブラリ: 5職種 × 3件（志望動機） */
 const EX_CATS = ['すべて','新卒','アルバイト','営業','事務','企画','IT・エンジニア','販売・接客','医療・介護','製造・物流'];
 const EXAMPLES = [
  { cat:'営業', title:'理念共感型（基本形）',
@@ -107,7 +107,7 @@ const EXAMPLES = [
    text:'前職の電子部品メーカーで外観検査と測定業務に4年間従事し、不良率の低減改善チームにも参加しました。0.1mmの見落としが大きな信頼を損なうことを現場で学んだ私にとって、貴社の「品質は企業の命」という方針は働く意味そのものです。培った目と改善視点で、検査工程の信頼性向上に貢献します。' }
 ];
 
-/* 履歴書チェックリスト (팁) */
+/* 履歴書チェックリスト（ヒント） */
 const TIPS = [
  '写真は縦4cm×横3cm・3か月以内に撮影・脱帽・正面が基本です（当スタジオで変換できます）。',
  '年号は和暦・西暦どちらかに統一しましょう（設定で切替可能）。',
@@ -119,8 +119,8 @@ const TIPS = [
 ];
 
 /* ================================================================
-   02. 和暦(연호) 변환 엔진
-   - 明治~令和. 경계일 정밀 비교(年月, 생년월일은 日까지)
+   02. 和暦（元号）変換エンジン
+   - 明治〜令和。境界日の精密比較（年月、生年月日は日まで）
 ================================================================ */
 const ERAS = [
   { name:'令和', y:2019, m:5,  d:1  },
@@ -129,7 +129,7 @@ const ERAS = [
   { name:'大正', y:1912, m:7,  d:30 },
   { name:'明治', y:1868, m:9,  d:8  }
 ];
-/* 年月(日) → 和暦 문자열 (예: 令和元年 / 平成31年) */
+/* 年月（日） → 和暦文字列（例: 令和元年 / 平成31年） */
 function toWareki(y, m, d){
   m = m || 1; d = d || 1;
   for (const e of ERAS){
@@ -138,16 +138,16 @@ function toWareki(y, m, d){
   }
   return '明治以前';
 }
-/* 年月 표기: 설정에 따라 和暦/西暦 */
+/* 年月表記: 設定により和暦/西暦 */
 function fmtYM(y, m){
   const era = store.get().settings.eraNotation;
   if (!y) return '';
   return era === 'wareki' ? toWareki(y, m) : y + '年';
 }
-/* 헤더 날짜: 令和8年8月23日 / 2026年8月23日
-   v2.34: 종전의 '現在' 꼬리표 제거 — 「○日現在」는 厚労省 양식의 관례였으나, 職務経歴書를 비롯한
-   최신 양식은 '날짜만' 표기가 일반적. 꼬리표가 있는 쪽이 오히려 어색하다는 사용감 피드백 반영.
-   (이력서·직무경력서 DOM+PNG 모두 이 함수 하나를 공유하므로 일괄 통일됨) */
+/* ヘッダー日付: 令和8年8月23日 / 2026年8月23日
+   v2.34: 従来の「現在」付尾を除去 — 「○日現在」は厚労省様式の慣例だったが、職務経歴書をはじめとする
+   最新様式は「日付のみ」表記が一般的。付尾がある方がむしろ不自然という使用感フィードバックを反映。
+   （履歴書・職務経歴書の DOM+PNG 両方がこの関数1つを共有するため一括で統一される） */
 function fmtDateHeader(dt){
   const era = store.get().settings.eraNotation;
   const y = dt.getFullYear(), m = dt.getMonth() + 1, d = dt.getDate();
@@ -155,7 +155,7 @@ function fmtDateHeader(dt){
 }
 
 /* ================================================================
-   03. 상태 Store (localStorage)
+   03. 状態 Store (localStorage)
 ================================================================ */
 function defaultState(){
   return {
@@ -164,17 +164,17 @@ function defaultState(){
                address:'', addressKana:'', phone:'', email:'', photoDataUrl:'' },
     education: [], workHistory: [], licenses: [],
     motivation:'', selfPr:'', workSummary:'', requests:'',
-    /* 退職届/退職願 (탭5 — 라이프사이클 서류 차별화) */
+    /* 退職届/退職願（タブ5 — ライフサイクル書類の差別化） */
     taishoku: { docType:'todoke', company:'', president:'', dept:'', leaveDate:'', reason:'isshin' },
-    /* 送付状/添え状 (탭6 — 우편 제출용 커버레터. 날짜·時候·프로필은 자동) */
+    /* 送付状/添え状（タブ6 — 郵送提出用カバーレター。日付・時候・プロフィールは自動） */
     sofu: { company:'', tantou:'', job:'', docRireki:true, docShokumu:true, otherDoc:'', note:'' },
-    /* 模擬面接 (탭7 — v2.12 차별화 자산) */
+    /* 模擬面接（タブ7 — v2.12 差別化資産） */
     mensetsu: { cat:'共通', gqStage:'一次面接', gqTarget:'人事' },
-    /* 内定対応パック (탭8 — 手取り 시뮬레이션・비교 조건 영속) */
+    /* 内定対応パック（タブ8 — 手取りシミュレーション・比較条件の永続） */
     pay: { monthly:null, bonus:2, age:'u39', noJumin:false, cmpA:{monthly:null,bonus:2}, cmpB:{monthly:null,bonus:1} },
     payUi: { scene:'accept', company:'', phoneScene:'thanks' },
     settings: { theme:'auto', eraNotation:'wareki', template:'jis-a4', bgColor:'#ffffff', autoSave:true,
-                showMot:true, showReq:true },   /* v2.32: 志望動機/本人希望欄 인쇄 포함 여부 (기본 ON = JIS 표준) */
+                showMot:true, showReq:true },   /* v2.32: 志望動機/本人希望欄の印刷含有の有無（デフォルトON = JIS標準） */
     meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
   };
 }
@@ -187,15 +187,15 @@ const store = {
       const raw = localStorage.getItem(LS_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
-      this.state = sanitizeState(parsed);   // 스키마 정제 후 탑재
-    }catch(e){ console.warn('저장 데이터를 읽지 못했습니다(초기화):', e); }
+      this.state = sanitizeState(parsed);   // スキーマ整備後に搭載
+    }catch(e){ console.warn('保存データを読み込めませんでした（初期化）:', e); }
   },
   save(){
     try{ localStorage.setItem(LS_KEY, JSON.stringify(this.state)); }
-    catch(e){ console.warn('localStorage 저장 실패(용량 부족 가능):', e); }
+    catch(e){ console.warn('localStorage 保存失敗（容量不足の可能性）:', e); }
   },
-  /* 변경 적용: render=true(전체갱신)/'light'(미리보기·대시보드만)/false, persist=저장 예약
-     ※ 입력 중인 리스트를 재생성하면 포커스가 날아가므로, 필드별 편집은 반드시 'light' 사용 */
+  /* 変更適用: render=true（全体更新）/'light'（プレビュー・ダッシュボードのみ）/false、persist=保存予約
+     ※ 入力中のリストを再生成するとフォーカスが飛ぶため、フィールド単位の編集は必ず 'light' を使用 */
   update(mutator, opts){
     const o = Object.assign({ render:true, persist:true }, opts);
     try{ mutator(this.state); }catch(e){ console.error(e); }
@@ -215,16 +215,16 @@ const store = {
 function uuid(){
   return (crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
 }
-/* Import/로드 데이터 정제: 키·타입·범위 점검 (악성 JSON 차단) */
+/* Import/ロードデータ整備: キー・型・範囲を検査（悪性JSON遮断） */
 function sanitizeState(src){
   const s = defaultState();
   if (!src || typeof src !== 'object') return s;
   const str = (v)=> (typeof v === 'string' ? v : '');
   const num = (v)=> (Number.isFinite(v) ? v : null);
   for (const k of Object.keys(s.profile)){
-    if (k === 'photoDataUrl') continue;              // 사진은 아래 화이트리스트에서만 수용
+    if (k === 'photoDataUrl') continue;              // 写真は下記ホワイトリストでのみ受領
     if (k in (src.profile||{})) s.profile[k] = str(src.profile[k]);
-    if (k === 'gender' && !['', '男', '女', '回答しない'].includes(s.profile.gender)) s.profile.gender = ''; // v2.24 화이트리스트
+    if (k === 'gender' && !['', '男', '女', '回答しない'].includes(s.profile.gender)) s.profile.gender = ''; // v2.24 ホワイトリスト
   }
   if (src.profile && typeof src.profile.photoDataUrl === 'string' &&
       src.profile.photoDataUrl.startsWith('data:image/')) s.profile.photoDataUrl = src.profile.photoDataUrl;
@@ -239,7 +239,7 @@ function sanitizeState(src){
   }));
   s.licenses = arr(src.licenses).map(i => ({ id:str(i.id)||uuid(), year:num(i.year), month:num(i.month), name:str(i.name) }));
   for (const k of ['motivation','selfPr','workSummary','requests']) s[k] = str(src[k]);
-  /* 退職届 데이터도 화이트리스트 정제 (백업 복원 시 XSS·형태 오류 방지) */
+  /* 退職届データもホワイトリスト整備（バックアップ復元時のXSS・形式誤り防止） */
   const tq = src.taishoku || {};
   s.taishoku.docType    = ['todoke','negai'].includes(tq.docType) ? tq.docType : 'todoke';
   s.taishoku.reason     = ['isshin','katei','keiyaku','kaisha'].includes(tq.reason) ? tq.reason : 'isshin';
@@ -247,7 +247,7 @@ function sanitizeState(src){
   s.taishoku.president  = str(tq.president);
   s.taishoku.dept       = str(tq.dept);
   s.taishoku.leaveDate  = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(tq.leaveDate||'') ? tq.leaveDate : '';
-  /* 送付状 데이터 화이트리스트 정제 (체크박스는 boolean 강제) */
+  /* 送付状データのホワイトリスト整備（チェックボックスはboolean強制） */
   const sf = src.sofu || {};
   s.sofu.company    = str(sf.company);
   s.sofu.tantou     = str(sf.tantou);
@@ -256,12 +256,12 @@ function sanitizeState(src){
   s.sofu.docShokumu = sf.docShokumu !== false;
   s.sofu.otherDoc   = str(sf.otherDoc);
   s.sofu.note       = str(sf.note);
-  /* 面接 카테고리 화이트리스트 정제 */
+  /* 面接カテゴリのホワイトリスト整備 */
   const msm = src.mensetsu || {};
   s.mensetsu.cat = MQ_CATS.includes(msm.cat) ? msm.cat : '共通';
   s.mensetsu.gqStage  = GQ_STAGES.includes(msm.gqStage)  ? msm.gqStage  : '一次面接';
   s.mensetsu.gqTarget = GQ_TARGETS.includes(msm.gqTarget) ? msm.gqTarget : '人事';
-  /* 手取り 입력값 화이트리스트 정제 (범위 밖 숫자 차단) */
+  /* 手取り入力値のホワイトリスト整備（範囲外の数値を遮断） */
   const py = src.pay || {};
   const yen = (v)=>{ const n = Number(v); return (Number.isFinite(n) && n>=0 && n<=3000000) ? n : null; };
   const bon = (v)=>{ const n = Number(v); return (Number.isFinite(n) && n>=0 && n<=12) ? Math.round(n*10)/10 : 2; };
@@ -281,7 +281,7 @@ function sanitizeState(src){
   s.settings.template   = st.template === 'modern' ? 'modern' : 'jis-a4';
   s.settings.bgColor    = /^#[0-9a-f]{6}$/i.test(st.bgColor||'') ? st.bgColor : '#ffffff';
   s.settings.autoSave   = st.autoSave !== false;
-  /* v2.32: 섹션 표시 플래그 — 기존 백업(키 없음)은 true 유지로 후방호환 */
+  /* v2.32: セクション表示フラグ — 既存バックアップ（キーなし）は true 維持で後方互換 */
   s.settings.showMot    = st.showMot !== false;
   s.settings.showReq    = st.showReq !== false;
   s.meta = { createdAt:str(src.meta&&src.meta.createdAt)||s.meta.createdAt, updatedAt:new Date().toISOString() };
@@ -289,10 +289,10 @@ function sanitizeState(src){
 }
 
 /* ================================================================
-   04. DOM 유틸 — innerHTML 금지 정책
+   04. DOMユーティリティ — innerHTML禁止ポリシー
 ================================================================ */
 const $ = (id)=> document.getElementById(id);
-/* 엘리먼트 생성 헬퍼: h('div',{class:'x',text:'문구'}, 자식...) */
+/* 要素生成ヘルパー: h('div',{class:'x',text:'文言'}, 子...) */
 function h(tag, attrs, ...kids){
   const el = document.createElement(tag);
   if (attrs) for (const [k,v] of Object.entries(attrs)){
@@ -306,8 +306,8 @@ function h(tag, attrs, ...kids){
   for (const kid of kids.flat(Infinity)) if (kid != null) el.append(kid);
   return el;
 }
-/* SVG 아이콘 생성 헬퍼: index.html 스프라이트의 <symbol>을 <use>로 참조.
-   innerHTML 없이 createElementNS만 사용 (XSS 안전 + OS 이모지 폰트 비의존) */
+/* SVGアイコン生成ヘルパー: index.html スプライトの <symbol> を <use> で参照。
+   innerHTMLなしで createElementNS のみ使用（XSS安全 + OS絵文字フォント非依存） */
 const SVGNS = 'http://www.w3.org/2000/svg';
 function ic(name, cls){
   const s = document.createElementNS(SVGNS, 'svg');
@@ -327,22 +327,22 @@ function downloadBlob(blob, filename){
 const todayStr = ()=>{ const d=new Date(); return ''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); };
 
 /* ================================================================
-   05. 토스트 시스템
+   05. トーストシステム
 ================================================================ */
 function toast(msg, type){
   type = type || 'success';
-  const iconName = { success:'i-check', error:'i-x', warn:'i-alert' }[type] || 'i-check'; // 유형별 SVG 아이콘
+  const iconName = { success:'i-check', error:'i-x', warn:'i-alert' }[type] || 'i-check'; // 種類別 SVG アイコン
   const t = h('div', { class:'toast ' + type, attrs:{ role:'status' } }, ic(iconName), msg);
   $('toastRoot').append(t);
   setTimeout(()=>{ t.classList.add('out'); setTimeout(()=> t.remove(), 320); }, 3000);
 }
 
 /* ================================================================
-   06. 기본정보 폼 바인딩 + 검증
-   - 정적 input: 초기 1회 바인딩(재렌더 X → 포커스 유지)
+   06. 基本情報フォームバインド + 検証
+   - 静的 input: 初期1回バインド（再描画なし → フォーカス維持）
 ================================================================ */
 const PROFILE_FIELDS = ['nameKanji','nameKana','birthDate','gender','postal','address','addressKana','phone','email'];
-/* v2.44: birthDate는 年/月/日 3연 커스텀 셀렉트(buildYmdPicker)가 전담 — 단일 DOM id가 없어 FIELD_IDS에서 제외 */
+/* v2.44: birthDate は 年/月/日 3連カスタムセレクト(buildYmdPicker)が専任 — 単一DOM idがないため FIELD_IDS から除外 */
 const FIELD_IDS = { nameKanji:'p_nameKanji', nameKana:'p_nameKana', gender:'p_gender',
                     postal:'p_postal', address:'p_address', addressKana:'p_addressKana', phone:'p_phone', email:'p_email' };
 
@@ -367,13 +367,13 @@ function showFieldError(key, msg){
   const input = $(FIELD_IDS[key]); if (input) input.classList.toggle('invalid', !!msg);
 }
 /* ================================================================
-   年/月/日 3연 셀렉트 날짜 피커 (type="date" 대체, v2.44)
-   - 네이티브 <input type="date">는 페이지 lang이 아니라 "브라우저 UI 언어"로 렌더링돼
-     한국어/영어 브라우저에서 「연도-월-일」 등 비일본어가 표시 → 完全日本語UI 약속 파괴.
-     이 커스텀 셀렉트는 어떤 브라우저 언어에서도 항상 일본어(和暦 병기)로 표시된다.
-   - 연도 옵션은 和暦 병기 (연호 기준으로 생년을 찾는 일본 사용자 입력 습관 대응)
-   - 일 수는 윤년까지 반영해 年/月 선택에 연동 재구성
-   - 저장 형식은 기존과 동일한 ISO(YYYY-MM-DD) → 백업/복원 호환 유지
+   年/月/日 3連セレクト日付ピッカー（type="date" 代替、v2.44）
+   - ネイティブ <input type="date"> はページの lang ではなく「ブラウザUI言語」でレンダリングされ
+     韓国語/英語ブラウザで非日本語の年月日表示が現れる → 完全日本語UIの約束を破壊。
+     このカスタムセレクトはどのブラウザ言語でも常に日本語（和暦併記）で表示される。
+   - 年オプションは和暦併記（元号基準で生年を探す日本のユーザーの入力習慣に対応）
+   - 日数は閏年まで反映し 年/月 選択に連動して再構成
+   - 保存形式は従来と同じ ISO(YYYY-MM-DD) → バックアップ/復元の互換を維持
 ================================================================ */
 const YMD_PICKERS = {};
 function buildYmdPicker(prefix, opt){
@@ -381,11 +381,11 @@ function buildYmdPicker(prefix, opt){
     const ySel = $(prefix+'Y'), mSel = $(prefix+'M'), dSel = $(prefix+'D');
     if (!ySel || !mSel || !dSel) return;
     const mk = (txt, val)=>{ const o = document.createElement('option'); o.value = val; o.textContent = txt; return o; };
-    /* 연도 옵션: desc=true면 최신 연도가 위 (生年月日는 최근 연도 접근이 잦아 내림차순) */
+    /* 年オプション: desc=true なら最新年が上（生年月日は近年へのアクセスが多いため降順） */
     ySel.appendChild(mk('年', '')); mSel.appendChild(mk('月', '')); dSel.appendChild(mk('日', ''));
     const yFirst = opt.desc ? opt.yMax : opt.yMin, yLast = opt.desc ? opt.yMin : opt.yMax, step = opt.desc ? -1 : 1;
     for (let y = yFirst; opt.desc ? y >= yLast : y <= yLast; y += step){
-      ySel.appendChild(mk(y + '年（' + toWareki(y, 7, 1) + '）', String(y)));  // 연호 전환 해는 7/1 기준 연호 병기
+      ySel.appendChild(mk(y + '年（' + toWareki(y, 7, 1) + '）', String(y)));  // 元号切り替え年は7/1時点の元号を併記
     }
     for (let m = 1; m <= 12; m++) mSel.appendChild(mk(m + '月', String(m)));
     const pad2 = (n)=> String(n).padStart(2, '0');
@@ -396,7 +396,7 @@ function buildYmdPicker(prefix, opt){
       while (dSel.firstChild) dSel.removeChild(dSel.firstChild);
       dSel.appendChild(mk('日', ''));
       for (let d = 1; d <= maxD; d++) dSel.appendChild(mk(d + '日', String(d)));
-      dSel.value = (cur && cur <= maxD) ? String(cur) : '';   // 31일 → 2월 변경처럼 존재하지 않는 날은 명시적 재선택 유도
+      dSel.value = (cur && cur <= maxD) ? String(cur) : '';   // 31日→2月変更のように存在しない日は明示的な再選択を促す
     }
     const iso = ()=> (ySel.value && mSel.value && dSel.value) ? ySel.value + '-' + pad2(mSel.value) + '-' + pad2(dSel.value) : '';
     const onChange = ()=>{ if (opt.onPick) opt.onPick(iso()); };
@@ -416,15 +416,15 @@ function buildYmdPicker(prefix, opt){
     };
   }catch(e){ console.error('[ymd:' + prefix + ']', e); }
 }
-/* 백업 복원/全削除 후 모든 정적 폼을 store 값으로 재주입
-   (v2.44: 종전에는 profile 폼만 재주입돼 退職届・送付状 폼이 구값으로 남는 불일치가 있었음 — 이번에 함께 해소) */
+/* バックアップ復元/全削除後に全ての静的フォームを store 値で再注入
+   (v2.44: 従来は profile フォームのみ再注入され 退職届・送付状 フォームが旧値のまま残る不一致があった — 今回あわせて解消) */
 function fillAllForms(){
   try{ fillProfileForm(); }catch(e){ console.error(e); }
   try{ fillTaishokuForm(); }catch(e){ console.error(e); }
   try{ fillSofuForm(); }catch(e){ console.error(e); }
 }
 function bindProfileForm(){
-  /* v2.44: 生年月日 커스텀 피커 (구 type="date"와 동일 범위 1930〜2015년 유지) */
+  /* v2.44: 生年月日カスタムピッカー（旧 type="date" と同じ範囲 1930〜2015年を維持） */
   buildYmdPicker('p_birth', { yMin:1930, yMax:2015, desc:true, onPick:(iso)=>{
     store.update(st=>{ st.profile.birthDate = iso; }, { render:'light' });
     updateWarekiHint();
@@ -434,7 +434,7 @@ function bindProfileForm(){
     if (!el) continue;
     el.addEventListener('input', ()=>{
       let v = el.value;
-      if (key === 'postal'){                             // 우편번호 하이픈 자동
+      if (key === 'postal'){                             // 郵便番号ハイフン自動
         const digits = v.replace(/\D/g,'');
         if (digits.length === 7 && !v.includes('-')) { v = digits.slice(0,3)+'-'+digits.slice(3); el.value = v; }
       }
@@ -444,18 +444,18 @@ function bindProfileForm(){
     });
     el.addEventListener('blur', ()=> showFieldError(key, validateField(key, el.value)));
   }
-  /* textarea 계열 (지원동기/기타/직무요약/자기PR) */
+  /* textarea 系（志望動機/その他/職務要約/自己PR） */
   bindTextArea('ta_motivation','motivation','motCount','motGauge');
   bindTextArea('ta_requests','requests',null,null);
   bindTextArea('ta_workSummary','workSummary','sumCount',null);
   bindTextArea('ta_selfPr','selfPr','prCount',null);
-  /* v2.32: 섹션 인쇄 포함 토글 — OFF = プレビュー/印刷/PNG에서 해당 란 전체 제외 (입력 내용은 유지) */
+  /* v2.32: セクション印刷含有トグル — OFF = プレビュー/印刷/PNG から該当欄ごと除外（入力内容は保持） */
   const bindSecToggle = (cbId, key, noteId)=>{
     const cb = $(cbId); if (!cb) return;
     cb.addEventListener('change', ()=>{
       store.update(st=>{ st.settings[key] = cb.checked; }, {render:'light'});
-      /* 연속 입력과 달리 '설정 토글'은 단발 동작 — 디바운스(400ms) 안 기다리고 즉시 확정 저장해
-         토글 직후 탭을 닫아도 설정이 날아가지 않도록 한다 (v2.32 하드닝) */
+      /* 連続入力と違い「設定トグル」は単発動作 — デバウンス(400ms)を待たず即座に確定保存し
+         トグル直後にタブを閉じても設定が飛ばないようにする（v2.32 ハードニング） */
       store.save();
       const note = $(noteId); if (note) note.hidden = cb.checked;
       toast(cb.checked ? 'この欄を履歴書に含めます'
@@ -488,7 +488,7 @@ function computeAge(y, m, d){
   if (t.getMonth() + 1 < m || (t.getMonth() + 1 === m && t.getDate() < d)) a--;
   return a;
 }
-/* 생년월일 → 和暦 힌트 표시 (v2.44: 단일 date input 폐지 → store 기준으로 읽음) */
+/* 生年月日 → 和暦ヒント表示（v2.44: 単一 date input 廃止 → store 基準で読む） */
 function updateWarekiHint(){
   const v = store.get().profile.birthDate; const hint = $('warekiHint');
   if (!hint) return;
@@ -496,11 +496,11 @@ function updateWarekiHint(){
   const [y,m,d] = v.split('-').map(Number);
   hint.textContent = '和暦: ' + toWareki(y,m,d) + m + '月' + d + '日生まれ（満' + computeAge(y,m,d) + '歳）';
 }
-/* store → 폼 값 주입 (초기/복원/리셋 시에만 호출) */
+/* store → フォーム値注入（初期/復元/リセット時のみ呼び出し） */
 function fillProfileForm(){
   const p = store.get().profile;
   for (const key of PROFILE_FIELDS){ const el = $(FIELD_IDS[key]); if (el) el.value = p[key] || ''; }
-  const birthPk = YMD_PICKERS['p_birth']; if (birthPk) birthPk.set(p.birthDate || '');   // v2.44: 生年月日 3연 셀렉트 주입
+  const birthPk = YMD_PICKERS['p_birth']; if (birthPk) birthPk.set(p.birthDate || '');   // v2.44: 生年月日 3連セレクトを注入
   showOnlyValidErrors();
   updateWarekiHint();
   $('ta_motivation').value = store.get().motivation;
@@ -510,7 +510,7 @@ function fillProfileForm(){
   updateCharCounter(store.get().motivation,'motCount','motGauge');
   updateCharCounter(store.get().workSummary,'sumCount',null);
   updateCharCounter(store.get().selfPr,'prCount',null);
-  /* v2.32: 섹션 표시 토글 상태 복원 (재방문/백업 복원 시에도 OFF 유지) */
+  /* v2.32: セクション表示トグル状態の復元（再訪問/バックアップ復元時も OFF を維持） */
   const stg = store.get().settings;
   const tgm = $('tgMot'), tgr = $('tgReq');
   if (tgm) tgm.checked = stg.showMot !== false;
@@ -526,15 +526,15 @@ function showOnlyValidErrors(){
 }
 
 /* ================================================================
-   07. CRUD 리스트 (학력/직력/자격/직무상세)
+   07. CRUDリスト（学歴/職歴/資格/職務詳細）
 ================================================================ */
-/* 연도/월 select 생성기 */
+/* 年/月 select 生成器 */
 function yearOptions(sel, current){
   sel.replaceChildren();
   sel.append(h('option',{ value:'', text:'—' }));
   const nowY = new Date().getFullYear();
   for (let y = nowY; y >= YEAR_MIN; y--){
-    const label = y + '（' + toWareki(y,6,1) + '）';   // 연중 6월 기준 연호 병기
+    const label = y + '（' + toWareki(y,6,1) + '）';   // 年中6月時点の元号を併記
     const op = h('option',{ value:String(y), text:label });
     if (current === y) op.selected = true;
     sel.append(op);
@@ -551,7 +551,7 @@ function monthOptions(sel, current){
 }
 const EDU_TYPES = { entry:'入学', grad:'卒業', other:'その他' };
 
-/* --- 학력 리스트 --- */
+/* --- 学歴リスト --- */
 function renderEduList(){
   const list = $('eduList'); list.replaceChildren();
   const items = store.get().education;
@@ -574,7 +574,7 @@ function renderEduList(){
     ));
   });
 }
-/* --- 직력 리스트 --- */
+/* --- 職歴リスト --- */
 function renderWorkList(){
   const list = $('workList'); list.replaceChildren();
   const items = store.get().workHistory;
@@ -596,14 +596,14 @@ function renderWorkList(){
       store.update(st=>{ const w=st.workHistory[idx];
         if (cb.checked){ w.endY = null; w.endM = null; }
         else {
-          /* v2.29 치명 수정: 해제 시 퇴사연월이 미선택(placeholder 값 '')이면 endY=null이 유지되어
-             재렌더에서 다시 '재직'으로 되돌아가 체크를 영구히 해제할 수 없던 데드락.
-             입사년(없으면 올해)을 기본 퇴사년으로 채워 해제 상태가 성립되도록 한다 */
+          /* v2.29 致命的修正: 解除時に退社年月が未選択（プレースホルダ値 ''）だと endY=null が維持され
+             再描画で再び「在職」に戻りチェックを永遠に解除できなかったデッドロック。
+             入社年（なければ今年）をデフォルト退社年に充填し解除状態が成立するようにする */
           w.endY = +eY.value || w.startY || new Date().getFullYear();
           w.endM = +eM.value || null;
         }
       },{render:false});
-      renderDynamic();                     // 체크 = 구조 변경(선택框 비활성) → 리스트 재구성
+      renderDynamic();                     // チェック = 構造変更（選択枠を無効化）→ リスト再構築
     });
     txt.addEventListener('input',()=> store.update(st=>{ st.workHistory[idx].company = txt.value; },{render:'light'}));
     list.append(h('div',{class:'crud-item'},
@@ -612,7 +612,7 @@ function renderWorkList(){
     ));
   });
 }
-/* --- 자격증 리스트 --- */
+/* --- 資格リスト --- */
 function renderLicList(){
   const list = $('licList'); list.replaceChildren();
   const items = store.get().licenses;
@@ -630,7 +630,7 @@ function renderLicList(){
     ));
   });
 }
-/* --- CRUD 공통 도구(위/아래/삭제) --- */
+/* --- CRUD共通ツール（上/下/削除） --- */
 function crudTools(kind, idx, len){
   const mv = (dir)=>{
     store.update(st=>{
@@ -654,14 +654,14 @@ function crudTools(kind, idx, len){
     h('button',{ type:'button', class:'btn small danger', attrs:{'aria-label':'削除'}, on:{click:del} }, ic('i-trash'))
   );
 }
-/* --- 직무 상세 (職務経歴書 탭) — v2.28: 읽기 전용에서 '이 화면에서 바로 편집'으로 격상.
-       회사명/入退社 연월/재직 체크/이동·삭제까지 이 탭에서 전부 가능 (履歴書 탭과同一 store) --- */
+/* --- 職務詳細（職務経歴書タブ） — v2.28: 読取専用から「この画面で直接編集」へ格上げ.
+       会社名/入退社年月/在職チェック/移動・削除までこのタブで全て可能（履歴書タブと同一 store） --- */
 function renderWorkDetail(){
   const list = $('workDetailList'); list.replaceChildren();
   const items = store.get().workHistory;
   if (!items.length){ list.append(h('div',{class:'empty-note',text:'まだ職歴がありません。上の「＋ 追加」から登録してください（履歴書タブと同期されます）。'})); return; }
   items.forEach((item, idx)=>{
-    /* 연월 선택 (履歴書 탭의 職歴 행과 동일한 바인딩 규칙) */
+    /* 年月選択（履歴書タブの職歴行と同じバインド規則） */
     const sY=h('select',{attrs:{'aria-label':'入社年'}}), sM=h('select',{attrs:{'aria-label':'入社月'}});
     const eY=h('select',{attrs:{'aria-label':'退社年'}}), eM=h('select',{attrs:{'aria-label':'退社月'}});
     yearOptions(sY,item.startY); monthOptions(sM,item.startM); yearOptions(eY,item.endY); monthOptions(eM,item.endM);
@@ -678,17 +678,17 @@ function renderWorkDetail(){
       store.update(st=>{ const w=st.workHistory[idx];
         if (cb.checked){ w.endY = null; w.endM = null; }
         else {
-          /* v2.29 치명 수정: 해제 시 퇴사연월이 미선택(placeholder 값 '')이면 endY=null이 유지되어
-             재렌더에서 다시 '재직'으로 되돌아가 체크를 영구히 해제할 수 없던 데드락.
-             입사년(없으면 올해)을 기본 퇴사년으로 채워 해제 상태가 성립되도록 한다 */
+          /* v2.29 致命的修正: 解除時に退社年月が未選択（プレースホルダ値 ''）だと endY=null が維持され
+             再描画で再び「在職」に戻りチェックを永遠に解除できなかったデッドロック。
+             入社年（なければ今年）をデフォルト退社年に充填し解除状態が成立するようにする */
           w.endY = +eY.value || w.startY || new Date().getFullYear();
           w.endM = +eM.value || null;
         }
       },{render:false});
-      renderDynamic();                     // 체크 = 구조 변경(선택框 비활성) → 리스트 재구성
+      renderDynamic();                     // チェック = 構造変更（選択枠を無効化）→ リスト再構築
     });
     comp.addEventListener('input',()=> store.update(st=>{ st.workHistory[idx].company = comp.value; },{render:'light'}));
-    /* 업무 상세 */
+    /* 業務詳細 */
     const ta = h('textarea',{ rows:4, placeholder:'担当業務・実績・工夫した点などを具体的に', attrs:{'aria-label':'業務内容'} });
     ta.value = item.role || '';
     ta.addEventListener('input',()=> store.update(st=>{ st.workHistory[idx].role = ta.value; },{render:'light'}));
@@ -701,7 +701,7 @@ function renderWorkDetail(){
 }
 
 /* ================================================================
-   08. 경고 시스템 (필수 미입력/공백기간/사진/글자수)
+   08. 警告システム（必須未入力/空白期間/写真/文字数）
 ================================================================ */
 function computeWarnings(){
   const w = []; const s = store.get(); const p = s.profile;
@@ -711,17 +711,17 @@ function computeWarnings(){
   if (!p.phone.trim())     w.push('電話番号が未入力です');
   if (!p.address.trim())   w.push('現住所が未入力です');
   if (!p.photoDataUrl)     w.push('証明写真が未登録です（「証明写真」タブで作成できます）');
-  /* v2.32: 志望動機 란을 인쇄에서 제외한 사용자에게 글자수 경고는 무의미 → 스킵 */
+  /* v2.32: 志望動機欄を印刷から除外したユーザーに文字数警告は無意味 → スキップ */
   if (s.settings.showMot !== false){
     const ml = s.motivation.trim().length;
     if (ml > 0 && ml < 150)  w.push('志望動機が短めです（目安300〜400字）');
     if (ml > 420)            w.push('志望動機が枠を超える可能性があります（現在 ' + ml + '字）');
   }
-  /* 공백기간 감지: 정렬 후 인접 경력 사이 3개월 초과 → 경고 */
+  /* 空白期間検出: ソート後に隣接経歴の間が3か月超 → 警告 */
   const jobs = s.workHistory.filter(j=>j.startY).slice().sort((a,b)=> (a.startY*12+(a.startM||1)) - (b.startY*12+(b.startM||1)));
   for (let i = 0; i < jobs.length - 1; i++){
     const end = jobs[i].endY ? jobs[i].endY*12 + (jobs[i].endM||12) : null;
-    if (end == null) continue;                        // 재직 중은 이후 공백 아님
+    if (end == null) continue;                        // 在職中は以後の空白ではない
     const next = jobs[i+1].startY*12 + (jobs[i+1].startM||1);
     const gap = next - end - 1;
     if (gap > 3) w.push('職歴に約' + gap + 'か月の空白期間があります（理由を本人希望欄などで補足すると安心です）');
@@ -730,7 +730,7 @@ function computeWarnings(){
 }
 
 /* ================================================================
-   09. 대시보드 (완성도 도넛 + 섹션바 + 경고)
+   09. ダッシュボード（完成度ドーナツ + セクションバー + 警告）
 ================================================================ */
 function sectionScores(){
   const s = store.get(); const p = s.profile;
@@ -743,7 +743,7 @@ function sectionScores(){
     { label:'職歴',     ratio: s.workHistory.some(e=>e.company.trim()&&e.startY) ? 1 : (s.workHistory.length ? .5 : 0), weight:15 },
     { label:'資格',     ratio: s.licenses.some(e=>e.name.trim()) ? 1 : (s.licenses.length ? .5 : 0), weight:5 }
   ];
-  /* v2.32: 인쇄 제외한 志望動機는 완성도 계산에서도 제외 (대신 가중치 재정규화로 총점 왜곡 방지) */
+  /* v2.32: 印刷除外した志望動機は完成度計算からも除外（代わりに重み再正規化で総点の歪みを防止） */
   if (s.settings.showMot !== false)
     list.push({ label:'志望動機', ratio: Math.min(1, s.motivation.trim().length / 300), weight:20 });
   list.push({ label:'職務経歴', ratio: Math.min(1, (s.workSummary.trim().length + s.selfPr.trim().length) / 200), weight:10 });
@@ -751,10 +751,10 @@ function sectionScores(){
 }
 function renderDashboard(){
   const secs = sectionScores();
-  /* v2.32: 제외된 섹션(志望動機 OFF 등)이 있으면 가중치 합 기준으로 재정규화 — 기본(100 합)일 때 결과 동일 */
+  /* v2.32: 除外セクション（志望動機 OFF 等）があれば重み合計基準で再正規化 — デフォルト（合計100）のとき結果は同一 */
   const sumW = secs.reduce((a,x)=> a + x.weight, 0);
   const total = sumW ? Math.round(secs.reduce((sum,x)=> sum + x.ratio * x.weight, 0) / sumW * 100) : 0;
-  const C = 2 * Math.PI * 52;                                  // 도넛 원주 (r=52)
+  const C = 2 * Math.PI * 52;                                  // ドーナツ円周 (r=52)
   const val = C * (1 - total/100);
   $('dcVal').style.strokeDashoffset = String(val);
   $('dcText').textContent = total + '%';
@@ -770,56 +770,56 @@ function renderDashboard(){
   const warns = computeWarnings();
   if (!warns.length) wl.append(h('li',{class:'ok-item',text:'必須項目はすべて入力されています'}));
   else {
-    warns.slice(0,4).forEach(w => wl.append(h('li',{text:w})));       // 최대 4건 + 나머지 건수 안내 (v2.29)
+    warns.slice(0,4).forEach(w => wl.append(h('li',{text:w})));       // 最大4件 + 残件数の案内 (v2.29)
     if (warns.length > 4) wl.append(h('li',{class:'ok-item', text:'ほか' + (warns.length - 4) + '件の指摘があります'}));
   }
 }
 
 /* ================================================================
-   10. A4 미리보기 렌더러 (履歴書 / 職務経歴書)
+   10. A4プレビューレンダラー（履歴書 / 職務経歴書）
 ================================================================ */
-/* --- 이력서 이벤트 행 생성 (학력+직력을 연월 정렬) --- */
+/* --- 履歴書イベント行生成（学歴+職歴を年月ソート） --- */
 function historyRows(){
   const s = store.get(); const rows = [];
   for (const e of s.education){
-    /* v2.31: 연도 미선택 상태에서 학교명만 입력하든 행이 미리보기에서 통째로 사라지던 문제 수정
-       (기존 if(!e.year) continue → 입력 중이던 행의 조용한 유실. '내용만 먼저 적고 연도는 나중에' 라는
-        자연스러운 입력 순서를 깨뜨려 사용자가 버그로 인지하게 됨. licenses는 이름만으로 표시되는데 불일치했음) */
+    /* v2.31: 年未選択の状態で学校名だけ入力した行がプレビューから丸ごと消えていた問題を修正
+       （従来の if(!e.year) continue → 入力中の行の静かな喪失。「内容を先に書き年は後で」という
+        自然な入力順序を壊しユーザーがバグと認識する。licenses は名前だけで表示されるのに不整合だった） */
     if (!e.year && !(e.school||'').trim()) continue;
-    const ym = e.year ? e.year*12 + (e.month||0) : 99998;   // 연도 미정 행은 現在に至る(99999) 직전으로
-    /* v2.31: 학교명 끝에 사용자가 직접 적은 卒業/中退/入学을 '종류 셀렉트 값'보다 우선해 표기.
-       종전엔 무조건 잘라내고 셀렉트 기본값(入学)을 붙여 「○○大学 卒業」입력이 「○○大学 入学」으로
-       뒤바뀌어 인쇄되는 치명적 오표기 발생 (v2.27 dedupe 로직의 부작용) */
+    const ym = e.year ? e.year*12 + (e.month||0) : 99998;   // 年未定の行は 現在に至る(99999) の直前へ
+    /* v2.31: 学校名の末尾にユーザーが直接書いた 卒業/中退/入学 を「種類セレクト値」より優先して表記.
+       従来は無条件に切り捨てセレクトのデフォルト値（入学）を付け 「○○大学 卒業」入力が 「○○大学 入学」に
+       入れ替わって印刷される致命的誤表記が発生（v2.27 dedupe ロジックの副作用） */
     const rawEdu = (e.school||'');
     const sufM = rawEdu.match(/[\s　]*(入学|卒業|中退)$/u);
     const school = sufM ? rawEdu.replace(/[\s　]*(入学|卒業|中退)$/u, '') : rawEdu;
     const eduLabel = sufM ? sufM[1] : EDU_TYPES[e.type];
-    rows.push({ y:e.year, m:e.month, key:ym, text:school + (school ? ' ' : '') + eduLabel, kind:'edu' });   /* v2.30: kind 태그 */
+    rows.push({ y:e.year, m:e.month, key:ym, text:school + (school ? ' ' : '') + eduLabel, kind:'edu' });   /* v2.30: kind タグ */
   }
-  /* 회사명/학교명 끝에 사용자가 入社·退社·卒業 등을 직접 적은 경우 자동 접미사와의 이중 표기를 정리 (v2.27)
-     예: 「株式会社○○ 入社」라고 입력하면 「…入社 入社」가 되던 것 방지 */
+  /* 会社名/学校名の末尾にユーザーが 入社・退社・卒業 等を直接書いた場合の自動接尾辞との二重表記を整理（v2.27）
+     例: 「株式会社○○ 入社」と入力すると 「…入社 入社」になっていたのを防止 */
   const stripEnd = (t, re) => (t||'').replace(re, '');
   const RE_WORK_SUFFIX = /[\s　]*(入社|退社|入|退)$/u;
   let hasCurrent = false;
   for (const w of s.workHistory){
-    /* v2.31: 회사명만 입력(입사년 미선택)한 경우에도 행이 사라지던 문제 동일 수정 */
+    /* v2.31: 会社名のみ入力（入社年未選択）の場合も行が消える問題を同様に修正 */
     if (!w.startY && !(w.company||'').trim()) continue;
     const comp = stripEnd(w.company, RE_WORK_SUFFIX);
     rows.push({ y:w.startY, m:w.startM, key: w.startY ? w.startY*12+(w.startM||0) : 99998, text:comp + (comp?' ':'') + '入社', kind:'work' });
     if (w.endY){
       rows.push({ y:w.endY, m:w.endM, key:w.endY*12+(w.endM||0)+0.5, text:comp + (comp?' ':'') + '退社', kind:'work' });
     } else {
-      hasCurrent = true;   /* 「現在に至る」은 재직 행이 몇 개든 맨 마지막에 '단 1회만' 출력 — JIS 표준 (v2.27) */
+      hasCurrent = true;   /* 「現在に至る」は在職行がいくつあっても最後に「1回のみ」出力 — JIS標準 (v2.27) */
     }
   }
   if (hasCurrent) rows.push({ y:new Date().getFullYear(), m:new Date().getMonth()+1, key:99999, text:'現在に至る', isNow:true, kind:'work' });
   rows.sort((a,b)=> a.key - b.key);
   return rows;
 }
-/* --- 履歴書 미리보기 DOM 구성 --- */
-/* v2.38: 氏名을 성씨 단위로 분할 — 「姓かなは姓の真上、名かなは名の真上」배치용 (PC 履歴書 빌더 관례).
-   성씨·명 각 파트의 // 가나를 해당 한자 파트의 수평 중심에 맞춘다. 양쪽 모두 같은 개수(2개 이상)로
-   나뉘는 경우에만 per-part 레이아웃, 아니면 null 폐백(종전 전폭 중앙 정렬) */
+/* --- 履歴書プレビューDOM構成 --- */
+/* v2.38: 氏名を姓・名の単位で分割 — 「姓かなは姓の真上、名かなは名の真上」配置用（PC 履歴書ビルダー慣例）.
+   姓・名の各パートのかなを該当漢字パートの水平中心に合わせる。両方とも同じ個数（2個以上）に
+   分かれる場合のみ per-part レイアウト、それ以外は null フォールバック（従来の全幅中央揃え） */
 function splitNameParts(nm, kn){
   const n = String(nm||'').trim().split(/[\s　]+/).filter(Boolean);
   const k = String(kn||'').trim().split(/[\s　]+/).filter(Boolean);
@@ -834,14 +834,14 @@ function buildRirekiA4(){
   a4.append(h('h1',{class:'r-title', text:'履　歴　書'}));
   a4.append(h('div',{class:'r-date', text: fmtDateHeader(new Date())}));
 
-  /* 상단: 신원 정보 + 사진 */
+  /* 上部: 身分情報 + 写真 */
   const photoBox = h('div',{class:'r-photo'});
   if (p.photoDataUrl){ photoBox.append(h('img',{ src:p.photoDataUrl, alt:'証明写真' })); }
   else photoBox.append(h('span',{text:'写真を貼る位置\n（縦4cm×横3cm）'}), );
 
-  /* v2.38: 氏名 영역 재설계 — 분할 가능한 姓/名이면 각 카운트의 카/나를 한자 파트의 수평 중심에
-     배치(姓かなは姓の真上、名かなは名の真上). 종전 '칸 전체 중앙에 가나 1줄' 방식은 긴 가나가
-     이름보다 크게 퍼져 어색해 보인다는 사용자 지적 반영. 라벨은 양식 관례대로 칸 좌상단 소형. */
+  /* v2.38: 氏名領域の再設計 — 分割可能な 姓/名 なら各カウントのかなを漢字パートの水平中心に
+     配置（姓かなは姓の真上、名かなは名の真上）。従来の「欄全体中央にかな1行」方式は長いかなが
+     名前より大きく広がり不格好に見えるというユーザー指摘を反映。ラベルは様式慣例通り欄左上に小型. */
   const nmParts = splitNameParts(p.nameKanji, p.nameKana);
   const nameCell = h('div',{class:'c', style:'flex-direction:column;align-items:center;justify-content:center;position:relative'});
   nameCell.append(h('span',{class:'r-kana-label', style:'top:.9mm;transform:none;left:.6mm', text:'ふりがな'}));
@@ -874,11 +874,11 @@ function buildRirekiA4(){
     h('div',{}, photoBox, h('div',{class:'r-ph-cap', text:p.photoDataUrl? '' : '写真'})));
   a4.append(idWrap);
 
-  /* 주소·연락처 블록 */
+  /* 住所・連絡先ブロック */
   const addr = h('div',{class:'r-rows', style:'margin-top:2.5mm'},
     h('div',{class:'r-row hist', style:'grid-template-columns:1fr;min-height:6mm'},
       h('div',{class:'c', style:'min-height:6mm'},
-        h('div',{class:'r-kana-line'},                       /* v2.33: 주소 칵나도 동일 배치 */
+        h('div',{class:'r-kana-line'},                       /* v2.33: 住所かなも同じ配置 */
           h('span',{class:'r-kana-label', text:'ふりがな'}),
           h('span',{class:'r-kana-val', text:p.addressKana||''})))),
     h('div',{class:'r-row hist', style:'grid-template-columns:18mm 1fr'},
@@ -890,28 +890,28 @@ function buildRirekiA4(){
   );
   a4.append(addr);
 
-  /* 학력·직력 블록 (고정 행수로 1페이지 유지) */
+  /* 学歴・職歴ブロック（固定行数で1ページ維持） */
   const hist = historyRows();
   const TOTAL = 11; const blankCount = Math.max(2, TOTAL - hist.length);
   const histGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
   histGrid.append(h('div',{class:'r-sect', text:'学　歴'}));
-  /* 학력/직력을 한 그리드에: 学歴 header → 학력 rows → 職歴 header → 직력 rows */
+  /* 学歴/職歴を一つのグリッドに: 学歴 header → 学歴 rows → 職歴 header → 職歴 rows */
   const eduList = [], workList = [];
-  for (const r of hist){ (r.kind === 'edu' ? eduList : workList).push(r); }   /* v2.30: kind 태그 분류(캔버스 렌더러와 통일) */
+  for (const r of hist){ (r.kind === 'edu' ? eduList : workList).push(r); }   /* v2.30: kind タグで分類（Canvasレンダラーと統一） */
   eduList.forEach(r=> histGrid.append(histRow(r)));
   histGrid.append(h('div',{class:'r-sect', text:'職　歴'}));
   workList.forEach(r=> histGrid.append(histRow(r)));
   for (let i=0;i<blankCount;i++) histGrid.append(histRow(null));
-  /* 「以上」행 */
+  /* 「以上」行 */
   histGrid.append(h('div',{class:'r-row hist', style:'grid-template-columns:1fr'},
     h('div',{class:'c', style:'justify-content:flex-end;padding-right:6mm', text:'以　上'})));
   a4.append(histGrid);
 
-  /* 자격 블록 */
+  /* 資格ブロック */
   const licGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
   licGrid.append(h('div',{class:'r-sect', text:'免許・資格'}));
   const lics = s.licenses.filter(l=>l.year||l.name.trim());
-  lics.forEach(l=> licGrid.append(    /* v2.30: slice(0,4) 캡 폐지 — 5개째 이후 資格 조용한 유실 방지 */
+  lics.forEach(l=> licGrid.append(    /* v2.30: slice(0,4) キャップ廃止 — 5件目以降の資格の静かな喪失を防止 */
     h('div',{class:'r-row hist', style:'grid-template-columns:18mm 15mm 1fr'},
       h('div',{class:'c center', text: l.year? fmtYM(l.year,l.month):''}),
       h('div',{class:'c center', text: l.month? l.month+'月':''}),
@@ -921,21 +921,21 @@ function buildRirekiA4(){
       h('div',{class:'c'}), h('div',{class:'c'}), h('div',{class:'c'})));
   a4.append(licGrid);
 
-  /* 志望動機 · 本人希望欄 (v2.32: 설정에서 OFF 시 섹션째로 미출력 —
-     Web応募/企業指定書式처럼 두 란이 불필요한 사용자에게 빈 박스가 어색하게 남지 않도록.
-     입력 내용은 store에 그대로 보존, 프린트/PNG와도 동일 플래그 공유) */
+  /* 志望動機・本人希望欄（v2.32: 設定で OFF 時はセクションごと非出力 —
+     Web応募/企業指定書式のように両欄が不要なユーザーに空ボックスが不格好に残らないように.
+     入力内容は store にそのまま保存、プリント/PNG とも同じフラグを共有） */
   if (s.settings.showMot !== false){
     const motGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
     motGrid.append(h('div',{class:'r-sect', text:'志望の動機'}));
     motGrid.append(h('div',{class:'r-row r-mot', style:'grid-template-columns:1fr'},
-      h('div',{class:'c', style:'min-height:22mm', text:s.motivation||''})));   /* v2.30: 압축 */
+      h('div',{class:'c', style:'min-height:22mm', text:s.motivation||''})));   /* v2.30: 圧縮 */
     a4.append(motGrid);
   }
   if (s.settings.showReq !== false){
     const reqGrid = h('div',{class:'r-rows', style:'margin-top:2.5mm'});
     reqGrid.append(h('div',{class:'r-sect', text:'本人希望欄'}));
     reqGrid.append(h('div',{class:'r-row r-mot', style:'grid-template-columns:1fr'},
-      h('div',{class:'c', style:'min-height:10mm', text:s.requests||'貴社の規定に従います。'})));   /* v2.30: 압축 */
+      h('div',{class:'c', style:'min-height:10mm', text:s.requests||'貴社の規定に従います。'})));   /* v2.30: 圧縮 */
     a4.append(reqGrid);
   }
 
@@ -947,7 +947,7 @@ function histRow(r){
     h('div',{class:'c center', text: (r && r.m) ? r.m + '月' : ''}),
     h('div',{class:'c', text: r ? r.text : ''}));
 }
-/* --- 職務経歴書 미리보기 DOM --- */
+/* --- 職務経歴書プレビューDOM --- */
 function buildShokumuA4(){
   const s = store.get();
   const a4 = h('div',{ class: s.settings.template==='modern' ? 'a4 tall modern' : 'a4 tall' });
@@ -978,7 +978,7 @@ function buildShokumuA4(){
   a4.append(h('div',{class:'s-box', text: s.selfPr || ''}));
   return a4;
 }
-/* --- 미리보기 반영 + 스케일 맞춤 --- */
+/* --- プレビュー反映 + スケールフィット --- */
 let mmProbePx = null;
 function mmToPx(mm){
   if (!mmProbePx){
@@ -993,35 +993,35 @@ function fitA4(a4El, fitEl){
   const w = fitEl.clientWidth - 2; if (w <= 0) return;
   const pageW = mmToPx(210), pageH = mmToPx(297);
   let scale = Math.min(1, w / pageW);
-  /* 데스크탑(sticky 미리보기): 뷰포트 '높이' 안에 A4 1페이지 전체가 온전히 보이도록 추가 축소.
-     노트북 등 세로가 짧은 화면에서 미리보기 하단이 잘려본문 스크롤이 필요했던 문제 수정 (v2.25) */
+  /* デスクトップ（sticky プレビュー）: ビューポートの「高さ」内に A4 1ページ全体が完全に見えるよう追加縮小.
+     ノートPC等の縦の短い画面でプレビュー下部が切れ本文スクロールが必要だった問題を修正 (v2.25) */
   try{
     if (window.matchMedia('(min-width:1024px)').matches){
-      let topOff = 136;                                       // CSS .pv-col sticky top 값과 동기화(기본값)
+      let topOff = 136;                                       // CSS .pv-col の sticky top 値と同期（デフォルト値）
       const col = fitEl.closest ? fitEl.closest('.pv-col') : null;
       if (col){ const t = parseFloat(getComputedStyle(col).top); if (isFinite(t)) topOff = t; }
       const tb = fitEl.parentElement ? fitEl.parentElement.querySelector('.pv-toolbar') : null;
       const toolbarH = tb ? (tb.offsetHeight + 8) : 0;
-      const availH = window.innerHeight - topOff - toolbarH - 16;   // 하단 여유 16px
+      const availH = window.innerHeight - topOff - toolbarH - 16;   // 下部余白 16px
       if (availH > 200){
-        const visibleH = Math.min(a4El.offsetHeight || pageH, pageH); // 다페이지(.tall) 문서는 1페이지 기준
+        const visibleH = Math.min(a4El.offsetHeight || pageH, pageH); // 複数ページ(.tall)書類は1ページ基準
         scale = Math.min(scale, availH / visibleH);
-        scale = Math.max(scale, 0.34);                        // 과도한 축소 방지 하한(최악의 짧은 화면은 스크롤 허용)
+        scale = Math.max(scale, 0.34);                        // 過度な縮小防止の下限（最悪の低い画面はスクロール許容）
       }
     }
-  }catch(e){ /* 측정 실패 시 폭 맞춤만 적용 */ }
+  }catch(e){ /* 計測失敗時は幅フィットのみ適用*/ }
   a4El.style.transform = 'scale(' + scale + ')';
-  a4El.style.marginLeft = Math.max(0, Math.floor((w - pageW * scale) / 2)) + 'px';  // 축소 시 좌우 가울데 정렬
+  a4El.style.marginLeft = Math.max(0, Math.floor((w - pageW * scale) / 2)) + 'px';  // 縮小時は左右中央揃え
   fitEl.style.height = Math.ceil(a4El.offsetHeight * scale + 8) + 'px';
 }
 function renderPreview(){
   const host = $('a4Preview');
   host.replaceChildren();
-  const fresh = buildRirekiA4();               // 새 DOM으로 교체
+  const fresh = buildRirekiA4();               // 新しいDOMに差し替え
   host.parentNode.replaceChild(fresh, host);
   fresh.id = 'a4Preview';
   fitA4(fresh, $('pvFit1'));
-  /* v2.30: A4 초과 시 배지 표시 — 종전엔 화면엔 보이는데 인쇄/PNG에서만 잘려 사용자가 인지 불가능했음 */
+  /* v2.30: A4超過時にバッジ表示 — 従来は画面には見えるのに印刷/PNG でだけ切れユーザーが認知不可能だった */
   try{
     const wn = $('pvWarn1');
     if (wn) wn.hidden = fresh.offsetHeight <= mmToPx(297) + 2;
@@ -1034,7 +1034,7 @@ function renderPreview2(){
   fresh.id = 'a4Preview2';
   fitA4(fresh, $('pvFit2'));
 }
-/* 창 크기 변경/탭 전환 시 재피팅 */
+/* ウィンドウサイズ変更/タブ切替時に再フィット */
 function bindPreviewFit(){
   const refitAll = ()=>{ fitA4($('a4Preview'),$('pvFit1')); fitA4($('a4Preview2'),$('pvFit2')); fitA4($('a4PreviewT'),$('pvFit3')); fitA4($('a4PreviewS'),$('pvFit4')); };
   try{
@@ -1042,12 +1042,12 @@ function bindPreviewFit(){
       const ro = new ResizeObserver(refitAll);
       ro.observe($('pvFit1')); ro.observe($('pvFit2')); ro.observe($('pvFit3')); ro.observe($('pvFit4'));
     }
-  }catch(e){ /* RO 미지원 환경은 아래 resize 리스너로 커버 */ }
-  /* 뷰포트 '높이' 변화(창 세로 리사이즈/회전)는 RO가 감지 못하므로 항상 함께 리스닝 (v2.25) */
+  }catch(e){ /* RO 非対応環境は下の resize リスナーでカバー */ }
+  /* ビューポートの「高さ」変化（ウィンドウ縦リサイズ/回転）は RO が検知しないため常に併せてリスニング (v2.25) */
   window.addEventListener('resize', refitAll);
   window.addEventListener('orientationchange', refitAll);
-  /* 확대 표시: 4개 문서 공용 (v2.34: 기존 이력서 전용에서 職務経歴書/退職届/送付状로 확장 — 사용자 요청)
-     클론을 dlgZoom의 zoomBox에 넣고 폭 맞춤 스케일링. 다이얼로그는 하나를 재사용 */
+  /* 拡大表示: 4書類共通（v2.34: 従来の履歴書専用から 職務経歴書/退職届/送付状 へ拡張 — ユーザー要望）
+     クローンを dlgZoom の zoomBox に入れ幅フィットスケーリング。ダイアログは1つを再利用 */
   const ZOOM_DOCS = [
     ['pvZoomBtn',  'a4Preview',  '履歴書'],
     ['pvZoomBtn2', 'a4Preview2', '職務経歴書'],
@@ -1060,12 +1060,12 @@ function bindPreviewFit(){
       const src = $(prevId); if (!src) return;
       const tt = $('zoomTitle'); if (tt) tt.textContent = label + ' — 拡大表示';
       const box = $('zoomBox'); box.replaceChildren();
-      const clone = src.cloneNode(true);   // DOM 복제(innerHTML 미사용)
+      const clone = src.cloneNode(true);   // DOM複製（innerHTML不使用）
       clone.style.transform = 'none';
       clone.style.marginLeft = '0';
       box.append(clone);
       openDlg($('dlgZoom'));
-      /* 확대 다이얼로그: 폭에 맞춰 스케일링해 가로 스크롤 제거 — 세로로만 읽으면 됨 (v2.25) */
+      /* 拡大ダイアログ: 幅に合わせスケーリングし横スクロール除去 — 縦に読むだけでよい (v2.25) */
       requestAnimationFrame(()=>{
         try{
           const bw = box.clientWidth - 2;
@@ -1075,7 +1075,7 @@ function bindPreviewFit(){
             clone.style.transformOrigin = 'top left';
             box.style.height = Math.ceil(clone.offsetHeight * s + 4) + 'px';
           }
-        }catch(e){ /* 실패 시 원본 크기 그대로 스크롤 */ }
+        }catch(e){ /* 失敗時は元のサイズのままスクロール */ }
       });
     });
   }
@@ -1083,20 +1083,20 @@ function bindPreviewFit(){
 }
 
 /* ================================================================
-   11. 인쇄 출력 (printRoot에 복제 후 window.print)
+   11. 印刷出力（printRoot に複製後 window.print）
 ================================================================ */
 function printDoc(kind){
   const root = $('printRoot'); root.replaceChildren();
   root.append(kind === 'shokumu' ? buildShokumuA4() : kind === 'taishoku' ? buildTaishokuA4() : kind === 'sofu' ? buildSofuA4() : buildRirekiA4());
-  /* 렌더 안정화 후 인쇄 호출 */
+  /* 描画安定後に印刷を呼び出し */
   setTimeout(()=>{ try{ window.print(); }catch(e){ toast('印刷に失敗しました', 'error'); } }, 60);
 }
 
 /* ================================================================
-   11-5. 履歴書 PNG 이미지 익스포트 (프린터 없는 모바일 사용자용)
-   - 경쟁 서비스(ヤギッシュ/リクナビ 등)의 PDF/이미지 다운로드와 동급 기능
-   - Canvas에 JIS 레이아웃을 직접 래스터화 (DOM 미리보기와 동일 store 데이터 사용)
-   - A4 @150dpi (1240×1754) 로 출력 → 휴폐 단위의 선명도
+   11-5. 履歴書 PNG イメージエクスポート（プリンタのないモバイルユーザー向け）
+   - 競合サービス（ヤギッシュ/リクナビ等）の PDF/画像ダウンロードと同級機能
+   - Canvas に JIS レイアウトを直接ラスタライズ（DOM プレビューと同じ store データ使用）
+   - A4 @150dpi (1240×1754) で出力 → 印刷レベルの鮮明度
 ================================================================ */
 async function downloadResumePNG(){
   try{
@@ -1113,7 +1113,7 @@ async function downloadResumePNG(){
 }
 async function renderResumePNG(){
   const s = store.get(); const p = s.profile;
-  const K = 1240 / 210;                       // mm → px 변환 계수 (A4 @150dpi)
+  const K = 1240 / 210;                       // mm → px 換算係数 (A4 @150dpi)
   const cv = document.createElement('canvas'); cv.width = 1240; cv.height = 1754;
   const ctx = cv.getContext('2d');
   const stack = s.settings.template === 'modern'
@@ -1125,7 +1125,7 @@ async function renderResumePNG(){
   ctx.lineCap = 'butt'; ctx.textBaseline = 'middle';
   const bg = s.settings.bgColor || '#ffffff';
 
-  /* --- 사진 (2패스 공용으로 미리 로드) --- */
+  /* --- 写真（2パス共通で事前ロード） --- */
   const photoImg = p.photoDataUrl ? await new Promise(res=>{
     const im = new Image();
     im.onload = ()=> res(im);
@@ -1134,9 +1134,9 @@ async function renderResumePNG(){
     im.src = p.photoDataUrl;
   }) : null;
 
-  /* 본체 레이아웃: 지정 ctx에 그리고 최종 y(mm)를 반환.
-     v2.30: ①측정 패스로 실제 소요 높이 산정 → 캔버스를 필요한 높이로 확정 → ②본 패스.
-     종전엔 1754px(=297mm) '고정'이라 내용이 넘치면 어떤 경고도 없이 잘려나갔다 */
+  /* 本体レイアウト: 指定 ctx に描き最終 y(mm) を返す.
+     v2.30: ①計測パスで実際の所要高さを算出 → Canvas を必要な高さに確定 → ②本パス.
+     従来は 1754px(=297mm) 「固定」で内容が溢れると何の警告もなく切れていた */
   const drawAll = (ctx)=>{
     const fset = (mm, bold)=> ctx.font = (bold ? '700 ' : '') + (mm * K) + 'px ' + stack;
     ctx.lineCap = 'butt'; ctx.textBaseline = 'middle';
@@ -1144,15 +1144,15 @@ async function renderResumePNG(){
       ctx.beginPath(); ctx.moveTo(x1*K,y1*K); ctx.lineTo(x2*K,y2*K); ctx.stroke(); };
     const text  = (t,x,y,mm,align,bold)=>{ fset(mm,!!bold); ctx.fillStyle='#111111';
       ctx.textAlign = align||'left'; ctx.fillText(t, x*K, y*K); };
-    const wrap  = (str, mm, maxWmm)=>{          // 폭 초과 시 개행 + 禁則処理(킨소쿠) 적용
+    const wrap  = (str, mm, maxWmm)=>{          // 幅超過時は改行 + 禁則処理を適用
       fset(mm,false); const maxW = maxWmm*K; const lines=[]; let cur='';
-      const NO_START = '。、）』」!?！？・ー—─…‥ァィゥェォッャュョぁぃぅぇぉっゃゅょ％‰°′″℃'; // 행두금지 문자
-      const NO_END   = '（「『【〔［｛〈《';                                       // 행말금지 문자
+      const NO_START = '。、）』」!?！？・ー—─…‥ァィゥェォッャュョぁぃぅぇぉっゃゅょ％‰°′″℃'; // 行頭禁則文字
+      const NO_END   = '（「『【〔［｛〈《';                                       // 行末禁則文字
       for (const ch of String(str)){
         if (ch === '\n'){ lines.push(cur); cur=''; continue; }
         if (cur && ctx.measureText(cur + ch).width > maxW){
-          if (NO_START.indexOf(ch) >= 0){ cur += ch; }                                 // 구두점 등은 줄 끝에 매달기(垂れ下げ)
-          else if (NO_END.indexOf(cur.charAt(cur.length-1)) >= 0){ lines.push(cur.slice(0,-1)); cur = cur.charAt(cur.length-1) + ch; } // 여는 괄호는 다음 줄로
+          if (NO_START.indexOf(ch) >= 0){ cur += ch; }                                 // 句読点などは行末にぶら下げ
+          else if (NO_END.indexOf(cur.charAt(cur.length-1)) >= 0){ lines.push(cur.slice(0,-1)); cur = cur.charAt(cur.length-1) + ch; } // 開き括弧は次の行へ
           else { lines.push(cur); cur = ch; }
         } else cur += ch;
       }
@@ -1160,20 +1160,20 @@ async function renderResumePNG(){
       return lines;
     };
 
-    const L = 14, R = 196;                      // 좌우 기준선(mm)
+    const L = 14, R = 196;                      // 左右の基準線(mm)
 
-    /* --- 타이틀 / 날짜 --- */
+    /* --- タイトル / 日付 --- */
     text(fmtDateHeader(new Date()), R, 12, 3.6, 'right');
     text('履　歴　書', 105, 20, 8, 'center', true);
 
-    /* --- 신원 블록 (ふりがな / 氏名 / 生年月日+性別) --- */
-    const X1 = L, X2 = 158, PHW = 30, PHX = R - PHW;   // 사진 30×40 (JIS)
+    /* --- 身分ブロック（ふりがな / 氏名 / 生年月日+性別） --- */
+    const X1 = L, X2 = 158, PHW = 30, PHX = R - PHW;   // 写真 30×40 (JIS)
     let y = 28;
     const idRows = [ {h:7, label:'ふりがな', val:(p.nameKana||'')},
                      {h:14, label:'', val:(p.nameKanji||'氏　　名'), big:true},
                      {h:9, label:'', val:'sex', split:124} ];
-    /* v2.38: 氏名 per-part 레이아웃 — 姓かなは姓の真上、名かなは名の真上 (DOM과 동일 관례).
-       각 유닛 폭 = 카/나·한자 중 넓은 쪽, 그룹 전체는 신원 칸((X1+X2)/2 중심)에 중앙 정렬 */
+    /* v2.38: 氏名 per-part レイアウト — 姓かなは姓の真上、名かなは名の真上（DOM と同じ慣例）.
+       各ユニット幅 = かな・漢字の広い方、グループ全体は身分欄（(X1+X2)/2 中心）に中央揃え */
     const nmParts2 = splitNameParts(p.nameKanji, p.nameKana);
     let npLayout = null;
     if (nmParts2){
@@ -1201,11 +1201,11 @@ async function renderResumePNG(){
     }
     for (const r of idRows){
       if (r.big){
-        if (npLayout){                                   /* v2.38: 파트별 한자를 유닛 중심에 */
+        if (npLayout){                                   /* v2.38: パート別漢字をユニット中央に */
           fset(7,true); ctx.fillStyle='#111111'; ctx.textAlign='center';
           for (const col of npLayout) ctx.fillText(col.n, col.cx, (y + r.h/2)*K);
         } else {
-          text(r.val, (X1+X2)/2, y + r.h/2, 7, 'center', true);   /* v2.36: 이름 중앙 정렬 (ふりがな와 세로축 일치) */
+          text(r.val, (X1+X2)/2, y + r.h/2, 7, 'center', true);   /* v2.36: 名前は中央揃え（ふりがなと縦軸を一致） */
         }
       }
       else if (r.val === 'sex'){
@@ -1213,10 +1213,10 @@ async function renderResumePNG(){
         text(p.gender ? '性別　' + p.gender : '性別', r.split+3, y + r.h/2, 4.2);
         line(r.split, y, r.split, y + r.h);
       } else if (r.label){
-        /* v2.33: DOM과 동일하게 라벨(左소형)+칵나(칸 전체 중앙) 분리 배치 */
+        /* v2.33: DOM と同様にラベル（左小型）+かな（欄全体中央）分離配置 */
         fset(2.2,false); ctx.fillStyle='#444444'; ctx.textAlign='left';
         ctx.fillText(r.label, (X1+2.4)*K, (y + r.h/2)*K);
-        if (r.val && npLayout){                          /* v2.38: 파트별 카/나를 유닛 중심에 */
+        if (r.val && npLayout){                          /* v2.38: パート別かなをユニット中央に */
           fset(3.3,false); ctx.fillStyle='#111111'; ctx.textAlign='center';
           try{
             ctx.letterSpacing = (0.6*K)+'px';
@@ -1226,16 +1226,16 @@ async function renderResumePNG(){
         } else if (r.val){
           fset(3.3,false); ctx.fillStyle='#111111'; ctx.textAlign='center';
           try{ ctx.letterSpacing = (0.6*K)+'px'; ctx.fillText(r.val, ((X1+X2)/2)*K, (y + r.h/2)*K); ctx.letterSpacing = '0px'; }
-          catch(e){ ctx.fillText(r.val, ((X1+X2)/2)*K, (y + r.h/2)*K); }   // letterSpacing 미지원 방어
+          catch(e){ ctx.fillText(r.val, ((X1+X2)/2)*K, (y + r.h/2)*K); }   // letterSpacing 非対応への防御
         }
       }
       y += r.h; line(X1, y, X2, y);
     }
     line(X1, 28, X1, y); line(X2, 28, X2, y);
-    /* 사진 박스/이미지 */
+    /* 写真ボックス/画像 */
     line(PHX, 28, R, 28); line(PHX, 68, R, 68); line(PHX, 28, PHX, 68); line(R, 28, R, 68);
     if (photoImg){
-      /* 3:4 커버 크롭 (결과 캔버스는 이미 3:4지만 방어적 처리) */
+      /* 3:4 カバークロップ（結果 Canvas は既に 3:4 だが防御的処理） */
       const sw = photoImg.width, sh = photoImg.height, target = 3/4;
       let sx=0, sy=0, cw=sw, ch=sh;
       if (sw/sh > target) cw = sh*target, sx = (sw-cw)/2; else ch = sw/target, sy = (sh-ch)/2;
@@ -1247,9 +1247,9 @@ async function renderResumePNG(){
       ctx.fillText('(縦4cm×横3cm)', (PHX+PHW/2)*K, 52*K);
     }
 
-    /* --- 주소·연락처 블록 (사진 박스 하단 y=68 아래에서 시작 → 겹침 방지) --- */
+    /* --- 住所・連絡先ブロック（写真ボックス下端 y=68 の下から開始 → 重なり防止） --- */
     y = 72; const addrRows = [
-      { h:6,  v:'kana', val:(p.addressKana||'') },   /* v2.33: 칵나 전용 행 — 라벨+중앙 정렬 렌더 */
+      { h:6,  v:'kana', val:(p.addressKana||'') },   /* v2.33: かな専用行 — ラベル+中央揃えレンダリング */
       { h:10, v: '現住所　' + (p.postal ? '〒' + p.postal + '　' : '') + (p.address||'') },
       { h:8,  v:'tel', split:96 }
     ];
@@ -1274,16 +1274,16 @@ async function renderResumePNG(){
     }
     line(X1, y - 24, X1, y); line(R, y - 24, R, y);
 
-    /* --- 학력·직력 그리드 --- */
-    const C1 = 18, C2 = 15;   // 年 폭 / 月 폭
+    /* --- 学歴・職歴グリッド --- */
+    const C1 = 18, C2 = 15;   // 年 幅 / 月 幅
     const hist = historyRows();
     const eduR = [], workR = [];
-    for (const r of hist){ (r.kind === 'work' ? workR : eduR).push(r); }   /* v2.30: 분류 버그 수정 — 종전 '現在に至る'가 学歴 블록에 들어감 */
+    for (const r of hist){ (r.kind === 'work' ? workR : eduR).push(r); }   /* v2.30: 分類バグ修正 — 従来は「現在に至る」が学歴ブロックに入っていた */
     const HK = 6.8;
     const sect = (label)=>{
       y += 4; text(label, 105, y + HK/2, 4.4, 'center', true);
       line(X1,y,R,y,.35); y += HK; line(X1,y,R,y,.35);
-      /* v2.33: セクション見出し行은 전폭(年/月 칸분할 없음) — DOM 미리보기·공식 양식과 일치 */
+      /* v2.33: セクション見出し行は全幅（年/月 欄分割なし） — DOM プレビュー・公式様式と一致 */
       line(X1,y-HK,X1,y); line(R,y-HK,R,y);
     };
     const row = (r, center)=>{
@@ -1292,7 +1292,7 @@ async function renderResumePNG(){
         text(r.m ? r.m+'月' : '', X1+C1+C2/2, y + HK/2, 3.6, 'center');
         text(r.text, X1+C1+C2+3, y + HK/2, 4, 'left');
       } else if (r && center === true){
-        /* 「以　上」행도 전폭 — 우측 정렬 텍스트만 (v2.33) */
+        /* 「以　上」行も全幅 — 右揃えテキストのみ (v2.33) */
         text('以　上', R-8, y + HK/2, 4, 'right');
       }
       line(X1,y,R,y,.3); line(X1,y+HK,R,y+HK,.3);
@@ -1306,33 +1306,33 @@ async function renderResumePNG(){
     for (let i=0;i<blankTotal;i++) row(null);
     row({ y:0, m:0, text:'以上' }, true);
 
-    /* --- 자격 블록 --- */
+    /* --- 資格ブロック --- */
     y += 2; sect('免許・資格');
-    const lics = s.licenses.filter(l=> l.year || l.name.trim());   /* v2.30: slice(0,4) 캡 폐지 — 자격 조용한 유실 방지 */
+    const lics = s.licenses.filter(l=> l.year || l.name.trim());   /* v2.30: slice(0,4) キャップ廃止 — 資格の静かな喪失を防止 */
     lics.forEach(l=> row({ y:l.year, m:l.month, text:l.name||'' }));
     for (let i=lics.length;i<3;i++) row(null);
 
-    /* --- 지원동기 / 희망사항 (박스 + 자동개행) --- */
+    /* --- 志望動機 / 希望事項（ボックス + 自動改行） --- */
     const boxText = (label, body, fallback)=>{
       y += 2; sect(label);
       const inner = (body||'').trim() || fallback;
       const lines = wrap(inner, 4, R - X1 - 8);
-      const needH = Math.max(10, lines.length * 5.6 + 4);   /* v2.30: 상한 폐지 — 문장이 절대 잘리지 않게 박스를 내용만큼 키움 */
+      const needH = Math.max(10, lines.length * 5.6 + 4);   /* v2.30: 上限廃止 — 文章が絶対に切れないよう内容分だけボックスを拡大 */
       line(X1,y,R,y,.3); line(X1,y,X1,y+needH); line(R,y,R,y+needH); line(X1,y+needH,R,y+needH,.3);
       lines.forEach((ln,i)=> text(ln, X1+4, y + 4 + 2.8 + i*5.6, 4));
       y += needH;
     };
-    /* v2.32: DOM 미리보기와 동일하게 표시 플래그 적용 — PNG에서도 OFF 섹션 제외 */
+    /* v2.32: DOM プレビューと同様に表示フラグ適用 — PNG でも OFF セクション除外 */
     if (s.settings.showMot !== false) boxText('志望の動機', s.motivation, '');
     if (s.settings.showReq !== false) boxText('本人希望欄', s.requests, '貴社の規定に従います。');
     return y;
   };
 
-  /* ① 측정 패스(1×1 캔버스로 높이만 계산) ② 높이 확정 후 본 패스 */
+  /* ① 計測パス（1×1 Canvas で高さのみ計算）② 高さ確定後に本パス */
   const probe = document.createElement('canvas');
   const yEnd = drawAll(probe.getContext('2d'));
   const overflow = yEnd > 297;
-  if (overflow){ cv.height = Math.ceil((yEnd + 4) * K); }   // A4 초과 시 세로 연장 — 내용 100% 보존
+  if (overflow){ cv.height = Math.ceil((yEnd + 4) * K); }   // A4超過時は縦に延長 — 内容を100%保存
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
   drawAll(ctx);
@@ -1340,21 +1340,21 @@ async function renderResumePNG(){
 }
 
 /* ================================================================
-   12. 写真スタジ오
-   파이프라인: 업로드 → 정규화(≤1600px) → 크롭(3:4) → 마스크(크로마키)
-   → 브러시 보정 → 프리셋/슬라이더 보정 → 결과 저장/삽입/시트
+   12. 写真スタジオ
+   パイプライン: アップロード → 正規化(≤1600px) → クロップ(3:4) → マスク(クロマキー)
+   → ブラシ補正 → プリセット/スライダー補正 → 結果の保存/挿入/シート
 ================================================================ */
-const CW = 450, CH = 600;                    // 크롭 캔버스 표시 크기(3:4)
-const photoS = {                             // 사진 작업 상태 (영속 대상 아님)
-  src:null, zoom:1, ox:0, oy:0,              // 원본 작업 캔버스 / 크롭 상태
-  cropped:null, mask:null, result:null,      // 단계별 캔버스
+const CW = 450, CH = 600;                    // クロップCanvasの表示サイズ(3:4)
+const photoS = {                             // 写真作業の状態（永続対象外）
+  src:null, zoom:1, ox:0, oy:0,              // 元画像作業Canvas / クロップ状態
+  cropped:null, mask:null, result:null,      // 段階別Canvas
   preset:'standard', tol:45, bri:100, con:100, sat:100,
   brush:null, brushSize:30, drag:null
 };
 function setStep(n){
   for (let i=1;i<=4;i++){ const el = $('st'+i); el.classList.toggle('done', i<=n); }
 }
-/* --- 12-1. 업로드 --- */
+/* --- 12-1. アップロード --- */
 function bindPhotoUpload(){
   const dz = $('dz'), fi = $('fileInput');
   $('btnPick').addEventListener('click', (e)=>{ e.stopPropagation(); fi.click(); });
@@ -1373,7 +1373,7 @@ async function loadPhotoFile(file){
     let bmp;
     try{ bmp = await createImageBitmap(file); }
     catch(e){ bmp = await loadImageFallback(file); }
-    /* 정규화: 최대 변 1600px로 축소 (성능/메모리 보호) */
+    /* 正規化: 最大辺 1600px に縮小（性能/メモリ保護） */
     const maxDim = Math.max(bmp.width, bmp.height);
     const scale = Math.min(1, 1600 / maxDim);
     const w = Math.round(bmp.width*scale), hgt = Math.round(bmp.height*scale);
@@ -1389,7 +1389,7 @@ async function loadPhotoFile(file){
     toast('写真を読み込みました。範囲を決めてください');
   }catch(e){ console.error(e); toast('画像の読み込みに失敗しました', 'error'); }
 }
-function loadImageFallback(file){                    // 구형 브라우저 폐핑
+function loadImageFallback(file){                    // 旧ブラウザフォールバック
   return new Promise((res, rej)=>{
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -1397,12 +1397,12 @@ function loadImageFallback(file){                    // 구형 브라우저 폐�
     img.onerror = rej; img.src = url;
   });
 }
-function applyPhotoDefaults(){                        // 설정의 기본 배경색 반영
+function applyPhotoDefaults(){                        // 設定のデフォルト背景色を反映
   const bg = store.get().settings.bgColor;
   const radio = document.querySelector('input[name="bgSel"][value="'+bg+'"]');
   if (radio) radio.checked = true;
 }
-/* --- 12-2. 크롭 (드래그 이동 + 휠/슬라이더 줌) --- */
+/* --- 12-2. クロップ（ドラッグ移動 + ホイール/スライダーズーム） --- */
 function bindCrop(){
   const cv = $('cvCrop');
   cv.addEventListener('pointerdown', (e)=>{
@@ -1449,28 +1449,28 @@ function doCrop(){
   const cv = document.createElement('canvas'); cv.width=outW; cv.height=outH;
   cv.getContext('2d').drawImage(photoS.src, sx, sy, sw, sh, 0, 0, outW, outH);
   photoS.cropped = cv;
-  buildMask();                                        // 크로마키 마스크 생성
+  buildMask();                                        // クロマキーマスク生成
   $('cropStage').classList.add('hidden');
   $('editPanel').classList.remove('hidden');
   setStep(3);
   composite();
   toast('範囲を確定しました。背景と補正を調整してください');
 }
-/* --- 12-3. 배경 제거 마스크 (모서리 색 샘플 + 가장자리 연결 BFS 플러드필) ---
-   v2.36 근본 수정: 종전은 '배경색과 거리가 가까운 픽셀을 화면 전체에서 제거'하는 전역 크로마키라,
-   코 끝의 밝은 하이라이트나 흰 와이셔츠처럼 인물 "내부"의 밝은 영역까지 배경으로 오판해 지워버리는
-   심각한 결함이 있었다 (흰 얼룩·화질 붕괴의 원인).
-   → ①배경색 유사 픽셀이더라도 가장자리(테두리)와 연결된 영역만 배경으로 인정(BFS),
-     ②인물 내부 픽셀은 색이 아무리 비슷하든 절대 지우지 않음,
-     ③경계는 feather 대역 부분 알파 + 3×3 블러로 부드럽게. */
+/* --- 12-3. 背景除去マスク（コーナー色サンプル + エッジ接続 BFS フラッドフィル） ---
+   v2.36 根本修正: 従来は「背景色と距離の近いピクセルを画面全体から除去」するグローバルクロマキーで、
+   鼻先の明るいハイライトや白いワイシャツのように人物"内部"の明るい領域まで背景と誤認して消してしまう
+   深刻な欠陥があった（白い斑・画質崩壊の原因）。
+   → ①背景色に類似したピクセルでもエッジ（縁）と接続された領域のみ背景と認定（BFS）、
+       ②人物内部のピクセルは色がどれほど似ていても絶対に消さない、
+       ③境界は feather 帯を部分アルファ + 3×3 ブラーで滑らかに。 */
 function buildMask(){
   const src = photoS.cropped, w = src.width, hgt = src.height;
   const ctx = src.getContext('2d');
   const data = ctx.getImageData(0,0,w,hgt).data;
   const N = w * hgt;
-  /* 모서리 4점 8×8 평균 → 배경 기준색.
-     v2.36+: 모서리끼리 색이 크게 다륾면(옷·인물이 모서리까지 닿은 경우) 초상권 사진 특성상
-     '위쪽 모서리 = 배경'이 가장 안전하므로 상단 2점만 사용해 기준색 오염을 막는다 */
+  /* コーナー4点 8×8 平均 → 背景基準色。
+     v2.36+: コーナー同士の色が大きく違えば（服・人物がコーナーまで達した場合）肖像写真の特性上
+     「上側コーナー = 背景」が最も安全なので上部2点のみ使用し基準色の汚染を防ぐ */
   const pts = [[0,0],[w-8,0],[0,hgt-8],[w-8,hgt-8]];
   const corners = pts.map(([px,py])=>{
     let r=0,g=0,b=0,n2=0;
@@ -1484,30 +1484,30 @@ function buildMask(){
     const d=Math.hypot(corners[a][0]-corners[b][0], corners[a][1]-corners[b][1], corners[a][2]-corners[b][2]);
     if (d>pairMax) pairMax=d;
   }
-  const pool = pairMax > 60 ? [corners[0], corners[1]] : corners;   // 불일치 시 상단 모서리 우선
+  const pool = pairMax > 60 ? [corners[0], corners[1]] : corners;   // 不一致時は上側コーナー優先
   let kr=0, kg=0, kb=0, n=0;
   for (const c of pool){ kr+=c[0]; kg+=c[1]; kb+=c[2]; n++; }
   kr/=n; kg/=n; kb/=n;
-  const t0 = photoS.tol * 2.0, t1 = t0 * 1.45;        // 내부 유사도 임계 + 페더링 경계
-  /* 이웃 스텝 상한: 실물 스마트폰 사진의 어깨/옷깃 초점면은 1~3px로 비교적 선명해 코어 스텝이
-     9~25/px, 배경 벽의 조명 그라디언트는 0.1~3/px → 9 근처에서 둘을 가른다.
-     ※ 순백 셔츠 × 순백 벽처럼 색 자체가 동일한 경우는 물리적으로 구분 불가 → UI 힌트+브러시로 안내 */
+  const t0 = photoS.tol * 2.0, t1 = t0 * 1.45;        // 内部類似度の閾値 + フェザリング境界
+  /* 隣接ステップ上限: 実物スマホ写真の肩/襟の焦点面は 1〜3px で比較的鮮明でコアステップが
+     9〜25/px、背景壁の照明グラデーションは 0.1〜3/px → 9 付近で二者を分ける。
+     ※ 純白シャツ × 純白壁のように色自体が同一の場合は物理的に区別不可 → UI ヒント+ブラシで案内 */
   const tLoc = Math.max(9, t0*0.1);
-  /* 1) 각 픽셀과 배경 기준색의 거리 맵 */
+  /* 1) 各ピクセルと背景基準色の距離マップ */
   const dist = new Float32Array(N);
   for (let p=0, i=0; p<N; p++, i=p*4){
     const dr=data[i]-kr, dg=data[i+1]-kg, db=data[i+2]-kb;
     dist[p] = Math.sqrt(dr*dr+dg*dg+db*db);
   }
-  /* 2) 가장자리 연결 배경 판정 (BFS): 테두리에서 시작해 '배경 유사색'으로 이어진 픽셀만 isBg.
-     v2.36+: 이중 제약 — ①배경 기준색과의 거리 ≤ t0, ②전파 시 이웃 픽셀과의 색 스텝 ≤ tLoc.
-     ②가 어깨·옷깃의 희미한 윤곽선(그림자·색변화)에서 플러드를 멈춰줘,
-     배경색과 비슷한 밝은 옷까지 삼켜버리는 문제를 최대한 억제한다 */
+  /* 2) エッジ接続背景判定（BFS）: 縁から始まり「背景類似色」で続くピクセルのみ isBg。
+     v2.36+: 二重制約 — ①背景基準色との距離 ≤ t0、②伝播時に隣接ピクセルとの色ステップ ≤ tLoc。
+     ②が肩・襟のかすかな輪郭線（影・色変化）でフラッドを止めてくれ、
+     背景色と似た明るい服まで飲み込む問題を最大限抑制する */
   const isBg = new Uint8Array(N);
   const stack = new Int32Array(N); let sp = 0;
-  /* 시드 이중 기준: 상단 변은 t0(머리 위 배경이 가장 확실), 좌우·하단 변은 t0*0.45로 엄격하게 —
-     하단/측면 테두리를 채우는 밝은 '옷'이 시드로 오인돼 통째로 삼켜지는 것을 차단.
-     벽이 비네트 등으로 다소 어두워도(t0*0.45 이내) 정상 시드되도록 여유는 유지 */
+  /* シード二重基準: 上辺は t0（頭の上の背景が最も確実）、左右・下辺は t0*0.45 で厳格に —
+     下部/側面の縁を埋める明るい「服」がシードと誤認され丸ごと飲まれるのを遮断。
+     壁がビネット等で多少暗くても（t0*0.45 以内）正常にシードされるよう余裕は維持 */
   const tSeed = t0 * 0.45;
   const seedTop  = (idx)=>{ if (!isBg[idx] && dist[idx] <= t0){ isBg[idx]=1; stack[sp++]=idx; } };
   const seedSide = (idx)=>{ if (!isBg[idx] && dist[idx] <= tSeed){ isBg[idx]=1; stack[sp++]=idx; } };
@@ -1517,7 +1517,7 @@ function buildMask(){
     const idx = stack[--sp];
     const x = idx % w, y = (idx / w) | 0;
     const fi = idx*4;
-    const tryRel = (to)=>{                        // 전파: 유사색 + 이웃 스텝 모두 만족해야
+    const tryRel = (to)=>{                        // 伝播: 類似色 + 隣接ステップの両方を満たすこと
       if (isBg[to] || dist[to] > t0) return;
       const ti = to*4;
       const dr=data[fi]-data[ti], dg=data[fi+1]-data[ti+1], db=data[fi+2]-data[ti+2];
@@ -1529,7 +1529,7 @@ function buildMask(){
     if (y>0) tryRel(idx-w);
     if (y<hgt-1) tryRel(idx+w);
   }
-  /* 3) 알파 맵: 배경=0 / 인물=255 / 배경에 맞닿은 feather 대역 경계 픽셀은 부분 알파 */
+  /* 3) アルファマップ: 背景=0 / 人物=255 / 背景に接する feather 帯の境界ピクセルは部分アルファ */
   const alpha = new Uint8ClampedArray(N);
   for (let p=0;p<N;p++){
     if (isBg[p]){ alpha[p]=0; continue; }
@@ -1537,7 +1537,7 @@ function buildMask(){
     const edge = (x>0 && isBg[p-1]) || (x<w-1 && isBg[p+1]) || (y>0 && isBg[p-w]) || (y<hgt-1 && isBg[p+w]);
     alpha[p] = edge ? clamp(Math.round((dist[p]-t0)/(t1-t0)*255), 0, 255) : 255;
   }
-  /* 4) 경계 3×3 박스 블러 (계단 현상 완화 — 내부는 인접 픽셀이 전부 255라 영향 없음) */
+  /* 4) 境界 3×3 ボックスブラー（階段現象の緩和 — 内部は隣接ピクセルが全て 255 なので影響なし） */
   const blur = new Uint8ClampedArray(N);
   for (let y=0;y<hgt;y++) for (let x=0;x<w;x++){
     let s=0, c=0;
@@ -1549,40 +1549,40 @@ function buildMask(){
   const mask = document.createElement('canvas'); mask.width=w; mask.height=hgt;
   const mctx = mask.getContext('2d');
   const mi = mctx.createImageData(w,hgt);
-  for (let p=0, i=0; p<N; p++, i=p*4) mi.data[i+3] = blur[p];   // 알파 = 인물 유지량
+  for (let p=0, i=0; p<N; p++, i=p*4) mi.data[i+3] = blur[p];   // アルファ = 人物の保持量
   mctx.putImageData(mi,0,0);
   photoS.mask = mask;
 }
-/* --- 12-4. 합성 파이프라인 (마스크→보정→배경 합성→표시) --- */
+/* --- 12-4. 合成パイプライン（マスク→補正→背景合成→表示） --- */
 function composite(){
   if (!photoS.cropped || !photoS.mask) return;
   const w = photoS.cropped.width, hgt = photoS.cropped.height;
   const P = PRESETS[photoS.preset];
-  /* 1) 인물 레이어 준비 (원본 RGB 복사)
-     v2.36: 샤프닝은 마스크 적용 '전'에 수행한다. 종전엔 마스크 적용 후(투명 가장자리RGB=블랙)에
-     언샤프를 걸어 인물 윤곽에 검은 헤일로가 생기는 화질 결함이 있었다 → 원본에서 샤프닝 후 마스킹으로 해결 */
+  /* 1) 人物レイヤー準備（元 RGB コピー）
+     v2.36: シャープニングはマスク適用「前」に行う。従来はマスク適用後（透明エッジRGB=ブラック）に
+     アンシャープを掛け人物輪郭に黒いヘイローが出る画質欠陥があった → 元画像でシャープニング後にマスキングで解決 */
   const person = document.createElement('canvas'); person.width=w; person.height=hgt;
   const pctx = person.getContext('2d');
   pctx.drawImage(photoS.cropped,0,0);
-  /* 2) 샤프닝 (언샤프 3×3, 불투명 원본에서만 수행 → compounding 없음) */
+  /* 2) シャープニング（アンシャープ 3×3、不透明の元画像でのみ実行 → コンパウンディングなし） */
   if (P.sharp) sharpen(person);
-  /* 3) 마스크 적용 (인물만 추출) */
+  /* 3) マスク適用（人物のみ抽出） */
   pctx.globalCompositeOperation = 'destination-in';
   pctx.drawImage(photoS.mask,0,0);
   pctx.globalCompositeOperation = 'source-over';
-  /* 4) 자동 조명 보정 (평균 휘도 → 0.55 타깃) */
+  /* 4) 自動照明補正（平均輝度 → 0.55 ターゲット） */
   let briAdj = 1;
   if (P.auto){
     try{
       const id = pctx.getImageData(0,0,w,hgt).data;
       let sum=0, cnt=0;
-      for (let i=0;i<id.length;i+=16){                 // 4픽셀 간격 샘플링
+      for (let i=0;i<id.length;i+=16){                 // 4ピクセル間隔サンプリング
         if (id[i+3] > 40){ sum += (0.299*id[i]+0.587*id[i+1]+0.114*id[i+2])/255; cnt++; }
       }
       if (cnt>0) briAdj = clamp(0.55/(sum/cnt), .8, 1.25);
-    }catch(e){ console.warn('자동 밝기 생략:', e); }
+    }catch(e){ console.warn('自動明るさ調整をスキップ:', e); }
   }
-  /* 4) 보정 필터 적용본 생성 */
+  /* 4) 補正フィルタ適用版を生成 */
   const fb = clamp((photoS.bri/100)*(P.bri/100)*briAdj, .5, 2);
   const fc = (photoS.con/100)*(P.con/100);
   const fs = (photoS.sat/100)*(P.sat/100);
@@ -1591,13 +1591,13 @@ function composite(){
   tctx.filter = 'brightness('+fb.toFixed(3)+') contrast('+fc.toFixed(3)+') saturate('+fs.toFixed(3)+')'
               + (P.sepia ? ' sepia('+(P.sepia/100)+')' : '');
   tctx.drawImage(person,0,0);
-  /* 5) 배경 합성 */
+  /* 5) 背景合成 */
   const bg = document.querySelector('input[name="bgSel"]:checked');
   const out = document.createElement('canvas'); out.width=w; out.height=hgt;
   const octx = out.getContext('2d');
   octx.fillStyle = bg ? bg.value : '#ffffff'; octx.fillRect(0,0,w,hgt);
   octx.drawImage(toned,0,0);
-  /* 6) 비네트(스튜디오 프리셋) */
+  /* 6) ビネット（スタジオプリセット） */
   if (P.vig){
     const g = octx.createRadialGradient(w/2,hgt/2, Math.min(w,hgt)*.35, w/2,hgt/2, Math.max(w,hgt)*.75);
     g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.25)');
@@ -1612,7 +1612,7 @@ function displayResult(){
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(photoS.result, 0,0, cv.width, cv.height);
 }
-/* 비교 모드: 필터만 적용한 "원본 베이스" 표시 */
+/* 比較モード: フィルタのみ適用した「元画像ベース」表示 */
 function displayOriginal(){
   if (!photoS.cropped) return;
   const w=photoS.cropped.width, hgt=photoS.cropped.height;
@@ -1625,7 +1625,7 @@ function displayOriginal(){
   const cv = $('cvEdit');
   cv.getContext('2d').drawImage(tmp,0,0,cv.width,cv.height);
 }
-/* 샤프닝: 3×3 컨볼루션 [0,-1,0,-1,5,-1,0,-1,0] (패딩=가장자리 복사) */
+/* シャープニング: 3×3 畳み込み [0,-1,0,-1,5,-1,0,-1,0]（パディング=エッジコピー） */
 function sharpen(cv){
   const ctx = cv.getContext('2d');
   const w=cv.width, hgt=cv.height;
@@ -1634,7 +1634,7 @@ function sharpen(cv){
   const S=src.data, D=dst.data;
   for (let y=0;y<hgt;y++) for (let x=0;x<w;x++){
     const i=(y*w+x)*4;
-    if (S[i+3]===0){ D[i+3]=0; continue; }             // 투명부 패스
+    if (S[i+3]===0){ D[i+3]=0; continue; }             // 透明部パス
     for (let ch=0;ch<3;ch++){
       let v=0;
       v += -1*S[((Math.max(0,y-1))*w+x)*4+ch];
@@ -1648,9 +1648,9 @@ function sharpen(cv){
   }
   ctx.putImageData(dst,0,0);
 }
-/* --- 12-5. 편집 UI 바인딩 --- */
+/* --- 12-5. 編集UIバインド --- */
 function bindEditor(){
-  /* 프리셋 버튼 생성 */
+  /* プリセットボタン生成 */
   const grid = $('presetGrid');
   for (const [key,P] of Object.entries(PRESETS)){
     const b = h('button',{ type:'button', class:'preset-btn'+(key==='standard'?' active':'') },
@@ -1663,24 +1663,24 @@ function bindEditor(){
     });
     grid.append(b);
   }
-  /* 슬라이더: rAF 스로틀로 합성 재실행 */
+  /* スライダー: rAF スロットルで合成を再実行 */
   let pending = false;
   const rerun = ()=>{ if(pending) return; pending=true; requestAnimationFrame(()=>{ pending=false; composite(); }); };
   $('rngBri').addEventListener('input', e=>{ photoS.bri=+e.target.value; rerun(); });
   $('rngCon').addEventListener('input', e=>{ photoS.con=+e.target.value; rerun(); });
   $('rngSat').addEventListener('input', e=>{ photoS.sat=+e.target.value; rerun(); });
-  $('rngTol').addEventListener('change', e=>{       // 제거 강도 = 마스크 재생성(브러시 초기화)
+  $('rngTol').addEventListener('change', e=>{       // 除去強度 = マスク再生成（ブラシ初期化）
     photoS.tol=+e.target.value;
-    /* v2.43: 「브러시만 초기화」가 아니라 '지금 무슨 일이 일어났는지'가 먼저 오도록 문구 개선
-       (슬라이더만 조작했는데 브러시 경고가 먼저 보여 사용자가 혼란스럽다는 사용감 피드백) */
+    /* v2.43: 「ブラシのみ初期化」ではなく「今何が起きたか」が先に来るよう文言を改善
+       （スライダーだけ操作したのにブラシ警告が先に見えてユーザーが混乱するという使用感フィードバック） */
     if (photoS.cropped){ buildMask(); composite(); toast('背景除去の強さを変更しました（ブラシの手修正はリセットされます）','warn'); }
   });
   document.querySelectorAll('input[name="bgSel"]').forEach(r=> r.addEventListener('change', composite));
-  /* 비교 버튼 (길게 눌러 원본 보기) */
+  /* 比較ボタン（長押しで元画像を見る） */
   const cmp = $('btnCompare');
   ['pointerdown'].forEach(ev=> cmp.addEventListener(ev, ()=> displayOriginal()));
   ['pointerup','pointerleave','pointercancel'].forEach(ev=> cmp.addEventListener(ev, ()=> photoS.result && displayResult()));
-  /* 브러시 */
+  /* ブラシ */
   const be = $('btnBrushErase'), br = $('btnBrushRestore');
   const setBrush = (mode)=>{
     photoS.brush = (photoS.brush === mode ? null : mode);
@@ -1691,9 +1691,9 @@ function bindEditor(){
   br.addEventListener('click', ()=> setBrush('restore'));
   $('rngBrush').addEventListener('input', e=>{ photoS.brushSize=+e.target.value; });
   bindBrushPainting();
-  /* 리셋 */
+  /* リセット */
   $('btnPhotoReset').addEventListener('click', ()=>{
-    /* v2.29: 「やり直し」가 보정만 초기화하던 것 → 라벨 기대에 맞게 '완전 초기화'(사진 선택 단계로 복귀) */
+    /* v2.29: 「やり直し」が補正のみ初期化していたもの → ラベルの期待通り「完全初期化」（写真選択段階へ復帰） */
     photoS.preset='standard'; photoS.tol=45; photoS.bri=100; photoS.con=100; photoS.sat=100;
     $('rngBri').value=100; $('rngCon').value=100; $('rngSat').value=100; $('rngTol').value=45;
     photoS.src=null; photoS.cropped=null; photoS.result=null; photoS.mask=null;
@@ -1703,12 +1703,12 @@ function bindEditor(){
     setStep(1);
     toast('最初からやり直します。写真を選んでください');
   });
-  /* 저장/삽입/시트 */
+  /* 保存/挿入/シート */
   $('btnSavePng').addEventListener('click', savePhotoPng);
   $('btnInsertResume').addEventListener('click', insertPhotoToResume);
   $('btnSheet').addEventListener('click', makePhotoSheet);
 }
-/* 브러시 페인팅: 마스크 알파를 지우기/복원 */
+/* ブラシペイント: マスクアルファを消去/復元 */
 function bindBrushPainting(){
   const cv = $('cvEdit');
   let painting = false;
@@ -1732,7 +1732,7 @@ function bindBrushPainting(){
   cv.addEventListener('pointermove', (e)=>{ if (painting) paint(e); });
   ['pointerup','pointercancel'].forEach(ev=> cv.addEventListener(ev, ()=>{ painting=false; }));
 }
-/* --- 12-6. 저장/삽입/인쇄시트 --- */
+/* --- 12-6. 保存/挿入/印刷シート --- */
 function savePhotoPng(){
   if (!photoS.result){ toast('まず写真を準備してください', 'warn'); return; }
   photoS.result.toBlob(b=>{
@@ -1742,13 +1742,13 @@ function savePhotoPng(){
 }
 function insertPhotoToResume(){
   if (!photoS.result){ toast('まず写真を準備してください', 'warn'); return; }
-  /* v2.36: 썸네일 300×400 → 360×480 상향 (A4 300dpi 인쇄 시 3cm 폭 = 354px 필요.
-     종전엔 300pxを업스케일해 인쇄·확대 시 흐릿해지는 2차 화질 손실이 있었다) */
+  /* v2.36: サムネイル 300×400 → 360×480 に引上げ（A4 300dpi 印刷時に 3cm 幅 = 354px 必要。
+     従来は 300px をアップスケールし印刷・拡大時にぼやける二次画質損失があった） */
   const th = document.createElement('canvas'); th.width=360; th.height=480;
   const t2 = th.getContext('2d'); t2.imageSmoothingEnabled = true; t2.imageSmoothingQuality = 'high';
   t2.drawImage(photoS.result,0,0,360,480);
   let url = th.toDataURL('image/png');
-  if (url.length > PHOTO_STORE_LIMIT*1.4){           // 초과 시 고품질 JPEG로 절감
+  if (url.length > PHOTO_STORE_LIMIT*1.4){           // 超過時は高品質JPEGで削減
     const c2 = document.createElement('canvas'); c2.width=360; c2.height=480;
     const cx = c2.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,360,480);
     cx.imageSmoothingQuality = 'high';
@@ -1761,7 +1761,7 @@ function insertPhotoToResume(){
 }
 function makePhotoSheet(){
   if (!photoS.result){ toast('まず写真を準備してください', 'warn'); return; }
-  /* A4 @300dpi (2480×3508)에 3×4cm 사진 6매 배치 */
+  /* A4 @300dpi (2480×3508) に 3×4cm 写真を 6枚配置 */
   const SW=708, SH=944, GAP=60;
   const cv = document.createElement('canvas'); cv.width=2480; cv.height=3508;
   const ctx = cv.getContext('2d');
@@ -1775,7 +1775,7 @@ function makePhotoSheet(){
 function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
 
 /* ================================================================
-   13. 예문 라이브러리 (검색/카테고리/복사)
+   13. 例文ライブラリ（検索/カテゴリ/コピー）
 ================================================================ */
 let libCat = 'すべて';
 function bindLibrary(){
@@ -1791,18 +1791,18 @@ function bindLibrary(){
     cats.append(b);
   }
   $('exSearch').addEventListener('input', renderExamples);
-  /* 팁 리스트 */
+  /* ヒントリスト */
   const tl = $('tipList');
   for (const t of TIPS) tl.append(h('li',{text:t}));
-  renderExamples();                       // 초기 목록 렌더
+  renderExamples();                       // 初期リスト描画
 }
 
 /* ================================================================
-   13-B. 志望動機 셀프 진단 (v2.11 차별화 자산)
-   - 공개된 履歴書 작성 룰 7항목을 규칙 기반으로 즉시 채점
-   - 외부 전송 0·계정 불필요 ("AI 느낌"의 가치를 순수 클라이언트로 구현)
+   13-B. 志望動機セルフ診断（v2.11 差別化資産）
+   - 公開された履歴書作成ルール7項目をルールベースで即採点
+   - 外部送信0・アカウント不要（"AI的"な価値を純粋クライアントで実装）
 ================================================================ */
-/* 문자 수 (공백 제외, サロゲートペア 안전) */
+/* 文字数（空白除く、サロゲートペア安全） */
 function diagCount(t){ return Array.from(String(t).replace(/\s+/g,'')).length; }
 const DIAG_NG_CLICHE = ['貴社の将来性に魅力','精一杯頑張','一生懸命頑張','未熟ながら','未熟ですが','成長できる環境'];
 const DIAG_NEGA = ['嫌い','我慢できな','人間関係が悪','前職への不満','辞めたくな'];
@@ -1820,30 +1820,30 @@ function runDiagnosis(text){
       : n > 400 && n <= 520 ? '現在' + n + '字。少し長め。結論→根拠→貢献の3点に絞ると読みやすくなります。'
       : n > 520      ? '現在' + n + '字。面接官が30秒で読める量（400字程度）に絞りましょう。'
       : '' });
-  /* ② 結論의 문 — 志望의意思表明 */
+  /* ② 結論の文 — 志望の意思表明 */
   const hasConclusion = /志望いたしました|志望します|志望したと|応募させていただき|応募いたしました/.test(t);
   checks.push({ st: st(hasConclusion, false), name:'結論（「志望いたしました」など意思表明）がある',
     hint:'冒頭か結尾で、意思を一文ではっきり伝えましょう。' });
-  /* ③ 根拠의 문 — 나만의 경험/학습 */
+  /* ③ 根拠の文 — 自分だけの経験/学び */
   const hasBase = /経験|実績|従事|担当|取り組|部活|アルバイト|ゼミ|インターン|資格|学んだ|培っ|実習|研究/.test(t);
   checks.push({ st: st(hasBase, false), name:'根拠（自分の経験・学び）が書かれている',
     hint:'部活・アルバイト・研究・資格など、自分だけの経験を1つ添えましょう。' });
-  /* ④ 数字의 구체성 */
+  /* ④ 数字の具体性 */
   const hasNum = /[0-9０-９]|[一二三四五六七八九十]?(年間|か月|ヶ月|件|人|倍|％|%)/.test(t);
   checks.push({ st: hasNum ? 'pass' : (hasBase ? 'warn' : 'fail'), name:'数字で語れる実績・期間がある',
     hint:'「3年間」「月5件」「1.3倍」など、数字は記憶に残ります。' });
-  /* ⑤ 貢献 자세 — 貴社 호칭 + 기여 동사 */
+  /* ⑤ 貢献姿勢 — 貴社呼称 + 貢献動詞 */
   const hasKisha = /貴社|御社|貴店|貴校/.test(t);
   const hasContrib = /貢献|活か|役立|力を発揮|目指|挑戦|支え|推進|改善|成長に寄与/.test(t);
   checks.push({ st: st(hasKisha && hasContrib, hasKisha || hasContrib),
     name:'貢献の姿勢が「貴社で〜する」形になっている',
     hint:'経験の紹介で終わらせず「貴社の◯◯で活かす/貢献する」まで結びつけましょう。' });
-  /* ⑥ 定型句 회피 */
+  /* ⑥ 定型句の回避 */
   const cliches = DIAG_NG_CLICHE.filter(w => t.includes(w));
   checks.push({ st: cliches.length === 0 ? 'pass' : 'warn',
     name:'そのままでも通じる定型句を避けている',
     hint: cliches.length ? '検出: 「' + cliches.join('」「') + '」— どの会社にも送れる文は届きません。その会社だけの一言に。' : '' });
-  /* ⑦ 긍정 표현 (부정 어휘 회피) */
+  /* ⑦ ポジティブ表現（否定語彙の回避） */
   const negas = DIAG_NEGA.filter(w => t.includes(w));
   checks.push({ st: negas.length === 0 ? 'pass' : 'warn',
     name:'前職・環境への否定的な表現がない',
@@ -1892,13 +1892,13 @@ function bindDiag(){
   });
 }
 /* ================================================================
-   13-C. 模擬面接・想定質問ジェネレーター (v2.12 차별화 자산)
-   - 共通의 鉄板 18問 + 직종 9카테고리×6問 (面接官の意図・答え方·NG例付き)
-   - store의 志望動機·学職歴에서 'あなた専用 深掘り質問' 규칙 기반 생성
-     (서버 AI 없이 규칙 기반 — 즉시·묵料·프라이버시 안전이라는 차별점 유지)
+   13-C. 模擬面接・想定質問ジェネレーター（v2.12 差別化資産）
+   - 共通の鉄板18問 + 職種9カテゴリ×6問（面接官の意図・答え方・NG例付き）
+   - store の志望動機・学職歴から「あなた専用 深掘り質問」をルールベース生成
+     （サーバーAIなしでルールベース — 即時・無料・プライバシー安全という差別点を維持）
 ================================================================ */
 const MQ_CATS = ['共通','新卒','アルバイト','営業','事務','企画','IT・エンジニア','販売・接客','医療・介護','製造・物流'];
-/* { cat:카테고리, q:想定質問, why:面接官の意図, tip:答え方のコツ, ng:NG例 } */
+/* { cat:カテゴリ, q:想定質問, why:面接官の意図, tip:答え方のコツ, ng:NG例 } */
 const MQ_COMMON = [
   { q:'自己紹介をお願いします', why:'話し方・表情・第一印象を見る導入の質問', tip:'氏名→経歴の要約→簡単な強みを30〜60秒で。「本日はよろしくお願いいたします」で締める', ng:'履歴書の全文朗読' },
   { q:'自己PRをお願いします', why:'強みと、その仕事への活かし方の具体性を確認', tip:'強み→根拠エピソード→入社後の貢献、の順で約1分にまとめる', ng:'「真面目です」など抽象語だけ' },
@@ -1997,7 +1997,7 @@ const MQ_TIPS = [
   '挨拶・目線・姿勢が第一印象の8割。声はワントーン高め、ゆっくりと'
 ];
 
-/* --- 想定質問ライブラリ描画 (共通분 + 선택 카테고리) --- */
+/* --- 想定質問ライブラリ描画（共通分 + 選択カテゴリ） --- */
 function mqFiltered(){
   const cat = store.get().mensetsu.cat;
   if (cat === '共通') return MQ_COMMON.slice();
@@ -2027,41 +2027,41 @@ function renderMensetsu(){
   }
 }
 
-/* --- あなた専用 深掘り質問 생성 규칙 (志望動機+経歴 기반) --- */
+/* --- あなた専用 深掘り質問の生成ルール（志望動機+経歴ベース） --- */
 function buildDeepQuestions(){
   const s = store.get();
   const mot = (s.motivation || '').replace(/\s+/g,'');
-  if (mot.length < 25) return null;                      // 미작성/너무 짧음
+  if (mot.length < 25) return null;                      // 未記入/短すぎ
   const out = [];
   const push = (q, base)=> out.push({ q, base });
-  /* ① 숫자 실적 → 재현성 파고들기 */
+  /* ① 数字実績 → 再現性を深掘り */
   const mnum = mot.match(/[0-9０-９]+(?:[\.・][0-9０-９]+)?\s*(?:件|人|%|％|倍|年間|か月|ヶ月|年|万円|円|回|社|日|時間)/);
   if (mnum) push('文中の「' + mnum[0] + '」について——その数字はどんな工夫・行動の結果ですか？別の環境でも再現できますか？', '数字の実績への深掘り');
   /* ② 定型句 NG → 他社転用可能性 */
   const cliche = DIAG_NG_CLICHE.find(w => mot.includes(w));
   if (cliche) push('「' + cliche + '」という表現は他の会社にも言えませんか？当社"だからこそ"の理由を1文で教えてください。', '定型句への指摘');
-  /* ③ 強み 키워드 → 뒷면 파고들기 */
+  /* ③ 強みキーワード → 裏面を深掘り */
   const STRENGTHS = ['行動力','リーダー','リーダーシップ','粘り','コミュニケーション','責任感','真面目','向上心','チャレンジ','主体性','柔軟'];
   const sw = STRENGTHS.find(w => mot.includes(w));
   if (sw) push('その「' + sw + '」という強みが、裏目に出てしまった経験はありますか？どう修正しましたか？', '強みの「裏の顔」を問う定番');
-  /* ④ 단체 경험 → 대립 해결 */
+  /* ④ 団体経験 → 対立解決 */
   const TEAME = ['部活','サークル','アルバイト','バイト','ボランティア','研究','ゼミ','チーム'];
   const tw = TEAME.find(w => mot.includes(w));
   if (tw) push('その経験(' + tw + ')の中で、仲間と意見が対立したとき、あなたはどう行動しましたか？', 'チーム経験への深掘り');
-  /* ⑤ 경력 여부 분기 */
+  /* ⑤ 経歴の有無で分岐 */
   if (s.workHistory.length > 0){
     push('前職では、なぜ同じことができなかったのですか？退職理由と志望動機の一貫性を教えてください。', '転職者への一貫性チェック');
     push('前職で最も評価されたことは何ですか？それを当社でどう活かしますか？', '即戦力性の確認');
   } else if (s.education.length > 0){
     push('学生時代の経験を、社会人として具体的にどう活かしますか？1つ例を挙げてください。', '新卒・第二新卒の定番');
   }
-  /* ⑥ 企業研究 확인 (貴社 존재 여부로 분기) */
+  /* ⑥ 企業研究の確認（貴社の存在有無で分岐） */
   if (mot.includes('貴社') || mot.includes('御社')){
     push('当社のどこに魅力を感じましたか？事業・商品・社風の中で一つ挙げるとしたら？', '企業研究の深さの確認');
   } else {
     push('なぜ"この会社"でなければならないのですか？同業他社ではいけない理由を教えてください。', '企業理解の確認');
   }
-  /* ⑦ 피날레 定番 (항상 마지막) */
+  /* ⑦ フィナーレ定番（常に最後） */
   const fin = { q:'もし内定したら、入社後3か月でまず何をしますか？', base:'締めの定番質問' };
   return out.slice(0, 6).concat([fin]);
 }
@@ -2087,13 +2087,13 @@ function renderDeep(){
   toast(qs.length + '件の深掘り質問を生成しました');
 }
 /* ================================================================
-   13-D. 逆質問ジェネレーター (v2.12 연장 — 면접 대응 완결)
-   - 段階(3)×相手(3) 매트릭스로 5問 + 締めの一言 생성
-   - 職種は 想定質問ライブラリ(mensetsu.cat)과 連動 (データ 자산 재활용)
+   13-D. 逆質問ジェネレーター（v2.12 延長 — 面接対応の完結）
+   - 段階(3)×相手(3) マトリクスで5問 + 締めの一言を生成
+   - 職種は 想定質問ライブラリ(mensetsu.cat)と連動（データ資産の再利用）
 ================================================================ */
 const GQ_STAGES  = ['一次面接', '二次面接', '最終面接'];
 const GQ_TARGETS = ['人事', '現場リーダー', '役員・社長'];
-/* 段階別 pool (先頭 2問 사용) */
+/* 段階別 pool（先頭2問使用） */
 const GQ_STAGE_Q = {
   '一次面接': [
     { q:'入社までに身につけておくべき知識やスキルはありますか', why:'「準備します」という前向きさが最も伝わる定番' },
@@ -2111,7 +2111,7 @@ const GQ_STAGE_Q = {
     { q:'御社に入社して「この人に来てよかった」と言われるには、何が必要ですか', why:'入社意欲の強い締めの質問' }
   ]
 };
-/* 相手別 pool (先頭 2問 사용) */
+/* 相手別 pool（先頭2問使用） */
 const GQ_TARGET_Q = {
   '人事': [
     { q:'入社後のキャリアパスの事例を教えていただけますか', why:'将来像を描いている姿勢' },
@@ -2126,7 +2126,7 @@ const GQ_TARGET_Q = {
     { q:'創業（事業開始）の頃の原体験を聞かせていただけますか', why:'理念への深い敬意が伝わる' }
   ]
 };
-/* 職種別 (1問) — mensetsu.cat 과 連動 */
+/* 職種別（1問） — mensetsu.cat と連動 */
 const GQ_JOB_Q = {
   '共通':        { q:'入社後、最初の3か月で理解しておくべきことは何ですか', why:'早期戦力化の意欲' },
   '新卒':        { q:'新入社員のうちにチャレンジできることはありますか', why:'受け身でない印象になる' },
@@ -2139,7 +2139,7 @@ const GQ_JOB_Q = {
   '医療・介護':  { q:'資格取得の支援制度はありますか', why:'成長意欲と定着の意志の両立' },
   '製造・物流':  { q:'安全への取り組みで、現場発の改善例はありますか', why:'安全意識の高さをアピール' }
 };
-/* 締めの一言 (段階で 분기) */
+/* 締めの一言（段階で分岐） */
 const GQ_CLOSING = {
   '一次面接': '本日は貴重なお時間をありがとうございました。お話を伺い、御社で働くイメージがより具体的になりました。',
   '二次面接': 'ありがとうございました。チームの皆様と一緒に成果を出したいという気持ちが一層強くなりました。',
@@ -2154,7 +2154,7 @@ const GQ_NG = [
   '「特にありません」— 最大のNG。関心ゼロに見える',
   '面接中に既に説明された内容をもう一度聞く — 聞いていなかった印象になる'
 ];
-/* 5問 생성 (段階2 + 相手2 + 職種1) — 결정적(랜덤 없음: 再現性·테스트 용이) */
+/* 5問生成（段階2 + 相手2 + 職種1） — 決定的（ランダムなし: 再現性・テスト容易） */
 function buildGyaku(){
   const ms = store.get().mensetsu;
   const list = GQ_STAGE_Q[ms.gqStage].slice(0, 2)
@@ -2166,7 +2166,7 @@ function renderGyaku(){
   const host = $('gqResult'); if (!host) return;
   host.replaceChildren();
   const ms = store.get().mensetsu;
-  /* 職種 連動 안내 */
+  /* 職種連動の案内 */
   const note = $('gqJobNote');
   if (note) note.textContent = ms.cat === '共通'
     ? '※ 上のライブラリで職種を選ぶと、その職種向けの逆質問も1問生成されます。'
@@ -2180,7 +2180,7 @@ function renderGyaku(){
       h('div', { class:'mq-deeprow' },
         h('span', { class:'mq-tag gold', text: x.why }))));
   });
-  /* 締めの一言 카드 */
+  /* 締めの一言カード */
   host.append(h('div', { class:'mq-deep gq-close' },
     h('p', { class:'mq-deepq', text:'締めの一言：「' + closing + '」' }),
     h('div', { class:'mq-deeprow' }, h('span', { class:'mq-tag', text:'退室前の最後の印象づくり' }))));
@@ -2193,12 +2193,12 @@ function gqCopyAllText(){
 }
 /* ================================================================
    13-E. 手取りシミュレーター & 内定メール (v2.14)
-   - 概算 규칙: 社保率(약14.65%/15.45%), 給与所得控除 단계식,
-     所得税 5〜45% 累進 + 復興特別 1.021, 住民税 10% + 均等割 5천
-   - 서버 없는 즉시 계산 + '개인정보 외부전송 제로' 정책 유지
+   - 概算ルール: 社保率(約14.65%/15.45%), 給与所得控除の段階式,
+       所得税 5〜45% 累進 + 復興特別 1.021, 住民税 10% + 均等割 5千
+   - サーバーなしの即時計算 + 「個人情報の外部送信ゼロ」ポリシー維持
 ================================================================ */
 const PAY_AGES = [ {k:'u39', label:'39歳以下'}, {k:'a40', label:'40・60代（介護保険あり）'}, {k:'a65', label:'65歳以上'} ];
-/* 給与所得控除 (2020년 개정 기준 단계) */
+/* 給与所得控除（2020年改正基準の段階） */
 function payKojo(g){
   if (g <= 1625000) return 550000;
   if (g <= 1800000) return g * 0.4 - 100000;
@@ -2207,7 +2207,7 @@ function payKojo(g){
   if (g <= 8500000) return g * 0.1 + 1100000;
   return 1950000;
 }
-/* 所得税累進 (소득공제 후 金額 → 세액, 復興特別 별도) */
+/* 所得税累進（所得控除後の金額 → 税額、復興特別は別途） */
 function payTaxRate(t){
   if (t <= 1950000) return t * 0.05;
   if (t <= 3300000) return t * 0.10 - 97500;
@@ -2217,7 +2217,7 @@ function payTaxRate(t){
   if (t <= 40000000) return t * 0.40 - 2796000;
   return t * 0.45 - 4796000;
 }
-/* 手取り 1세트 계산: {G:額面年収, SI:社報年, TAX:所得税年, J:住民税年, netY, netM, rate} */
+/* 手取り1セット計算: {G:額面年収, SI:社保年, TAX:所得税年, J:住民税年, netY, netM, rate} */
 function calcTakeHome(monthly, bonusM, age, noJumin){
   const G = monthly * 12 + monthly * bonusM;
   const socRate = (age === 'a40') ? 0.1545 : 0.1465;          // 健保+年金+雇用 (+介護)
@@ -2230,7 +2230,7 @@ function calcTakeHome(monthly, bonusM, age, noJumin){
   return { G, SI, TAX, J, netY, netM: netY / 12, rate: G > 0 ? netY / G : 0 };
 }
 const fmtY = (n)=> Math.round(n).toLocaleString('ja-JP');
-/* --- 手取りシミュ 렌더 (막대 그래프 + 手取り率 배지) --- */
+/* --- 手取りシミュ描画（棒グラフ + 手取り率バッジ） --- */
 function renderPay(){
   const host = $('payResult'); if (!host) return;
   host.replaceChildren();
@@ -2244,7 +2244,7 @@ function renderPay(){
       h('span',{class:'mq-tag gold', text:'手取り率 約' + Math.round(r.rate * 100) + '%'})),
     h('p',{class:'pay-sub', text:'年収（額面）約 ' + fmtY(r.G) + '円 → 手取り年額 約 ' + fmtY(r.netY) + '円'}));
   host.append(head);
-  /* 공제 내역 막대 (額面 대비 폭) */
+  /* 控除内訳の棒（額面に対する幅） */
   const rows = [ ['社会保険', r.SI, 'soc'], ['所得税', r.TAX, 'tax'], ['住民税', r.J, 'jumin'] ];
   for (const [label, amt, cls] of rows){
     const w = r.G > 0 ? Math.max(1, Math.round(amt / r.G * 100)) : 1;
@@ -2273,7 +2273,7 @@ function renderCmp(){
       h('span',{class:'mq-tag', text:'A 手取り ' + fmtY(ra.netM) + '円/月'}),
       h('span',{class:'mq-tag', text:'B 手取り ' + fmtY(rb.netM) + '円/月'}),
       h('span',{class:'mq-tag gold', text:'年額差 約 ' + fmtY(Math.abs(diffY)) + '円'}))));
-  /* 額面의 차이 vs 手取り 차이 인사이트 */
+  /* 額面の差 vs 手取りの差のインサイト */
   if (grossDiff !== 0){
     const shrink = Math.abs(grossDiff) - Math.abs(diff);
     if (shrink > 3000){
@@ -2282,7 +2282,7 @@ function renderCmp(){
     }
   }
 }
-/* --- 内定メール 템플릿 (장멳 5선) --- */
+/* --- 内定メールテンプレート（場面5選） --- */
 const MAIL_TPL = {
   accept: { label:'内定を承諾する', subject:'内定のご連絡につきまして（入社承諾のご返事）',
     body:'このたびは、内定のご連絡をいただき誠にありがとうございます。\n謹んで入社のご承諾をさせていただきます。\n入社当日までに必要な準備がございましたら、ご指示いただけますと幸いです。\n一日も早く貴社に貢献できるよう努めてまいります。今後ともよろしくお願いいたします。' },
@@ -2309,13 +2309,13 @@ function buildMail(){
 function renderMail(){
   const host = $('mailView'); if (!host) return;
   host.replaceChildren();
-  host.textContent = buildMail();               // pre-wrap 스타일로 줄바끊 유지 (textContent 전용)
+  host.textContent = buildMail();               // pre-wrap スタイルで改行を維持（textContent専用）
 }
-/* --- 内定탭 바인딩 --- */
+/* --- 内定タブバインド --- */
 /* ================================================================
-   13-F. 電話スクリプト + 入社前書類 (v2.15 — ラストマイル 완결)
+   13-F. 電話スクリプト + 入社前書類（v2.15 — ラストマイル完結）
 ================================================================ */
-/* 電話台本: 래이
+/* 電話台本:
    内定辞退電話はメールと併用（先に電話→後でメール）がマナー */
 const PHONE_TPL = {
   thanks: { label:'内定のお礼・承諾',
@@ -2399,7 +2399,7 @@ function bindPhoneDocs(){
 function bindNaitei(){
   if (!$('payAges')) return;
   const st = ()=> store.get();
-  /* ① 手取り 시뮬: 입력 즉시 계산 + store 영속 */
+  /* ① 手取りシミュ: 入力即時計算 + store 永続 */
   const bindNum = (id, apply)=>{
     const el = $(id);
     el.addEventListener('input', ()=>{ store.update(s2=>{ apply(s2, el.value); }, { render:false }); renderPay(); });
@@ -2407,7 +2407,7 @@ function bindNaitei(){
   bindNum('payMonthly', (s2,v)=>{ s2.pay.monthly = v === '' ? null : Number(v); });
   bindNum('payBonus',   (s2,v)=>{ s2.pay.bonus   = v === '' ? 0 : Number(v); });
   $('payNoJumin').addEventListener('change', e=>{ store.update(s2=>{ s2.pay.noJumin = e.target.checked; }, { render:false }); renderPay(); });
-  /* 年齢 칩 */
+  /* 年齢チップ */
   const ages = $('payAges');
   for (const a of PAY_AGES){
     const b = h('button', { type:'button', class:'chip' + (st().pay.age === a.k ? ' active' : ''), text: a.label });
@@ -2418,7 +2418,7 @@ function bindNaitei(){
     });
     ages.append(b);
   }
-  /* ② 비교: 입력 → store, 버튼 → renderCmp */
+  /* ② 比較: 入力 → store、ボタン → renderCmp */
   const bindCmp = (id, key, field)=>{
     const el = $(id);
     el.addEventListener('input', ()=>{
@@ -2428,7 +2428,7 @@ function bindNaitei(){
   bindCmp('cmpMonthlyA','cmpA','monthly'); bindCmp('cmpBonusA','cmpA','bonus');
   bindCmp('cmpMonthlyB','cmpB','monthly'); bindCmp('cmpBonusB','cmpB','bonus');
   $('btnCmp').addEventListener('click', renderCmp);
-  /* ③ 메일: 장면 칩 + 회사명, 자동 갱신 */
+  /* ③ メール: 場面チップ + 会社名、自動更新 */
   const sc = $('mailScenes');
   for (const k of Object.keys(MAIL_TPL)){
     const b = h('button', { type:'button', class:'chip' + (st().payUi.scene === k ? ' active' : ''), text: MAIL_TPL[k].label });
@@ -2441,7 +2441,7 @@ function bindNaitei(){
   }
   $('mailCo').addEventListener('input', e=>{ store.update(s2=>{ s2.payUi.company = e.target.value; }, { render:false }); renderMail(); renderPhone(); });
   $('btnMailCopy').addEventListener('click', ()=> copyText(buildMail()));
-  /* ④ 초기값 폼 채움 + 초기 렌더 */
+  /* ④ 初期値フォーム充填 + 初期描画 */
   const pyp = st().pay, pu = st().payUi;
   if (pyp.monthly != null) $('payMonthly').value = pyp.monthly;
   $('payBonus').value = pyp.bonus; $('payNoJumin').checked = pyp.noJumin;
@@ -2455,7 +2455,7 @@ function bindNaitei(){
 
 function bindGyaku(){
   if (!$('gqStages')) return;
-  /* 칩 빌드 공통 낶은 함수 — 클릭 시 store 영속 + 재생성 */
+  /* チップ構築の共通関数 — クリックで store 永続 + 再生成 */
   const build = (host, items, key)=>{
     const cur = store.get().mensetsu[key];
     for (const c of items){
@@ -2471,17 +2471,17 @@ function bindGyaku(){
   };
   build($('gqStages'),  GQ_STAGES,  'gqStage');
   build($('gqTargets'), GQ_TARGETS, 'gqTarget');
-  /* NG 리스트 (정적) */
+  /* NGリスト（静的） */
   const nl = $('gqNgList');
   for (const x of GQ_NG) nl.append(h('li', { text: x }));
   $('btnGqGen').addEventListener('click', ()=>{ renderGyaku(); toast('逆質問を生成しました'); });
   $('btnGqCopyAll').addEventListener('click', ()=> copyText(gqCopyAllText()));
-  renderGyaku();                                   // 초기 자동 생성
+  renderGyaku();                                   // 初期自動生成
 }
 
 function bindMensetsu(){
   if (!$('mqCats')) return;
-  /* 카테고리 칩 (선택값은 store에 영속 — 사용자 설정 규칙) */
+  /* カテゴリチップ（選択値は store に永続 — ユーザー設定規則） */
   const cats = $('mqCats');
   const cur = store.get().mensetsu.cat;
   for (const c of MQ_CATS){
@@ -2495,17 +2495,17 @@ function bindMensetsu(){
     });
     cats.append(b);
   }
-  /* 深掘り生成 + 「履歴書へ 이동」 버튼 */
+  /* 深掘り生成 + 「履歴書へ移動」ボタン */
   $('btnMqDeep').addEventListener('click', renderDeep);
   $('btnMqGotoRireki').addEventListener('click', ()=>{
     const tb = document.querySelector('.tab-btn[data-tab="rireki"]');
     if (tb) tb.click();
     setTimeout(()=>{ const t = $('ta_motivation'); if (t){ t.focus(); scrollTo({ top:0, behavior:'smooth' }); } }, 60);
   });
-  /* 직전 체크리스트 */
+  /* 直前チェックリスト */
   const tl = $('mqTips');
   for (const tip of MQ_TIPS) tl.append(h('li', { text: tip }));
-  renderMensetsu();                                  // 초기 목록 렌더
+  renderMensetsu();                                  // 初期リスト描画
 }
 
 function renderExamples(){
@@ -2527,8 +2527,8 @@ function renderExamples(){
     list.append(card);
   }
 }
-/* 예문을 志望動機 란에 직접 삽입 (코 인기 사이트의 'テンプレ挿入' UX 벤치마크)
-   - 기존 내용이 있으면 확인 후 교체, 카운터/미리보기 즉시 갱신 */
+/* 例文を志望動機欄に直接挿入（大手人気サイトの「テンプレ挿入」UX をベンチマーク）
+   - 既存内容があれば確認後に置換、カウンター/プレビュー即時更新 */
 function insertExample(text){
   const cur = store.get().motivation.trim();
   if (cur && !confirm('現在入力中の志望動機を例文で置き換えますか？（元に戻すには再入力してください）')) return;
@@ -2540,7 +2540,7 @@ function insertExample(text){
 
 async function copyText(text){
   try{ await navigator.clipboard.writeText(text); toast('コピーしました'); }
-  catch(e){                                            // 구형 브라우저 폐백
+  catch(e){                                            // 旧ブラウザフォールバック
     const ta = h('textarea',{ style:'position:fixed;opacity:0' }); ta.value = text;
     document.body.append(ta); ta.select();
     try{ document.execCommand('copy'); toast('コピーしました'); }
@@ -2550,11 +2550,11 @@ async function copyText(text){
 }
 
 /* ================================================================
-   14. Export / Import / 전체삭제
+   14. Export / Import / 全削除
 ================================================================ */
 function exportJson(){
   try{
-    store.save();                                      // 최신 상태 보장
+    store.save();                                      // 最新状態を保証
     const blob = new Blob([JSON.stringify(store.get(), null, 2)], { type:'application/json' });
     downloadBlob(blob, 'rireki-backup-' + todayStr() + '.json');
     toast('バックアップを保存しました');
@@ -2571,13 +2571,13 @@ function bindImport(){
       try{
         const raw = String(reader.result);
         let parsed;
-        try{ parsed = JSON.parse(raw); }              // ① JSON 파스 자체 실패 → 파일 손상/비JSON
+        try{ parsed = JSON.parse(raw); }              // ① JSONパース自体の失敗 → ファイル破損/非JSON
         catch(pe){ console.warn(pe); toast('ファイルが破損しているか、JSON形式ではありません', 'error'); return; }
-        if (!parsed || typeof parsed !== 'object' || !('profile' in parsed)){   // ② 파스는 됐지만 우리 앱 백업 아님
+        if (!parsed || typeof parsed !== 'object' || !('profile' in parsed)){   // ② パースは成功だが本アプリのバックアップではない
           console.warn('schema mismatch'); toast('このアプリのバックアップファイルではありません', 'error'); return;
         }
-        store.replace(sanitizeState(parsed));          // 스키마 정제 후 교체
-        fillAllForms();                                 // v2.44: 退職届・送付状 폼까지 전부 재주입 (구값 잔존 불일치 해소)
+        store.replace(sanitizeState(parsed));          // スキーマ整備後に置換
+        fillAllForms();                                 // v2.44: 退職届・送付状フォームまで全て再注入（旧値残留の不一致を解消）
         toast('バックアップを復元しました');
       }catch(e){ console.error(e); toast('読み込みに失敗しました', 'error'); }
     };
@@ -2587,22 +2587,22 @@ function bindImport(){
 }
 function bindDataButtons(){
   $('btnExport').addEventListener('click', exportJson);
-  /* v2.22: 헤더 バックアップ 버튼 삭제 — 書き出し는 設定 다이얼로그(btnExport)로 일원화 */
+  /* v2.22: ヘッダーのバックアップボタン削除 — 書き出しは設定ダイアログ(btnExport)に一元化 */
   $('btnImport').addEventListener('click', ()=> $('impFile').click());
   $('btnResetAll').addEventListener('click', ()=>{
     if (!confirm('すべての入力データを削除しますか？この操作は元に戻せません。')) return;
     store.replace(defaultState());
-    fillAllForms();                                 // v2.44: 退職届・送付状 폼까지 전부 재주입 (구값 잔존 불일치 해소)
+    fillAllForms();                                 // v2.44: 退職届・送付状フォームまで全て再注入（旧値残留の不一致を解消）
     toast('全データを削除しました', 'warn');
   });
 }
 
 /* ================================================================
-   15. 설정 / 테마 / 탭 전환
+   15. 設定 / テーマ / タブ切替
 ================================================================ */
 function applyTheme(){
   document.documentElement.setAttribute('data-theme', store.get().settings.theme);
-  /* 토글 아이콘(달/해)은 CSS가 data-theme 기반으로 자동 전환 → JS 조작 불필요 */
+  /* トグルアイコン（月/太陽）はCSSが data-theme ベースで自動切替 → JS操作不要 */
 }
 function effectiveDark(){
   const t = store.get().settings.theme;
@@ -2613,7 +2613,7 @@ function effectiveDark(){
 function bindSettings(){
   const dlg = $('dlgSettings');
   $('btnSettings').addEventListener('click', ()=>{
-    const st = store.get().settings;                   // 현재 값 반영 후 표시
+    const st = store.get().settings;                   // 現在値を反映して表示
     $('set_theme').value = st.theme;
     $('set_era').value = st.eraNotation;
     $('set_template').value = st.template;
@@ -2629,7 +2629,7 @@ function bindSettings(){
   $('set_theme').addEventListener('change', e=>{ store.update(st=>{st.settings.theme=e.target.value;}); applyTheme(); });
   $('set_era').addEventListener('change', e=>{
     store.update(st=>{st.settings.eraNotation=e.target.value;});
-    renderEduList(); renderWorkList(); renderLicList();   // 연도 라벨(연호) 재구성
+    renderEduList(); renderWorkList(); renderLicList();   // 年ラベル（元号）再構築
   });
   $('set_template').addEventListener('change', e=> store.update(st=>{st.settings.template=e.target.value;}));
   $('set_bgcolor').addEventListener('change', e=> store.update(st=>{st.settings.bgColor=e.target.value;}));
@@ -2638,12 +2638,12 @@ function bindSettings(){
     if (e.target.checked){ store.save(); toast('自動保存をONにしました'); }
     else toast('自動保存をOFFにしました（書出しで保存してください）','warn');
   });
-  /* 상표 클릭 = 상단으로 */
+  /* ブランドクリック = 上へ */
   $('brandTop').addEventListener('click', e=>{ e.preventDefault(); scrollTo({top:0, behavior:'smooth'}); });
 }
 function openDlg(d){ try{ d.showModal(); }catch(e){ d.setAttribute('open',''); } }
 function closeDlg(d){ try{ d.close(); }catch(e){ d.removeAttribute('open'); } }
-/* v2.40: 히어로 証明写真 노트 링크 → 写真탭 이동 (프로모 밴드 삭제에 따른 간소화) */
+/* v2.40: ヒーロー証明写真ノートリンク → 写真タブへ移動（プロモバンド削除による簡素化） */
 function bindPhotoPromo(){
   const go = $('hpPhotoGo');
   if (go) go.addEventListener('click', ()=>{
@@ -2657,16 +2657,16 @@ function bindTabs(){
     btns.forEach(x=>{ x.classList.remove('active'); x.setAttribute('aria-selected','false'); });
     b.classList.add('active'); b.setAttribute('aria-selected','true');
     document.querySelectorAll('.tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.panel === b.dataset.tab));
-    /* v2.28: 다른 탭에서 수정된 職歴 등을 전환 즉시 반영 (양쪽 탭이 같은 store를 편집하므로 재구성으로 동기화) */
+    /* v2.28: 他タブで修正された職歴等を切替即時反映（両タブが同じ store を編集するため再構成で同期） */
     try{ renderDynamic(); }catch(e){ console.warn(e); }
-    /* 숨김 상태에서 폭 0이었던 미리보기 재피팅 */
+    /* 非表示状態で幅 0 だったプレビューを再フィット */
     fitA4($('a4Preview'),$('pvFit1')); fitA4($('a4Preview2'),$('pvFit2')); fitA4($('a4PreviewT'),$('pvFit3')); fitA4($('a4PreviewS'),$('pvFit4'));
-    /* v2.20: 탭 전환 즉시 그 패널 맨 위로 스크롤 (모바일: 히어로가 패널을 화면 밖으로 밀어내는 문제 해소) */
+    /* v2.20: タブ切替即時にそのパネルの最上部へスクロール（モバイル: ヒーローがパネルを画面外に押し出す問題を解消） */
     const panelEl = document.querySelector('.tab-panel.active');
     if (panelEl){
       const headEl = document.querySelector('.site-header');
       const tbEl = document.getElementById('tool');
-      /* 데스크톱은 알약 탭바가 sticky로 따라오므로 그 높이까지 보정 */
+      /* デスクトップはピルタブバーが sticky で追従するためその高さまで補正 */
       const stickyH = (headEl ? headEl.offsetHeight : 0)
         + (tbEl && getComputedStyle(tbEl).position === 'sticky' ? tbEl.offsetHeight : 0);
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2677,36 +2677,36 @@ function bindTabs(){
 }
 
 /* ================================================================
-   16. 초기화 + 글로벌 에러 핸들러
+   16. 初期化 + グローバルエラーハンドラ
 ================================================================ */
-/* 동적 부분만 재렌더 (구조 변경 시 — 리스트까지 재구성) */
+/* 動的部分のみ再描画（構造変更時 — リストまで再構築） */
 function renderDynamic(){
   renderEduList(); renderWorkList(); renderLicList(); renderWorkDetail();
   renderLight();
 }
-/* 경량 재렌더 (필드 입력 중 — 리스트는 그대로 두어 포커스 보존) */
+/* 軽量再描画（フィールド入力中 — リストはそのままにしてフォーカス保持） */
 function renderLight(){
   renderPreview(); renderPreview2(); renderPreview3(); renderPreview4();
   renderDashboard();
-  /* メール生成文도 プロ필(氏名・連絡先)에 의존 — 입력 즉시 서명 갱신 */
+  /* メール生成文もプロフィール（氏名・連絡先）に依存 — 入力即時に署名更新 */
   renderMail();
   renderPhone();
 }
 
 /* ================================================================
-   10-B. 退職届 / 退職願 A4 빌더 (입사→퇴사→전직 라이프사이클 서류 도구)
-   - 退職届: 会社の承認不要(届出) / 退職願: 承認制(願出) — 정통 서식 차이 반영
-   - 氏名은 프로필에서 자동 계승, 提出日は本日自動
-   - v2.42: doda/Indeed/アクシ스 등 메이저 템플릿을 전수 조사해 표준 横書き 서식으로 재정비
-     ①본문 정형문 교체 — 종전 「退職いたしたく届け出ます」는 실재하지 않는 어색한 조어
-        → 届出는 사실 보고로 끝내는 「退職いたします」/
-           願出는 「退職いたしたく、ここにお願い申し上げます」(종전 「退職願いたく」는 문법 오류)
-     ②요소 순서를 표준으로: 標題(中央・最上部)→提出日(右)→宛名(左)‖署名(右)→私儀(→本文)
-        (종전은 宛名이 標題 위에 있고 날짜가 상단·서명란에 2회 중복 표기됐음)
-     ③딱딱한 「平素よりご指導ご鞭撻」 미문 → 자연스럽고 간결한 감사문으로
+   10-B. 退職届 / 退職願 A4 ビルダー（入社→退社→転職ライフサイクル書類ツール）
+   - 退職届: 会社の承認不要（届出） / 退職願: 承認制（願出） — 正統書式の違いを反映
+   - 氏名はプロフィールから自動継承、提出日は本日自動
+   - v2.42: doda/Indeed/アクシス等のメジャーテンプレートを全数調査し標準横書き書式に再整備
+       ①本文の定型文を交換 — 従来の「退職いたしたく届け出ます」は実在しない不自然な造語
+             → 届出は事実報告で締める「退職いたします」/
+                   願出は「退職いたしたく、ここにお願い申し上げます」（従来の「退職願いたく」は文法誤り）
+       ②要素順序を標準に: 標題（中央・最上部）→提出日（右）→宛名（左）‖署名（右）→私儀（→本文）
+             （従来は宛名が標題の上にあり日付が上部・署名欄に2重表記されていた）
+       ③堅苦しい「平素よりご指導ご鞭撻」の美文 → 自然で簡潔な感謝文へ
 ================================================================ */
 const TQ_REASONS = { isshin:'一身上の都合', katei:'家庭の事情', keiyaku:'契約期間の満了', kaisha:'会社の事情' };
-/* 本文 핵심문 — メ이저 템플릿 공통 표준형 (DOM/PNG 양쪽이 이 하나를 공유해 문구 불일치 재발 차단) */
+/* 本文の核心文 — メジャーテンプレート共通の標準形（DOM/PNG 両方がこの1つを共有し文言不一致の再発を遮断） */
 function tqCoreSentence(t, settings){
   const reason = TQ_REASONS[t.reason] || TQ_REASONS.isshin;
   let leaveTxt = '　　　　年　　月　　日';
@@ -2715,7 +2715,7 @@ function tqCoreSentence(t, settings){
   return 'このたび、' + reason + 'により、勝手ながら' + leaveTxt + 'をもって' +
     (t.docType === 'negai' ? '退職いたしたく、ここにお願い申し上げます。' : '退職いたします。');
 }
-/* 本文 후속문 — 인수인계 의지 + 감사 인사 (폭넓게 쓰이는 자연스러운 표현으로 딱딱함 해소, v2.42) */
+/* 本文の後続文 — 引継ぎの意志 + 感謝の挨拶（広く使われる自然な表現で堅苦しさを解消, v2.42） */
 const TQ_TAIL = [
   'なお、退職日までの間、業務の引継ぎ等に責任をもって対応してまいります。',
   '在職中は大変お世話になり、誠にありがとうございました。'
@@ -2729,14 +2729,14 @@ function buildTaishokuA4(){
                + (now.getMonth()+1) + '月' + now.getDate() + '日';
   const isNegai = t.docType === 'negai';
 
-  /* 표준 横書き 순서: 標題 → 提出日(우) → 宛名(좌)‖署名(우) → 私儀 → 本文 (v2.42) */
+  /* 標準横書き順序: 標題 → 提出日（右） → 宛名（左）‖署名（右） → 私儀 → 本文 (v2.42) */
   a4.append(h('h1',{class:'tq-title', text: isNegai ? '退　職　願' : '退　職　届'}));
   a4.append(h('div',{class:'tq-submit', text:submit}));
   a4.append(h('div',{class:'tq-heads'},
     h('div',{class:'tq-addr'},
       h('p',{text:(t.company || '株式会社　　　　　')}),
       h('p',{text:'代表取締役社長　' + (t.president || '　　　　') + '　殿'})),
-    /* 서명란은 所属+氏名(印)만 — 提出日는 상단에 1회만 (중복 폐지) */
+    /* 署名欄は 所属+氏名（印） のみ — 提出日は上部に1回のみ（重複廃止） */
     h('div',{class:'tq-sign'},
       h('p',{text:(t.dept || '　')}),
       h('p',{text:(p.nameKanji || '氏　　　　名') + '　　㊞'}))
@@ -2754,18 +2754,18 @@ function renderPreview3(){
   fresh.id = 'a4PreviewT';
   fitA4(fresh, $('pvFit3'));
 }
-/* --- 탭5 폼 바인딩 --- */
-/* v2.44: leaveDate는 年/月/日 3연 셀렉트(buildYmdPicker)가 전담 — 단일 input 없음 */
+/* --- タブ5 フォームバインド --- */
+/* v2.44: leaveDate は 年/月/日 3連セレクト(buildYmdPicker)が専任 — 単一 input なし */
 const TQ_FIELDS = { company:'tq_company', president:'tq_president', dept:'tq_dept', reason:'tq_reason' };
 function fillTaishokuForm(){
   const t = store.get().taishoku;
   for (const [key, id] of Object.entries(TQ_FIELDS)){ const el = $(id); if (el) el.value = t[key] || ''; }
-  const pk = YMD_PICKERS['tq_leave']; if (pk) pk.set(t.leaveDate || '');   // v2.44: 退職希望日 3연 셀렉트 주입
+  const pk = YMD_PICKERS['tq_leave']; if (pk) pk.set(t.leaveDate || '');   // v2.44: 退職希望日 3連セレクトを注入
   const r = document.querySelector('input[name="tq_type"][value="' + t.docType + '"]');
   if (r) r.checked = true;
 }
 function bindTaishoku(){
-  /* v2.44: 退職希望日 커스텀 피커 — 범위는 금년-1〜+2년 (직전 연도 소급 정리 ~ 장기 예정까지 커버) */
+  /* v2.44: 退職希望日カスタムピッカー — 範囲は今年-1〜+2年（直前年度の遡及整理 〜 長期予定までカバー） */
   const nowY = new Date().getFullYear();
   buildYmdPicker('tq_leave', { yMin: nowY-1, yMax: nowY+2, desc:false, onPick:(iso)=>{
     store.update(st=>{ st.taishoku.leaveDate = iso; }, { render:'light' });
@@ -2777,21 +2777,21 @@ function bindTaishoku(){
     r.addEventListener('change', (e)=> store.update(st=>{ st.taishoku.docType = e.target.value; },{render:'light'})));
   $('btnPrint3').addEventListener('click', ()=> printDoc('taishoku'));
   $('btnPng3').addEventListener('click', ()=> downloadTaishokuPNG());
-  /* 오프라인(file:) 실행 시 가이드 링크 안내 */
+  /* オフライン(file:)実行時のガイドリンク案内 */
   $('lnkTaishokuGuide').addEventListener('click', (e)=>{
     if (location.protocol === 'file:'){ e.preventDefault(); toast('ガイドはWeb公開版でご覧いただけます', 'warn'); }
   });
 }
 
 /* ================================================================
-   10-C. 送付状(添え状) A4 빌더 (기사 예문 → 생성 도구 격상)
-   - 일본 비즈니스 문서 정통 레이아웃: 날짜(우) → 수신(좌) → 발신(우)
-     → 표제(중앙 밑줄) → 頭語/本文/結語 → 記 + 동봉서류 목록 → 以上
-   - 時候の挨拶는 접수 월 기준 자동 삽입 (문화적 디테일 차별화)
+   10-C. 送付状（添え状） A4 ビルダー（記事例文 → 生成ツールへ格上げ）
+   - 日本のビジネス文書の正統レイアウト: 日付（右） → 宛先（左） → 差出人（右）
+       → 表題（中央・下線） → 頭語/本文/結語 → 記 + 同封書類リスト → 以上
+   - 時候の挨拶は受理月基準で自動挿入（文化的ディテールの差別化）
 ================================================================ */
 const TOKI = { 1:'新春の候', 2:'余寒の候', 3:'早春の候', 4:'春暖の候', 5:'新緑の候', 6:'初夏の候',
                7:'盛夏の候', 8:'残暑の候', 9:'初秋の候', 10:'秋麗の候', 11:'晩秋の候', 12:'初冬の候' };
-/* 동봉 서류 목록 (순서 고정: 履歴書 → 職務経歴書 → その他) */
+/* 同封書類リスト（順序固定: 履歴書 → 職務経歴書 → その他） */
 function sofuDocList(){
   const f = store.get().sofu; const docs = [];
   if (f.docRireki)  docs.push('履歴書');
@@ -2799,7 +2799,7 @@ function sofuDocList(){
   if (f.otherDoc)   docs.push(f.otherDoc);
   return docs;
 }
-/* 送付状 본문 문장 — guide/soefu.html 의 定型文과 동일 문구 (일관성) */
+/* 送付状本文の文 — guide/soefu.html の定型文と同一文言（一貫性） */
 function sofuBodyLines(){
   const f = store.get().sofu;
   const toki = TOKI[new Date().getMonth() + 1] || '';
@@ -2852,7 +2852,7 @@ function renderPreview4(){
   fresh.id = 'a4PreviewS';
   fitA4(fresh, $('pvFit4'));
 }
-/* --- 탭6 폼 바인딩 --- */
+/* --- タブ6 フォームバインド --- */
 const SF_FIELDS = { company:'sf_company', tantou:'sf_tantou', job:'sf_job', otherDoc:'sf_other', note:'sf_note' };
 function fillSofuForm(){
   const f = store.get().sofu;
@@ -2873,21 +2873,21 @@ function bindSofu(){
   });
 }
 /* ================================================================
-   10-D. 텍스트 문서 PNG 공용 엔진 (退職届 / 送付状)
-   - DOM 미리보기와 동일 store 데이터로 Canvas에 직접 래스터화
-   - A4 @150dpi (1240×1754), 禁則 처리 개행, 밑줄 스트로크 지원
-   - 라인 명세: {t, x, y(mm), mm(글자크기), align, bold, underline,
-                 wrap(최대폭mm), lh(행간mm), indent(첫행 전각공백)}
+   10-D. テキスト書類 PNG 共通エンジン（退職届 / 送付状）
+   - DOM プレビューと同じ store データで Canvas に直接ラスタライズ
+   - A4 @150dpi (1240×1754)、禁則処理改行、下線ストローク対応
+   - ライン仕様: {t, x, y(mm), mm(文字サイズ), align, bold, underline,
+                              wrap(最大幅mm), lh(行間mm), indent(先頭行 全角空白)}
 ================================================================ */
-/* 禁則 처리(킨소쿠) 개행 — 컨텍스트 폰트 설정 후 호출할 것 */
+/* 禁則処理の改行 — コンテキストのフォント設定後に呼び出すこと */
 function wrapKinsokuCanvas(ctx, str, maxWpx){
   const NO_START = '。、）』」!?！？・ー—─…‥ァィゥェォッャュョぁぃぅぇぉっゃゅょ％‰°′″℃';
   const NO_END   = '（「『【〔［｛〈《';
   const lines = []; let cur = '';
   for (const ch of String(str)){
     if (cur && ctx.measureText(cur + ch).width > maxWpx){
-      if (NO_START.includes(ch)) cur += ch;                                            // 행두금지 → 이전 줄 끝에 매달기
-      else if (NO_END.includes(cur.slice(-1))){ lines.push(cur.slice(0,-1)); cur = cur.slice(-1) + ch; } // 행말금지 → 다음 줄로
+      if (NO_START.includes(ch)) cur += ch;                                            // 行頭禁則 → 前の行末にぶら下げ
+      else if (NO_END.includes(cur.slice(-1))){ lines.push(cur.slice(0,-1)); cur = cur.slice(-1) + ch; } // 行末禁則 → 次の行へ
       else { lines.push(cur); cur = ch; }
     } else cur += ch;
   }
@@ -2915,7 +2915,7 @@ function renderTextDocPNG(lines){
       });
     } else {
       ctx.fillText(L.t, L.x * K, L.y * K);
-      if (L.underline){                                  // 수신인 밑줄 (정통 서식)
+      if (L.underline){                                  // 宛名の下線（正統書式）
         const w = ctx.measureText(L.t).width;
         const x1 = (L.align === 'center') ? L.x * K - w/2 : (L.align === 'right') ? L.x * K - w : L.x * K;
         ctx.strokeStyle = '#111111'; ctx.lineWidth = .3 * K;
@@ -2925,14 +2925,14 @@ function renderTextDocPNG(lines){
   }
   return new Promise(res=> cv.toBlob(b=> res(b), 'image/png'));
 }
-/* 현재 월 → 提出日 문자열 (설정의 和暦/西暦 반영) */
+/* 現在月 → 提出日文字列（設定の和暦/西暦反映） */
 function todayJpDate(){
   const n = new Date();
   return (store.get().settings.eraNotation === 'wareki'
     ? toWareki(n.getFullYear(), n.getMonth() + 1, n.getDate())
     : n.getFullYear() + '年') + (n.getMonth() + 1) + '月' + n.getDate() + '日';
 }
-/* 退職届/退職願 PNG — DOM 빌더와 동일 표준 서식(標題→提出日→宛名‖署名→私儀→本文)을 라인 명세로 변환 (v2.42) */
+/* 退職届/退職願 PNG — DOM ビルダーと同じ標準書式（標題→提出日→宛名‖署名→私儀→本文）をライン仕様に変換 (v2.42) */
 function buildTaishokuPngLines(){
   const s = store.get(); const t = s.taishoku; const p = s.profile;
   const isNegai = t.docType === 'negai';
@@ -2941,11 +2941,11 @@ function buildTaishokuPngLines(){
   L.push({ t:todayJpDate(), x:195, y:50, mm:3.6, align:'right' });
   L.push({ t:(t.company || '株式会社　　　　　'), x:15, y:64, mm:4.2 });
   L.push({ t:'代表取締役社長　' + (t.president || '　　　　') + '　殿', x:15, y:71, mm:4.2 });
-  /* 서명란(우): 所属+氏名만 — 提出日 중복 폐지 (v2.42) */
+  /* 署名欄（右）: 所属+氏名のみ — 提出日の重複廃止 (v2.42) */
   if (t.dept) L.push({ t:t.dept, x:195, y:64, mm:4, align:'right' });
   L.push({ t:(p.nameKanji || '氏　　　　名') + '　　㊞', x:195, y:71, mm:4, align:'right' });
   L.push({ t:'私儀', x:15, y:86, mm:4 });
-  /* 본문: 실측 개행(禁則) 누적으로 문장 간격 정확 유지 (送付状 빌더와 동일 기법) */
+  /* 本文: 実測改行（禁則）累積で文の間隔を正確に維持（送付状ビルダーと同じ技法） */
   const K = 1240 / 210;
   const mc = document.createElement('canvas').getContext('2d');
   mc.font = (4.2 * K) + 'px ' + (s.settings.template === 'modern'
@@ -2970,7 +2970,7 @@ async function downloadTaishokuPNG(){
     toast('画像の生成に失敗しました。「印刷 / PDF保存」をご利用ください', 'error');
   }
 }
-/* 送付状 PNG — 時候의 挨拶·동봉 목록 포함 정통 레이아웃 */
+/* 送付状 PNG — 時候の挨拶・同封リストを含む正統レイアウト */
 function buildSofuPngLines(){
   const f = store.get().sofu; const p = store.get().profile;
   const L = [];
@@ -2984,7 +2984,7 @@ function buildSofuPngLines(){
   const contact = [p.phone, p.email].filter(Boolean).join(' / ');
   if (contact)   { L.push({ t:contact, x:172, y:sy, mm:3.2, align:'right' }); }
   L.push({ t:'応募書類送付の件', x:105, y:68, mm:4.6, align:'center', bold:true, underline:true });
-  /* 본문 행 높이는 실측 개행(禁則 적용)으로 정확히 누적 — 겹침/과잉 공백 방지 */
+  /* 本文の行高は実測改行（禁則適用）で正確に累積 — 重なり/過剰空白を防止 */
   const K = 1240 / 210;
   const mc = document.createElement('canvas').getContext('2d');
   mc.font = (4 * K) + 'px ' + (store.get().settings.template === 'modern'
@@ -3018,15 +3018,15 @@ async function downloadSofuPNG(){
   }
 }
 
-/* 전체 재렌더 (Import/리셋 시 폼 값까지) — 사용: store.replace 남부 */
+/* 全体再描画（Import/リセット時はフォーム値まで） — 注: store.replace の乱用禁止 */
 function renderAll(){ renderDynamic(); }
 function init(){
   try{
     store.load();
-    /* v2.18: 섹션별 독립 초기화 — 한 기능(구형 브라우저에서 사진 스튜디오 등) 실패가
-       탭 전환 등 다른 기능까지 연쇄 사망시키지 않도록 개별 try-catch */
+    /* v2.18: セクション別独立初期化 — 1つの機能（旧ブラウザでの写真スタジオ等）の失敗が
+       タブ切替等他の機能まで連鎖的に死なせないよう個別 try-catch */
     const safe = (name, fn)=>{ try{ fn(); }catch(e){ console.error('[init:' + name + ']', e); } };
-    /* 정적 폼 1회 바인딩 */
+    /* 静的フォーム1回バインド */
     safe('profile', bindProfileForm);
     safe('tabs', bindTabs);
     safe('preview-fit', bindPreviewFit);
@@ -3039,16 +3039,16 @@ function init(){
     safe('naitei', bindNaitei);
     safe('phone-docs', bindPhoneDocs);
     safe('import', bindImport); safe('data-buttons', bindDataButtons);
-    /* 추가 버튼 */
+    /* 追加ボタン */
     $('btnAddEdu').addEventListener('click', ()=>{
       store.update(st=>{ st.education.push({ id:uuid(), year:null, month:null, type:'entry', school:'' }); },{render:false});
       renderDynamic();
     });
-    /* 生年月日 → 小・中・高の年次 자동 입력 (履歴書Maker 등 인기 서비스의 대표 편의기능)
-       일본 학제: 4月1日 시점 満6歳 입학 → 早生まれ(1/1〜4/1생)는 입학年度 +6, 그 외 +7 */
+    /* 生年月日 → 小・中・高の年次自動入力（履歴書Maker 等の人気サービスの代表的便利機能）
+       日本の学制: 4月1日時点 満6歳で入学 → 早生まれ（1/1〜4/1生）は入学年度 +6、その他 +7 */
     $('btnAutoEdu').addEventListener('click', ()=>{
       const bd = store.get().profile.birthDate;
-      if (!bd){ toast('先に「基本情報」で生年月日を入力してください', 'warn'); const by = $('p_birthY'); if (by) by.focus(); return; }  // v2.44: 生年月日은 3연 셀렉트 → 연도 셀렉트로 포커스
+      if (!bd){ toast('先に「基本情報」で生年月日を入力してください', 'warn'); const by = $('p_birthY'); if (by) by.focus(); return; }  // v2.44: 生年月日は3連セレクト → 年セレクトへフォーカス
       const [by,bm,bday] = bd.split('-').map(Number);
       const hayami = (bm < 4) || (bm === 4 && bday === 1);
       const base = by + (hayami ? 6 : 7);                    // 小学校入学年度(4月)
@@ -3070,7 +3070,7 @@ function init(){
       store.update(st=>{ st.workHistory.push({ id:uuid(), startY:null, startM:null, endY:null, endM:null, company:'', role:'' }); },{render:false});
       renderDynamic();
     });
-    $('btnAddWork2').addEventListener('click', ()=>{   /* 職務経歴書 탭의 追加 버튼 (v2.28) */
+    $('btnAddWork2').addEventListener('click', ()=>{   /* 職務経歴書タブの追加ボタン (v2.28) */
       store.update(st=>{ st.workHistory.push({ id:uuid(), startY:null, startM:null, endY:null, endM:null, company:'', role:'' }); },{render:false});
       renderDynamic();
       toast('職歴を追加しました。このまま入力できます');
@@ -3079,25 +3079,25 @@ function init(){
       store.update(st=>{ st.licenses.push({ id:uuid(), year:null, month:null, name:'' }); },{render:false});
       renderDynamic();
     });
-    /* 인쇄 버튼 */
+    /* 印刷ボタン */
     $('btnPrint1').addEventListener('click', ()=> printDoc('rireki'));
     $('btnPrint2').addEventListener('click', ()=> printDoc('shokumu'));
-    /* PNG 이미지 저장 (모바일 대응 핵심: 인쇄 없이 사진첩/메일/LINE 제출 가능) */
+    /* PNG 画像保存（モバイル対応の核心: 印刷なしで写真帳/メール/LINE 提出可能） */
     $('btnPng1').addEventListener('click', ()=> downloadResumePNG());
-    /* 가이드 링크: 로컬(파일) 실행 시 페이지 없음 안내 */
+    /* ガイドリンク: ローカル（ファイル）実行時はページなし案内 */
     $('btnGuide').addEventListener('click', (e)=>{
       if (location.protocol === 'file:'){ e.preventDefault(); toast('ガイドはWeb公開版でご覧いただけます', 'warn'); }
     });
-    /* v2.48: オフライン版(zip download) 폐지 — lnkOffline 바인딩 제거 (トラフィック만 소모·수익 기여 없음 판단) */
-    /* 초기 렌더 */
+    /* v2.48: オフライン版（zip download）廃止 — lnkOffline バインド除去（トラフィックのみ消耗・収益寄与なしと判断） */
+    /* 初期描画 */
     safe('fill-profile', fillProfileForm);
     safe('taishoku', ()=>{ bindTaishoku(); fillTaishokuForm(); });
     safe('sofu', ()=>{ bindSofu(); fillSofuForm(); });
-    safe('photo-promo', bindPhotoPromo);   /* v2.40: 히어로 写真 노트 링크 (→写真탭) */
+    safe('photo-promo', bindPhotoPromo);   /* v2.40: ヒーロー写真ノートリンク（→写真タブ） */
     renderDynamic();
     applyTheme();
     setStep(1);
-    /* URL 해시로 탭 직접 열기 (가이드 기사 CTA 딥링크용: #tab=photo 등) */
+    /* URL ハッシュでタブを直接開く（ガイド記事 CTA ディープリンク用: #tab=photo 等） */
     const tabMatch = location.hash.match(/tab=(rireki|shokumu|photo|library|shorui|sofu|mensetsu|naitei)/);
     if (tabMatch){
       const btn = document.querySelector('.tab-btn[data-tab="' + tabMatch[1] + '"]');
@@ -3108,7 +3108,7 @@ function init(){
     toast('初期化に失敗しました。ブラウザを更新してください。', 'error');
   }
 }
-/* 예기치 못한 오류도 조용히 죽지 않고 토스트로 알림 */
+/* 予期しないエラーも静かに死なずトーストで通知 */
 window.addEventListener('error', (e)=>{
   console.error(e.error || e.message);
   try{ toast('予期せぬエラーが発生しました', 'error'); }catch(_){}

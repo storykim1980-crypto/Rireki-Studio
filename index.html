@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <!-- ============================================================
   履歴スタジオ (Rireki Studio) — index.html
-  - 역할: 구조만 담당 (스타일=style.css, 동작=app.js 완전 분리)
-  - 서버 불필요 / 오프라인 100% / 외부 라이브러리 0
-  - XSS 방지: 본 파일 이외의 동적 DOM은 app.js에서 createElement로 생성
+  - 役割: 構造のみ担当（スタイル=style.css、動作=app.js に完全分離）
+  - サーバー不要 / オフライン100% / 外部ライブラリ0
+  - XSS防止: 本ファイル以外の動的DOMは app.js で createElement 生成
 ============================================================ -->
 <html lang="ja" data-theme="auto">
 <head>
@@ -13,13 +13,13 @@
   <meta name="description" content="履歴書・職務経歴書をフォーム入力だけで作成。送付状・退職届の自動作成も。スマホの自撮りを履歴書用証明写真(3×4cm)に変換できる無料ツール。和暦自動変換・PDF保存対応。登録不要・データは端末内保存。">
   <meta name="theme-color" content="#1d4ed8" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#070b18" media="(prefers-color-scheme: dark)">
-  <!-- OGP (실제 이미지는 사이트 셸 단계에서 assets/ogp.png로 추가) -->
+  <!-- OGP（実画像はサイトシェル段階で assets/ogp.png に追加） -->
   <meta property="og:title" content="履歴スタジオ｜履歴書作成と証明写真変換【無料】">
   <meta property="og:description" content="フォーム入力だけでJIS規格の履歴書。自撮り→証明写真変換。退職届の作成までワンストップ。和暦自動変換。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.rireki-studio.com/">
-  <!-- v2.39: canonical 자기참조 추가 — `/`과 `/index.html`이 동일 내용 200으로 열리는 환경(GitHub Pages)에서
-       検索評価 분산 방지 (하위 23페이지와 정책 통일) -->
+  <!-- v2.39: canonical 自己参照を追加 — `/` と `/index.html` が同一内容 200 で開く環境（GitHub Pages）で
+           検索評価の分散を防止（下位23ページとポリシー統一） -->
   <link rel="canonical" href="https://www.rireki-studio.com/">
   <meta property="og:image" content="https://www.rireki-studio.com/assets/ogp.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -27,13 +27,8 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Crect x='16' y='10' width='32' height='44' rx='3' fill='white'/%3E%3Crect x='21' y='16' width='14' height='10' fill='%2393c5fd'/%3E%3Crect x='21' y='30' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='37' width='22' height='3' fill='%23cbd5e1'/%3E%3Crect x='21' y='44' width='16' height='3' fill='%23cbd5e1'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css?v=2.49">
-  <!-- v2.46: Google AdSense サイト接続コード (심사 연결용 — 게시자 ID ca-pub-3122957517118825).
-       ※ 이 ID는 방문자 브라우저가 광고를 요청하는 공개 식별자 — 모든 AdSense 사이트의 소스에 노출되는 것이 정상이며 비밀정보가 아님.
-         승인 후 Auto 광고는 이 스크립트 하나로 전 페이지에 작동. 法関連 페이지에는 미삽입(広告 부적절 — 콘텐츠 페이지만 게재) -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3122957517118825"
-     crossorigin="anonymous"></script>
-  <!-- v2.45: WebSite+Organization 구조화데이터 — Google 검색결과의 「サイト名」표시(リッチリザルト) 대응.
-       사이트명 인식 + 지식그래프 신호 강화 (AdSense 심사의 사이트 신원 명확화 효과도 기대) -->
+  <!-- v2.45: WebSite+Organization 構造化データ — Google 検索結果の「サイト名」表示（リッチリザルト）対応。
+           サイト名認識 + ナレッジグラフ信号の強化（AdSense 審査のサイト身元明確化効果も期待） -->
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite",
    "name":"履歴スタジオ","alternateName":["Rireki Studio","履歴書スタジオ"],
@@ -53,17 +48,17 @@
    "offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},
    "inLanguage":"ja"}
   </script>
-  <!-- v2.49: 홈 FAQ 섹션 폐지 (사용자 지시 — 푸터의 faq.html 상설 페이지로 일원화).
-       FAQPage LD도 함께 제거: 구조화데이터는 가시 콘텐츠와 반드시 일치해야 함 (Google 가이드라인).
-       FAQPage LD는 전체 Q&A가 있는 faq.html에만 유지 -->
+  <!-- v2.49: ホームFAQセクション廃止（ユーザー指示 — フッターの faq.html 常設ページに一元化）。
+           FAQPage LD も併せて除去: 構造化データは可視コンテンツと必ず一致させること（Google ガイドライン）。
+           FAQPage LD は全Q&Aのある faq.html のみ維持 -->
   <noscript><p style="padding:1rem">このツールはJavaScriptで動作します。ブラウザのJavaScriptを有効にしてください。履歴書の書き方・証明写真サイズのガイドは/guide/でご覧いただけます。</p></noscript>
 </head>
 <body>
 
-<!-- ===== SVG 아이콘 스프라이트 =====
-     OS 이모지 폰트에 의존하지 않는 인라인 SVG 아이콘 세트.
-     stroke=currentColor 상속 → 버튼/탭 어디서나 전경색 자동 일치.
-     JS에서는 ic('i-xxx') 헬퍼로 <use> 참조만 생성 (innerHTML 미사용). -->
+<!-- ===== SVGアイコンスプライト =====
+          OS の絵文字フォントに依存しないインラインSVGアイコンセット。
+          stroke=currentColor 継承 → ボタン/タブのどこでも前景色を自動一致。
+          JSでは ic('i-xxx') ヘルパーで <use> 参照のみ生成（innerHTML不使用）。 -->
 <svg class="svg-sprite" aria-hidden="true" focusable="false"
      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <defs>
@@ -105,11 +100,11 @@
 
 <div id="appScreen">
 
-  <!-- ===== 헤더 (고정) ===== -->
+  <!-- ===== ヘッダー（固定） ===== -->
   <header class="site-header">
     <div class="header-inner">
       <a class="brand" href="#" id="brandTop">
-        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><!-- v2.24 리디자인: 레이어드 JIS 서류 + 사진 칸 + 금 인감 체크 --><rect x="15" y="9" width="30" height="38" rx="4" fill="#fff" opacity=".28"/><rect x="20" y="13" width="30" height="42" rx="4" fill="#fff"/><rect x="25" y="19" width="9" height="12" rx="1.6" fill="none" stroke="#2f52d4" stroke-width="2.2"/><line x1="38" y1="22.5" x2="45.5" y2="22.5" stroke="#93aef3" stroke-width="2.2" stroke-linecap="round"/><line x1="38" y1="27" x2="45.5" y2="27" stroke="#cdd8f5" stroke-width="2.2" stroke-linecap="round"/><line x1="25" y1="36.5" x2="45.5" y2="36.5" stroke="#2f52d4" stroke-width="2.2" stroke-linecap="round"/><line x1="25" y1="41" x2="45.5" y2="41" stroke="#93aef3" stroke-width="2.2" stroke-linecap="round"/><line x1="25" y1="45.5" x2="37" y2="45.5" stroke="#cdd8f5" stroke-width="2.2" stroke-linecap="round"/><circle cx="46" cy="48" r="8" fill="#f2b90d" stroke="#fff" stroke-width="2"/><path d="M42.4 48.2l2.6 2.6 4.6-5" stroke="#3a2a02" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><!-- v2.24 リデザイン: レイヤードJIS書類 + 写真欄 + 金の印鑑チェック --><rect x="15" y="9" width="30" height="38" rx="4" fill="#fff" opacity=".28"/><rect x="20" y="13" width="30" height="42" rx="4" fill="#fff"/><rect x="25" y="19" width="9" height="12" rx="1.6" fill="none" stroke="#2f52d4" stroke-width="2.2"/><line x1="38" y1="22.5" x2="45.5" y2="22.5" stroke="#93aef3" stroke-width="2.2" stroke-linecap="round"/><line x1="38" y1="27" x2="45.5" y2="27" stroke="#cdd8f5" stroke-width="2.2" stroke-linecap="round"/><line x1="25" y1="36.5" x2="45.5" y2="36.5" stroke="#2f52d4" stroke-width="2.2" stroke-linecap="round"/><line x1="25" y1="41" x2="45.5" y2="41" stroke="#93aef3" stroke-width="2.2" stroke-linecap="round"/><line x1="25" y1="45.5" x2="37" y2="45.5" stroke="#cdd8f5" stroke-width="2.2" stroke-linecap="round"/><circle cx="46" cy="48" r="8" fill="#f2b90d" stroke="#fff" stroke-width="2"/><path d="M42.4 48.2l2.6 2.6 4.6-5" stroke="#3a2a02" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span class="brand-text">履歴スタジオ<small>Rireki Studio</small></span>
       </a>
       <nav class="header-actions" aria-label="ヘッダー操作">
@@ -121,7 +116,7 @@
     </div>
   </header>
 
-  <!-- ===== 히어로 (가치 제안 + 3스텝 + 이력서 모형) ===== -->
+  <!-- ===== ヒーロー（価値提案 + 3ステップ + 履歴書模型） ===== -->
   <section class="hero" id="appHero">
     <div class="hero-inner">
       <div class="hero-copy">
@@ -132,7 +127,7 @@
           <a class="btn hero-btn" href="#tool"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>履歴書を作り始める</a>
           <a class="btn hero-btn-ghost" href="guide/"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg>書き方ガイドを読む</a>
         </div>
-        <!-- 완성물 미리보기 스트림 (모바일 전용 — v2.24: 비주얼 숨김 보완, result를 즉시 시각화) -->
+        <!-- 完成物プレビューストリップ（モバイル専用 — v2.24: ビジュアル非表示の補完、resultを即座に可視化） -->
         <div class="hero-proof" aria-hidden="true">
           <span class="hp-doc"><span class="hp-title">履 歴 書</span><span class="hp-line w60"></span><span class="hp-line w92"></span><span class="hp-line w75"></span><span class="hp-line w85"></span></span>
           <span class="hp-plus">＋</span>
@@ -144,7 +139,7 @@
           <span><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>会員登録ナシ</span>
           <span><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>外部送信ゼロ</span>
         </p>
-        <!-- v2.40: 証明写真 프로모 밴드 삭제 — 가치 제안은 히어로 내 컴팩트 1줄로 흡수 (사용자 지시: 레이아웃 확대 금지) -->
+        <!-- v2.40: 証明写真プロモバンド削除 — 価値提案はヒーロー内コンパクト1行に吸収（ユーザー指示: レイアウト拡大禁止） -->
         <p class="hero-photo-note"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>自撮り1枚が、背景自動除去で縦4×横3cmの「証明写真」に。<button type="button" class="hp-link" id="hpPhotoGo">つくってみる →</button></p>
         <ol class="hero-steps">
           <li><span class="hs-num">1</span><span class="hs-txt"><strong>写真をつくる</strong><small>自撮りでOK</small></span></li>
@@ -188,9 +183,9 @@
     </div>
   </section>
 
-  <!-- v2.40: 証明写真 프로모 밴드 전량 삭제 (사용자 지시) — 가치 문장은 히어로의 .hero-photo-note 1줄로 흡수 -->
+  <!-- v2.40: 証明写真プロモバンド全量削除（ユーザー指示） — 価値文はヒーローの .hero-photo-note 1行に吸収 -->
 
-  <!-- ===== 탭 낫캐게이션 (모바일에서는 하단 고정) ===== -->
+  <!-- ===== タブナビゲーション（モバイルでは下部固定） ===== -->
   <nav class="tabbar" id="tool" role="tablist" aria-label="機能タブ">
     <button class="tab-btn active" role="tab" aria-selected="true"  data-tab="rireki"   type="button"><span class="tab-ico"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg></span><span class="tab-lbl">履歴書</span></button>
     <button class="tab-btn"        role="tab" aria-selected="false" data-tab="shokumu"  type="button"><span class="tab-ico"><svg class="ic" aria-hidden="true"><use href="#i-case"/></svg></span><span class="tab-lbl">職務経歴書</span></button>
@@ -203,7 +198,7 @@
   </nav>
 
   <main class="main">
-    <!-- ============ 신뢰 스트립 (v2.11: 가치 부각 — 경쟁사 대비 차별점을 즉시 전달) ============ -->
+    <!-- ============ 信頼ストリップ（v2.11: 価値の強調 — 競合との差別点を即座に伝達） ============ -->
     <section class="why-strip" aria-label="このサイトの特徴">
       <div class="why-item">
         <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
@@ -227,14 +222,14 @@
       </details>
     </section>
 
-    <!-- ============ 탭1: 履歴書 작성 ============ -->
+    <!-- ============ タブ1: 履歴書作成 ============ -->
     <section class="tab-panel active" data-panel="rireki" role="tabpanel">
       <div class="workcols">
 
-        <!-- 왼쪽: 입력 폼 -->
+        <!-- 左: 入力フォーム -->
         <div class="form-col">
 
-          <!-- 진행률 대시보드 -->
+          <!-- 進捗率ダッシュボード -->
           <section class="card dashboard" aria-label="進捗ダッシュボード">
             <div class="dash-grid">
               <div class="donut-wrap">
@@ -251,7 +246,7 @@
             </div>
           </section>
 
-          <!-- 기본 정보 -->
+          <!-- 基本情報 -->
           <section class="card" aria-labelledby="h-basic">
             <h2 class="card-title" id="h-basic">基本情報</h2>
             <div class="grid2">
@@ -350,7 +345,7 @@
           <section class="card" aria-labelledby="h-mot">
             <div class="card-head-flex">
               <h2 class="card-title" id="h-mot">志望の動機</h2>
-              <!-- v2.32: 불필요한 란을 인쇄/PNG에서 통째로 제외하는 토글 (Web応募·企業指定書式 대응) -->
+              <!-- v2.32: 不要な欄を印刷/PNGから丸ごと除外するトグル（Web応募・企業指定書式対応） -->
               <label class="sec-toggle" title="OFFにすると、この欄は履歴書の印刷・画像から除外されます（入力内容は保持されます）">
                 <input type="checkbox" id="tgMot" checked>印刷に含める
               </label>
@@ -375,7 +370,7 @@
           </div>
         </div>
 
-        <!-- 오른쪽: A4 실시간 미리보기 -->
+        <!-- 右: A4リアルタイムプレビュー -->
         <div class="pv-col">
           <div class="pv-toolbar">
             <span class="pv-label">A4 プレビュー</span>
@@ -390,7 +385,7 @@
       </div>
     </section>
 
-    <!-- ============ 탭2: 職務経歴書 ============ -->
+    <!-- ============ タブ2: 職務経歴書 ============ -->
     <section class="tab-panel" data-panel="shokumu" role="tabpanel">
       <div class="workcols">
         <div class="form-col">
@@ -419,7 +414,7 @@
         </div>
         <div class="pv-col">
           <div class="pv-toolbar"><span class="pv-label">A4 プレビュー</span>
-            <!-- v2.34: 職務経歴書にも拡大表示 추가 (사용자 요청) -->
+            <!-- v2.34: 職務経歴書にも拡大表示を追加（ユーザー要望） -->
             <button class="btn ghost small" id="pvZoomBtn2" type="button"><svg class="ic" aria-hidden="true"><use href="#i-zoom"/></svg>拡大表示</button>
           </div>
           <div class="pv-fit" id="pvFit2">
@@ -429,11 +424,11 @@
       </div>
     </section>
 
-    <!-- ============ 탭3: 写真スタジオ ============ -->
+    <!-- ============ タブ3: 写真スタジオ ============ -->
     <section class="tab-panel" data-panel="photo" role="tabpanel">
       <div class="photo-layout">
 
-        <!-- 스텝 안내 -->
+        <!-- ステップ案内 -->
         <ol class="steps">
           <li class="step done" id="st1">写真を選ぶ</li>
           <li class="step" id="st2">範囲を決める</li>
@@ -450,7 +445,7 @@
           <a class="btn ghost small ai-bridge-link" href="guide/ai-shashin.html">AI写真の作り方ガイド</a>
         </div>
 
-        <!-- 1) 드롭존 -->
+        <!-- 1) ドロップゾーン -->
         <div class="card dropzone" id="dz" tabindex="0" role="button" aria-label="写真をアップロード">
           <div class="dz-inner">
             <div class="dz-ico"><svg class="dz-svg" aria-hidden="true"><use href="#i-img"/></svg></div>
@@ -461,7 +456,7 @@
           </div>
         </div>
 
-        <!-- 2) 크롭 스테이지 -->
+        <!-- 2) クロップステージ -->
         <div class="card crop-stage hidden" id="cropStage">
           <h2 class="card-title">範囲を決める（3:4）</h2>
           <p class="hint">ドラッグで位置を移動、ホイールまたはスライダーで拡大・縮小できます。</p>
@@ -476,7 +471,7 @@
           </div>
         </div>
 
-        <!-- 3) 편집 패널 -->
+        <!-- 3) 編集パネル -->
         <div class="card edit-panel hidden" id="editPanel">
           <h2 class="card-title">背景・補正</h2>
 
@@ -524,9 +519,9 @@
       </div>
     </section>
 
-    <!-- ============ 탭4: 예문 라이브러리 ============ -->
+    <!-- ============ タブ4: 例文ライブラリ ============ -->
     <section class="tab-panel" data-panel="library" role="tabpanel">
-      <!-- ============ 志望動機 셀프 진단 (v2.11 차별화 자산: 계정 불필요·즉시 피드백) ============ -->
+      <!-- ============ 志望動機セルフ診断（v2.11 差別化資産: アカウント不要・即時フィードバック） ============ -->
       <div class="card diag-card" id="diagCard">
         <h2 class="card-title">志望動機セルフ診断</h2>
         <p class="hint">書いた志望動機を7つの公開ルール（文字数・結論・根拠・具体性など）で即チェック。スコアと改善ポイントが10秒でわかります。</p>
@@ -556,7 +551,7 @@
       </div>
     </section>
 
-    <!-- ============ 탭5: 退職届/退職願 (차별화 전략: 입사→퇴사 라이프사이클 서류) ============ -->
+    <!-- ============ タブ5: 退職届/退職願（差別化戦略: 入社→退社ライフサイクル書類） ============ -->
     <section class="tab-panel" data-panel="shorui" role="tabpanel">
       <div class="workcols">
         <div class="form-col">
@@ -609,7 +604,7 @@
       </div>
     </section>
 
-    <!-- ============ 탭6: 送付状(添え状) — 기사 예문을 도구로 격상 (우편 제출 라이프사이클 완결) ============ -->
+    <!-- ============ タブ6: 送付状（添え状） — 記事例文をツールへ格上げ（郵送提出ライフサイクル完結） ============ -->
     <section class="tab-panel" data-panel="sofu" role="tabpanel">
       <div class="workcols">
         <div class="form-col">
@@ -646,7 +641,7 @@
       </div>
     </section>
 
-    <!-- ============ 탭7: 模擬面接 (v2.12 차별화 자산: 想定質問라이브러리 + あなた専用 深掘り質問) ============ -->
+    <!-- ============ タブ7: 模擬面接（v2.12 差別化資産: 想定質問ライブラリ + あなた専用 深掘り質問） ============ -->
     <section class="tab-panel" data-panel="mensetsu" role="tabpanel">
       <div class="card diag-card">
         <h2 class="card-title">あなた専用・深掘り質問メーカー</h2>
@@ -694,7 +689,7 @@
       </div>
     </section>
 
-    <!-- ============ 탭8: 内定対応パック (v2.14 — 경쟁사 구조적 공백 공략: 손액×비교×합격후 커뮤) ============ -->
+    <!-- ============ タブ8: 内定対応パック（v2.14 — 競合の構造的空白を攻略: 手取り×比較×合格後コミュ） ============ -->
     <section class="tab-panel" data-panel="naitei" role="tabpanel">
       <div class="card pay-card">
         <h2 class="card-title">手取りシミュレーター</h2>
@@ -791,12 +786,12 @@
 
   </main>
 
-  <!-- v2.49: 홈 FAQ 요약 섹션 폐지 (사용자 지시) — FAQ는 푸터 링크의 faq.html 상설 페이지로 일원화.
-       삭제 사유: (a) 全10件는 어차피 faq.html에서만 유지 → 홈 5件 요약은 중복 콘텐츠
-       (b) FAQPage 구조화데이터 중복 소지 제거 (리치 리ザルト는 faq.html이 전담)
-       (c) 홈 하단 여백 축소 → 툴 본연의 작업 화면이 체류 중심 -->
+  <!-- v2.49: ホームFAQ要約セクション廃止（ユーザー指示） — FAQはフッターリンクの faq.html 常設ページに一元化。
+           削除理由: (a) 全10件はいずれ faq.html でのみ維持 → ホーム5件要約は重複コンテンツ
+           (b) FAQPage 構造化データの重複懸念を除去（リッチリザルトは faq.html が専任）
+           (c) ホーム下部余白の縮小 → ツール本来の作業画面が滞在の中心 -->
 
-  <!-- 푸터 -->
+  <!-- フッター -->
   <footer class="site-footer">
     <nav class="foot-links">
       <a href="faq.html">よくある質問</a>
@@ -806,13 +801,13 @@
       <a href="about.html">運営者情報</a>
     </nav>
     <p class="foot-note">履歴スタジオ — データはブラウザ内にのみ保存されます（サーバー送信なし）</p>
-    <!-- AdSense 슬롯: 사이트 셸(2-B) 단계에서 활성화. data-ad-on="1" 로 바꾸고 광고 코드 삽입 -->
+    <!-- AdSenseスロット: サイトシェル(2-B)段階で有効化。data-ad-on="1" に変えて広告コード挿入 -->
     <div class="ad-slot" data-ad-on="0" aria-hidden="true"></div>
   </footer>
 
 </div><!-- /appScreen -->
 
-<!-- ===== 설정/데이터 관리 다이얼로그 ===== -->
+<!-- ===== 設定/データ管理ダイアログ ===== -->
 <dialog id="dlgSettings" aria-labelledby="dlgTitle">
   <form method="dialog" class="dlg-inner">
     <h2 id="dlgTitle">設定・データ管理</h2>
@@ -861,7 +856,7 @@
   </form>
 </dialog>
 
-<!-- 확대 미리보기 다이얼로그 -->
+<!-- 拡大プレビューダイアログ -->
 <dialog id="dlgZoom" aria-label="プレビュー拡大">
   <div class="dlg-inner">
     <div class="zoom-title" id="zoomTitle">拡大表示</div>
@@ -870,10 +865,10 @@
   </div>
 </dialog>
 
-<!-- 토스트 루트 -->
+<!-- トーストルート -->
 <div id="toastRoot" aria-live="polite" aria-atomic="false"></div>
 
-<!-- 인쇄 전용 루트 (화면에서는 숨김) -->
+<!-- 印刷専用ルート（画面では非表示） -->
 <div id="printRoot" aria-hidden="true"></div>
 
 <script src="app.js?v=2.48"></script>

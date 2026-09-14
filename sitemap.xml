@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 履歴スタジオ sitemap — 기사 추가 시 <url>을 늘려주세요. 도메인 확정 후 www.rireki-studio.com 부분 일괄 교체 -->
+<!-- 履歴スタジオ sitemap — 記事追加時に <url> を増やしてください。ドメイン確定後に www.rireki-studio.com 部分を一括置換 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.rireki-studio.com/</loc>
@@ -15,7 +15,7 @@
   </url>
   <url>
     <loc>https://www.rireki-studio.com/guide/</loc>
-    <lastmod>2026-08-30</lastmod>
+    <lastmod>2026-08-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

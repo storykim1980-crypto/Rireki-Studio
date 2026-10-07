@@ -1340,6 +1340,151 @@ async function renderResumePNG(){
 }
 
 /* ================================================================
+   11-6. 職務経歴書 PNG イメージエクスポート（プリンタのないモバイルユーザー向け） (v2.50)
+   - 履歴書 PNG と同様のエンジン: Canvas に直接ラスタライズ（DOM プレビューと同じ store データ使用）
+   - レイアウトは buildShokumuA4() と厳密に一致させる:
+     タイトル / 日付 / 氏名 → セクション見出し（グレー地・枠）+ 枠ボックス
+     （職務要約 / 職務経歴 / 免許・資格 / 自己PR）
+   - A4 @150dpi (1240×1754) 基準、A4超過時は Canvas を縦に延長（2パス: 計測→確定）
+================================================================ */
+async function downloadShokumuPNG(){
+  try{
+    const test = document.createElement('canvas');
+    if (!test.getContext || !test.getContext('2d')) throw new Error('canvas-unsupported');
+    const result = await renderShokumuPNG();
+    if (!result || !result.blob) throw new Error('blob-null');
+    downloadBlob(result.blob, 'shokumukeirekisho-' + todayStr() + '.png');
+    if (result.overflow) toast('内容がA4を超えているため、縦長の画像として保存しました（すべての欄が含まれています）', 'warn');
+    else toast('職務経歴書のPNG画像を保存しました（ダウンロードフォルダをご確認ください）');
+  }catch(e){
+    toast('画像の生成に失敗しました。「印刷 / PDF保存」をご利用ください', 'error');
+  }
+}
+function renderShokumuPNG(){
+  const s = store.get();
+  const K = 1240 / 210;                       // mm → px 換算係数 (A4 @150dpi)
+  const cv = document.createElement('canvas'); cv.width = 1240; cv.height = 1754;
+  const ctx = cv.getContext('2d');
+  const stack = s.settings.template === 'modern'
+    ? '"Hiragino Sans","Noto Sans JP","Noto Sans CJK JP","Yu Gothic",Meiryo,sans-serif'
+    : '"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP","MS Mincho",serif';
+  const BD = .2, BASE = 3.4;                  // 枠線幅(mm) / .a4 基準文字サイズ(mm) — CSS と同一値
+  const LH = 1.4;                             // line-height: normal の近似係数（タイトル等）
+  const BOX_PAD = 2.4;                        // .s-box / .s-job パディング
+  const BOX_LH = BASE * 1.9;                  // .s-box 行間 (line-height:1.9)
+  const HEAD_LH = BASE * LH;                  // .j-head / 見出し 行高
+  const ROLE_LH = BASE * 1.85;                // .s-job .j-role 行間 (line-height:1.85)
+  const CWMM = (198 - 12) - 2 * BOX_PAD - 2 * BD;  // ボックス本文の改行基準幅(mm)
+
+  /* 本体レイアウト: 指定 ctx に描き最終 y(mm) を返す.
+     v2.50: 履歴書 PNG と同じく ①計測パスで所要高さを算出 → Canvas 高さを確定 → ②本パス */
+  const drawAll = (ctx)=>{
+    const fset = (mm, bold)=> ctx.font = (bold ? '700 ' : '') + (mm * K) + 'px ' + stack;
+    ctx.lineCap = 'butt'; ctx.textBaseline = 'middle';
+    const line = (x1,y1,x2,y2,w)=>{ ctx.strokeStyle='#555555'; ctx.lineWidth=(w||BD)*K;
+      ctx.beginPath(); ctx.moveTo(x1*K,y1*K); ctx.lineTo(x2*K,y2*K); ctx.stroke(); };
+    const text = (t,x,y,mm,align,bold,ls)=>{ fset(mm,!!bold); ctx.fillStyle='#111111';
+      ctx.textAlign = align||'left';
+      try{ if (ls) ctx.letterSpacing = (ls*K)+'px'; }catch(e){}   // letterSpacing 非対応への防御
+      ctx.fillText(String(t==null?'':t), x*K, y*K);
+      try{ ctx.letterSpacing = '0px'; }catch(e){} };
+    const wrap = (str, maxWmm)=>{          // 幅超過時は改行 + 禁則処理（CSS pre-wrap と同じく改行文字も尊重）
+      fset(BASE,false); const maxW = maxWmm*K; const lines=[]; let cur='';
+      const NO_START = '。、）』」!?！？・ー—─…‥ァィゥェォッャュョぁぃぅぇぉっゃゅょ％‰°′″℃';
+      const NO_END   = '（「『【〔［｛〈《';
+      for (const ch of String(str||'')){
+        if (ch === '\n'){ lines.push(cur); cur=''; continue; }
+        if (cur && ctx.measureText(cur + ch).width > maxW){
+          if (NO_START.indexOf(ch) >= 0){ cur += ch; }
+          else if (NO_END.indexOf(cur.charAt(cur.length-1)) >= 0){ lines.push(cur.slice(0,-1)); cur = cur.charAt(cur.length-1) + ch; }
+          else { lines.push(cur); cur = ch; }
+        } else cur += ch;
+      }
+      if (cur) lines.push(cur);
+      return lines;
+    };
+
+    const L = 12, R = 198;                  // 左右の基準線(mm) — .a4 padding 12mm
+    let y = 9;                              // 上パディング 9mm
+
+    /* --- タイトル / 日付 / 氏名（DOM と同じ配置: 中央 / 右 / 右） --- */
+    text('職務経歴書', 105, y + 3 * LH, 6, 'center', true, 5);   // .s-title: 6mm bold・字間5mm
+    y += 6 * LH + 4;                                     // 行高 + margin-bottom 4mm
+    text(fmtDateHeader(new Date()), R, y + BASE * LH / 2, BASE, 'right');   // .s-date: 基準3.4mm
+    y += BASE * LH + 1;                                  // margin-bottom 1mm
+    text(s.profile.nameKanji || '氏名', R, y + 2 * LH, 4, 'right');   // .s-name: 4mm
+    y += 4 * LH + 5;                                     // margin-bottom 5mm
+
+    /* --- セクション見出し（.s-h: グレー地 + 4辺枠 + bold + 字間2mm） --- */
+    const sectHead = (label)=>{
+      y += 4;                                       // margin-top 4mm
+      const hh = 2 * BD + 2 * 1.2 + HEAD_LH;        // 枠 + パディング1.2 + 行高
+      ctx.fillStyle = '#f0f0f0'; ctx.fillRect(L*K, y*K, (R - L)*K, hh*K);
+      line(L,y,R,y); line(L,y+hh,R,y+hh); line(L,y,L,y+hh); line(R,y,R,y+hh);
+      text(label, L + 2.4, y + BD + 1.2 + HEAD_LH/2, BASE, 'left', true, 2);
+      y += hh;
+    };
+    /* --- 本文ボックス（.s-box: 上辺なし枠 + padding2.4 + pre-wrap + line-height1.9 + min-height22mm） --- */
+    const sectBox = (linesArr)=>{
+      const h = Math.max(22, 2 * BD + 2 * BOX_PAD + linesArr.length * BOX_LH);
+      line(L,y,L,y+h); line(R,y,R,y+h); line(L,y+h,R,y+h);
+      linesArr.forEach((ln,i)=> text(ln, L + BOX_PAD, y + BD + BOX_PAD + BOX_LH/2 + i * BOX_LH, BASE));
+      y += h;
+    };
+    /* --- 職歴ボックス（.s-job: 上辺なし枠 + padding2.4 / .j-head bold flex / .j-role line-height1.85） ---
+       会社名が期間と1行に収まらない場合は DOM(.j-head flex) と同じく会社名を折り返す */
+    const jobBox = (company, period, roleLines)=>{
+      const cText = String(company||''), pText = String(period||'');
+      fset(BASE, true);
+      const cW = ctx.measureText(cText).width / K, pW = ctx.measureText(pText).width / K;
+      const cLines = (cText && pText && cW + pW + 8 > CWMM) ? wrap(cText, CWMM - pW - 8) : [cText];
+      const headH = Math.max(1, cLines.length) * HEAD_LH;
+      const h = BD + 2 * BOX_PAD + headH + 1.2 + roleLines.length * ROLE_LH;
+      line(L,y,L,y+h); line(R,y,R,y+h); line(L,y+h,R,y+h);
+      cLines.forEach((ln,i)=> text(ln, L + BOX_PAD, y + BD + BOX_PAD + HEAD_LH/2 + i * HEAD_LH, BASE, 'left', true));  // 会社名（左）
+      text(pText, R - BOX_PAD, y + BD + BOX_PAD + HEAD_LH/2, BASE, 'right', true);                                       // 在籍期間（右）
+      roleLines.forEach((ln,i)=> text(ln, L + BOX_PAD, y + BD + BOX_PAD + headH + 1.2 + ROLE_LH/2 + i * ROLE_LH, BASE));
+      y += h;
+    };
+
+    /* --- 職務要約 --- */
+    sectHead('職務要約');
+    sectBox(wrap(s.workSummary, CWMM));
+
+    /* --- 職務経歴（buildShokumuA4 と同じフィルタ/期間表記） --- */
+    sectHead('職務経歴');
+    const jobs = s.workHistory.filter(j=> j.startY || (j.company||'').trim());
+    if (!jobs.length) sectBox([]);
+    for (const j of jobs){
+      const period = fmtYM(j.startY, j.startM) + (j.startM ? j.startM+'月' : '') + ' 〜 ' +
+        (j.endY ? fmtYM(j.endY, j.endM) + (j.endM ? j.endM+'月' : '') : '現在');
+      jobBox(j.company||'', period, wrap(j.role, CWMM));
+    }
+
+    /* --- 免許・資格（DOM と同じ \n 結合） --- */
+    const licText = s.licenses.filter(l=> (l.name||'').trim())
+      .map(l => (l.year ? fmtYM(l.year,l.month) + (l.month ? l.month+'月 ' : '') : '') + l.name).join('\n');
+    sectHead('免許・資格');
+    sectBox(wrap(licText, CWMM));
+
+    /* --- 自己PR --- */
+    sectHead('自己PR');
+    sectBox(wrap(s.selfPr, CWMM));
+
+    return y;
+  };
+
+  /* ① 計測パス（Canvas 作成のみで高さ計算）② 高さ確定後に本パス */
+  const probe = document.createElement('canvas');
+  const yEnd = drawAll(probe.getContext('2d'));
+  const overflow = yEnd > 297;
+  if (overflow){ cv.height = Math.ceil((yEnd + 4) * K); }   // A4超過時は縦に延長 — 内容を100%保存
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  drawAll(ctx);
+  return new Promise(res=> cv.toBlob(b=> res({ blob:b, overflow }), 'image/png'));
+}
+
+/* ================================================================
    12. 写真スタジオ
    パイプライン: アップロード → 正規化(≤1600px) → クロップ(3:4) → マスク(クロマキー)
    → ブラシ補正 → プリセット/スライダー補正 → 結果の保存/挿入/シート
@@ -3084,6 +3229,7 @@ function init(){
     $('btnPrint2').addEventListener('click', ()=> printDoc('shokumu'));
     /* PNG 画像保存（モバイル対応の核心: 印刷なしで写真帳/メール/LINE 提出可能） */
     $('btnPng1').addEventListener('click', ()=> downloadResumePNG());
+    $('btnPng2').addEventListener('click', ()=> downloadShokumuPNG());   // v2.50: 職務経歴書にも PNG 保存を追加
     /* ガイドリンク: ローカル（ファイル）実行時はページなし案内 */
     $('btnGuide').addEventListener('click', (e)=>{
       if (location.protocol === 'file:'){ e.preventDefault(); toast('ガイドはWeb公開版でご覧いただけます', 'warn'); }

@@ -64,6 +64,10 @@ setTimeout(() => {
     {id:'b',startY:2022,startM:10,endY:null,endM:null,company:'B社',role:''} ]; },{render:false})`);
   t('空白期間の自動検出（約18か月）', ev("computeWarnings()").some(w => w.includes('空白期間')));
 
+  /* ⑤-B 職務経歴書 PNG 保存 (v2.50) */
+  t('職務経歴書 PNG保存ボタン存在', d.getElementById('btnPng2') !== null);
+  t('職務経歴書 PNGエンジン関数定義', ev('typeof renderShokumuPNG') === 'function' && ev('typeof downloadShokumuPNG') === 'function');
+
   /* ⑥ バックアップ Export/Import ラウンドトリップ + 悪性JSON遮断 */
   const restored = ev("sanitizeState(JSON.parse(JSON.stringify(store.get())))");
   t('Export→整備ラウンドトリップ一致（学校名）', restored.education[0].school === '○○大学 経済学部');
